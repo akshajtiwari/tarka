@@ -3,6 +3,7 @@ import { FlatList, StyleSheet, Text, View } from 'react-native';
 
 import { IconButton } from '../../components/IconButton';
 import { listEntries } from '../../lib/projectFs';
+import { useWorkspaceStore } from '../workspace/workspaceStore';
 import { font, fontSize } from '../../theme/fonts';
 import { space } from '../../theme/spacing';
 import { useTheme } from '../../theme/useTheme';
@@ -16,6 +17,7 @@ type Props = {
   onOpenFile: (path: string) => void;
   onQuickOpen: () => void;
   onSearch: () => void;
+  onFileActions: (path: string, isDir: boolean) => void; // long-press, or + for the project root
 };
 
 export function FileTree({
@@ -25,13 +27,16 @@ export function FileTree({
   onOpenFile,
   onQuickOpen,
   onSearch,
+  onFileActions,
 }: Props) {
   const colors = useTheme();
   const [expanded, setExpanded] = useState<Set<string>>(new Set());
+  const treeVersion = useWorkspaceStore((s) => s.treeVersion);
 
+  // treeVersion changes after a file action, so the folder is read again.
   const rows = useMemo(
     () => buildRows((path) => listEntries(projectId, path), expanded),
-    [projectId, expanded],
+    [projectId, expanded, treeVersion], // eslint-disable-line react-hooks/exhaustive-deps
   );
 
   function toggleFolder(path: string) {
@@ -52,6 +57,11 @@ export function FileTree({
         <Text numberOfLines={1} style={[styles.title, { color: colors.text }]}>
           {projectName}
         </Text>
+        <IconButton
+          icon="plus"
+          label="New file or folder"
+          onPress={() => onFileActions('', true)}
+        />
         <IconButton icon="file-code" label="Go to file" onPress={onQuickOpen} />
         <IconButton icon="search" label="Search in files" onPress={onSearch} />
       </View>
@@ -64,6 +74,7 @@ export function FileTree({
             expanded={expanded.has(item.path)}
             active={item.path === activeFile}
             onPress={() => pressRow(item)}
+            onLongPress={() => onFileActions(item.path, item.isDir)}
           />
         )}
       />

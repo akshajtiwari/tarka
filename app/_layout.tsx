@@ -36,6 +36,7 @@ export default function RootLayout() {
           <Stack.Screen name="open-files" options={sheet} />
           <Stack.Screen name="editor-menu" options={sheet} />
           <Stack.Screen name="quick-open" options={sheet} />
+          <Stack.Screen name="file-actions" options={sheet} />
         </Stack>
       </KeyboardProvider>
     </GestureHandlerRootView>

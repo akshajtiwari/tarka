@@ -11,9 +11,10 @@ type Props = {
   expanded: boolean;
   active: boolean;
   onPress: () => void;
+  onLongPress: () => void;
 };
 
-export function FileRow({ row, expanded, active, onPress }: Props) {
+export function FileRow({ row, expanded, active, onPress, onLongPress }: Props) {
   const colors = useTheme();
   const folderIcon = expanded ? 'file-directory-open-fill' : 'file-directory-fill';
   const icon = row.isDir ? folderIcon : 'file';
@@ -21,8 +22,9 @@ export function FileRow({ row, expanded, active, onPress }: Props) {
   return (
     <Pressable
       accessibilityRole="button"
-      accessibilityLabel={row.path}
+      accessibilityLabel={`${row.isDir ? 'Folder' : 'File'} ${row.path}`}
       onPress={onPress}
+      onLongPress={onLongPress}
       style={({ pressed }) => [
         styles.row,
         { paddingLeft: space.md + row.depth * space.lg },

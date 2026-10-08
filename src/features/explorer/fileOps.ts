@@ -1,0 +1,67 @@
+import { Directory, File } from 'expo-file-system';
+
+import { listEntries } from '../../lib/projectFs';
+import { useEditorStore } from '../editor/editorStore';
+import { projectDir } from '../projects/projectFolder';
+import { useWorkspaceStore } from '../workspace/workspaceStore';
+import { copyName, joinPath, parentOf } from './names';
+
+// File and folder actions from the explorer. Each one refreshes the tree afterwards
+// and keeps open tabs in sync. They throw an Error with a readable message on failure.
+
+function parts(path: string) {
+  return path.split('/').filter(Boolean);
+}
+function fileAt(projectId: string, path: string) {
+  return new File(projectDir(projectId), ...parts(path));
+}
+function dirAt(projectId: string, path: string) {
+  return new Directory(projectDir(projectId), ...parts(path));
+}
+function ensureFree(projectId: string, path: string) {
+  if (fileAt(projectId, path).exists || dirAt(projectId, path).exists) {
+    throw new Error(`"${path}" already exists.`);
+  }
+}
+const refresh = () => useWorkspaceStore.getState().refreshTree();
+
+export function newFile(projectId: string, folder: string, name: string): string {
+  const path = joinPath(folder, name.trim());
+  ensureFree(projectId, path);
+  fileAt(projectId, path).create();
+  refresh();
+  return path;
+}
+
+export function newFolder(projectId: string, folder: string, name: string): string {
+  const path = joinPath(folder, name.trim());
+  ensureFree(projectId, path);
+  dirAt(projectId, path).create();
+  refresh();
+  return path;
+}
+
+export function renameEntry(projectId: string, path: string, isDir: boolean, newName: string) {
+  const newPath = joinPath(parentOf(path), newName.trim());
+  ensureFree(projectId, newPath);
+  if (isDir) dirAt(projectId, path).rename(newName.trim());
+  else fileAt(projectId, path).rename(newName.trim());
+  useEditorStore.getState().renamePath(path, newPath);
+  refresh();
+}
+
+export function duplicateFile(projectId: string, path: string): string {
+  const folder = parentOf(path);
+  const taken = listEntries(projectId, folder).map((e) => e.name);
+  const copyPath = joinPath(folder, copyName(path.split('/').pop()!, taken));
+  fileAt(projectId, path).copy(fileAt(projectId, copyPath));
+  refresh();
+  return copyPath;
+}
+
+export function deleteEntry(projectId: string, path: string, isDir: boolean) {
+  if (isDir) dirAt(projectId, path).delete();
+  else fileAt(projectId, path).delete();
+  useEditorStore.getState().closePathsUnder(path);
+  refresh();
+}

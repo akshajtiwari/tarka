@@ -61,6 +61,12 @@ export default function WorkspaceLayout() {
               router.push({ pathname: '/quick-open', params: { projectId: project.id } })
             }
             onSearch={() => router.push({ pathname: '/search', params: { projectId: project.id } })}
+            onFileActions={(path, isDir) =>
+              router.push({
+                pathname: '/file-actions',
+                params: { projectId: project.id, path, isDir: String(isDir) },
+              })
+            }
             onOpenFile={openFile}
           />
         </View>
