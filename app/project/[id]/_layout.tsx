@@ -4,6 +4,8 @@ import { StyleSheet, View } from 'react-native';
 import { Drawer } from 'react-native-drawer-layout';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { useEditorStore } from '../../../src/features/editor/editorStore';
+import { openFileFromDisk } from '../../../src/features/editor/fileActions';
 import { FileTree } from '../../../src/features/explorer/FileTree';
 import { useProjectStore } from '../../../src/features/projects/projectStore';
 import { Dock } from '../../../src/features/workspace/Dock';
@@ -16,10 +18,14 @@ export default function WorkspaceLayout() {
   const insets = useSafeAreaInsets();
   const { id } = useLocalSearchParams<{ id: string }>();
   const project = useProjectStore((s) => s.projects.find((p) => p.id === id));
-  const { explorerOpen, setExplorerOpen, activeFile, openFile, reset } = useWorkspaceStore();
+  const { explorerOpen, setExplorerOpen } = useWorkspaceStore();
+  const activePath = useEditorStore((s) => s.activePath);
 
-  // Start each project with a closed explorer and no file open.
-  useEffect(() => reset, [id, reset]);
+  // Each project starts with a closed explorer and no tabs.
+  useEffect(() => {
+    setExplorerOpen(false);
+    useEditorStore.getState().reset();
+  }, [id, setExplorerOpen]);
 
   if (!project) return <Redirect href="/" />;
 
@@ -34,8 +40,11 @@ export default function WorkspaceLayout() {
           <FileTree
             projectId={project.id}
             projectName={project.name}
-            activeFile={activeFile}
-            onOpenFile={openFile}
+            activeFile={activePath}
+            onOpenFile={(path) => {
+              openFileFromDisk(project.id, path);
+              setExplorerOpen(false);
+            }}
           />
         </View>
       )}

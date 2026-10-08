@@ -1,5 +1,6 @@
 import { useFonts } from 'expo-font';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import { KeyboardProvider } from 'react-native-keyboard-controller';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 
@@ -24,11 +25,13 @@ export default function RootLayout() {
 
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
-      <StatusBar style="auto" />
-      <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: colors.bg } }}>
-        <Stack.Screen name="new-project" options={sheet} />
-        <Stack.Screen name="project-actions" options={sheet} />
-      </Stack>
+      <KeyboardProvider>
+        <StatusBar style="auto" />
+        <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: colors.bg } }}>
+          <Stack.Screen name="new-project" options={sheet} />
+          <Stack.Screen name="project-actions" options={sheet} />
+        </Stack>
+      </KeyboardProvider>
     </GestureHandlerRootView>
   );
 }

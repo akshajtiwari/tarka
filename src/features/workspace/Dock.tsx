@@ -1,13 +1,16 @@
 import Octicons from '@expo/vector-icons/Octicons';
-import { useEffect, useState } from 'react';
-import { Keyboard, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { useKeyboardState } from 'react-native-keyboard-controller';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { font, fontSize } from '../../theme/fonts';
 import { size } from '../../theme/spacing';
 import { useTheme } from '../../theme/useTheme';
 
-const items: Record<string, { label: string; icon: React.ComponentProps<typeof Octicons>['name'] }> = {
+const items: Record<
+  string,
+  { label: string; icon: React.ComponentProps<typeof Octicons>['name'] }
+> = {
   code: { label: 'Code', icon: 'code' },
   git: { label: 'Git', icon: 'git-branch' },
   run: { label: 'Run', icon: 'play' },
@@ -23,7 +26,7 @@ type Props = {
 export function Dock({ state, navigation }: Props) {
   const colors = useTheme();
   const insets = useSafeAreaInsets();
-  const keyboardOpen = useKeyboardOpen();
+  const keyboardOpen = useKeyboardState((state) => state.isVisible);
 
   // While typing, the key row takes this space.
   if (keyboardOpen) return null;
@@ -58,19 +61,6 @@ export function Dock({ state, navigation }: Props) {
       })}
     </View>
   );
-}
-
-function useKeyboardOpen() {
-  const [open, setOpen] = useState(false);
-  useEffect(() => {
-    const show = Keyboard.addListener('keyboardDidShow', () => setOpen(true));
-    const hide = Keyboard.addListener('keyboardDidHide', () => setOpen(false));
-    return () => {
-      show.remove();
-      hide.remove();
-    };
-  }, []);
-  return open;
 }
 
 const styles = StyleSheet.create({

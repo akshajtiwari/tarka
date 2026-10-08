@@ -1,57 +1,85 @@
 import { useLocalSearchParams } from 'expo-router';
-import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import { memo, useCallback, useMemo, useRef, useState } from 'react';
+import { useColorScheme } from 'react-native';
+import { KeyboardAvoidingView, useKeyboardState } from 'react-native-keyboard-controller';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { Button } from '../../../src/components/Button';
 import { EmptyState } from '../../../src/components/EmptyState';
 import { Header } from '../../../src/components/Header';
 import { IconButton } from '../../../src/components/IconButton';
-import { fileAt } from '../../../src/lib/projectFs';
+import CodeEditorView from '../../../src/features/editor/CodeEditor.dom';
+import type { EditorCommand } from '../../../src/features/editor/editorCommand';
+import { isDirty, useEditorStore } from '../../../src/features/editor/editorStore';
+import { saveFile } from '../../../src/features/editor/fileActions';
+import { KeyRow } from '../../../src/features/editor/KeyRow';
+import { useAutosave } from '../../../src/features/editor/useAutosave';
 import { useWorkspaceStore } from '../../../src/features/workspace/workspaceStore';
-import { font, fontSize } from '../../../src/theme/fonts';
-import { space } from '../../../src/theme/spacing';
 import { useTheme } from '../../../src/theme/useTheme';
+
+// Only re-render the WebView when its props really change (not on every keystroke).
+const CodeEditor = memo(CodeEditorView);
 
 export default function CodeScreen() {
   const colors = useTheme();
+  const dark = useColorScheme() !== 'light';
   const { id } = useLocalSearchParams<{ id: string }>();
-  const { activeFile, setExplorerOpen } = useWorkspaceStore();
+  const setExplorerOpen = useWorkspaceStore((s) => s.setExplorerOpen);
+  const file = useEditorStore((s) => s.files.find((f) => f.path === s.activePath));
+  const keyboardOpen = useKeyboardState((s) => s.isVisible);
+  const [command, setCommand] = useState<EditorCommand | null>(null);
+  const nextId = useRef(1);
+  useAutosave(id);
+
+  // The text the editor starts with; only changes when another file is opened.
+  const startText = useMemo(() => file?.text ?? '', [file?.path]); // eslint-disable-line react-hooks/exhaustive-deps
+  const onChange = useCallback(async (path: string, text: string) => {
+    useEditorStore.getState().updateText(path, text);
+  }, []);
+  const domProps = useMemo(() => ({ style: { flex: 1 } }), []);
+
   const showFiles = () => setExplorerOpen(true);
+  const run = (cmd: EditorCommand) => setCommand(cmd);
+  const newId = () => nextId.current++;
 
   return (
     <SafeAreaView edges={['top']} style={{ flex: 1, backgroundColor: colors.bg }}>
       <Header
-        title={activeFile ? activeFile.split('/').pop()! : 'No file open'}
+        title={file ? file.path.split('/').pop()! : 'No file open'}
         left={<IconButton icon="three-bars" label="Show files" onPress={showFiles} />}
+        right={
+          file && isDirty(file) && <Button label="Save" onPress={() => saveFile(id, file.path)} />
+        }
       />
-      {activeFile ? (
-        <FilePreview projectId={id} path={activeFile} />
+      {file ? (
+        <KeyboardAvoidingView behavior="padding" style={{ flex: 1 }}>
+          <CodeEditor
+            path={file.path}
+            text={startText}
+            colors={colors}
+            dark={dark}
+            fontSize={14}
+            command={command}
+            onChange={onChange}
+            dom={domProps}
+          />
+          {keyboardOpen && (
+            <KeyRow
+              onInsert={(text) => run({ id: newId(), name: 'insert', text })}
+              onMove={(by) => run({ id: newId(), name: 'move', by })}
+              onUndo={() => run({ id: newId(), name: 'undo' })}
+              onRedo={() => run({ id: newId(), name: 'redo' })}
+            />
+          )}
+        </KeyboardAvoidingView>
       ) : (
-        <EmptyState title="Open a file" body="Pick a file from the explorer to start reading or editing.">
+        <EmptyState
+          title="Open a file"
+          body="Pick a file from the explorer to start reading or editing."
+        >
           <Button label="Show files" variant="primary" onPress={showFiles} />
         </EmptyState>
       )}
     </SafeAreaView>
   );
 }
-
-// shortcut: read-only preview until the CodeMirror editor lands in phase 2.
-function FilePreview({ projectId, path }: { projectId: string; path: string }) {
-  const colors = useTheme();
-  const text = fileAt(projectId, path).textSync();
-
-  return (
-    <ScrollView contentContainerStyle={styles.preview}>
-      <View>
-        <Text selectable style={[styles.code, { color: colors.text }]}>
-          {text}
-        </Text>
-      </View>
-    </ScrollView>
-  );
-}
-
-const styles = StyleSheet.create({
-  preview: { padding: space.lg },
-  code: { fontFamily: font.code, fontSize: fontSize.small, lineHeight: 22 },
-});
