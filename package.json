@@ -82,8 +82,7 @@
       "^isomorphic-git/http/web$": "<rootDir>/node_modules/isomorphic-git/http/node/index.cjs"
     },
     "testPathIgnorePatterns": [
-      "/node_modules/",
-      "/__tests__/helpers/"
+      "/node_modules/"
     ]
   }
 }

@@ -4,7 +4,8 @@ import os from 'os';
 import path from 'path';
 
 import * as gitService from '../features/git/gitService';
-import { startGitServer } from './helpers/gitServer';
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const { startGitServer } = require('../../scripts/git-server.cjs');
 
 const me = { name: 'Test', email: 'test@example.com' };
 let root: string;
