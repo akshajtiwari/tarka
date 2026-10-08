@@ -13,16 +13,18 @@ type Props = {
   tabCount: number;
   onShowFiles: () => void;
   onShowTabs: () => void;
+  onShowMenu: () => void;
   onSave: () => void;
 };
 
-// ☰ | file name ● ▾ | Save. Tapping the name opens the list of open files.
+// ☰ | file name ● ▾ | Save ⋯. Tapping the name opens the list of open files.
 export function EditorHeader({
   fileName,
   dirty,
   tabCount,
   onShowFiles,
   onShowTabs,
+  onShowMenu,
   onSave,
 }: Props) {
   const colors = useTheme();
@@ -44,6 +46,7 @@ export function EditorHeader({
         {tabCount > 0 && <Octicons name="chevron-down" size={14} color={colors.muted} />}
       </Pressable>
       {dirty && <Button label="Save" onPress={onSave} />}
+      {fileName && <IconButton icon="kebab-horizontal" label="Editor menu" onPress={onShowMenu} />}
     </View>
   );
 }
