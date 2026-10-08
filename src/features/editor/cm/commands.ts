@@ -1,3 +1,4 @@
+import { insertBracket } from '@codemirror/autocomplete';
 import { cursorLineDown, cursorLineUp, redo, undo } from '@codemirror/commands';
 import { gotoLine, openSearchPanel } from '@codemirror/search';
 import type { EditorView } from '@codemirror/view';
@@ -7,9 +8,13 @@ import type { EditorCommand } from '../editorCommand';
 // Runs a key-row or menu action inside CodeMirror.
 export function runCommand(v: EditorView, command: EditorCommand) {
   switch (command.name) {
-    case 'insert':
-      v.dispatch(v.state.replaceSelection(command.text), { scrollIntoView: true });
+    case 'insert': {
+      // Brackets and quotes from the key row auto-close, just like typing them does.
+      const bracket = insertBracket(v.state, command.text);
+      if (bracket) v.dispatch(bracket, { scrollIntoView: true });
+      else v.dispatch(v.state.replaceSelection(command.text), { scrollIntoView: true });
       break;
+    }
     case 'move': {
       const pos = v.state.selection.main.head + command.by;
       const clamped = Math.min(Math.max(pos, 0), v.state.doc.length);
