@@ -7,35 +7,35 @@ Check items off as they land (each must pass the definition of done in AGENTS.md
 - [x] Expo skeleton, commit hook, rules, and the docs skeleton
 - [x] Android toolchain + emulator (`scripts/setup-android.sh`)
 - [x] expo-router, eslint, prettier, jest, and the `npm run check` script
-- [ ] Dev build installs on the emulator. The Maestro "app launches" flow plus a screenshot.
+- [x] Dev build installs on the emulator. The Maestro "app launches" flow plus a screenshot.
 - [x] TESTING.md and DEV_SETUP.md written from what actually worked
 
 ## Phase 1: design system and shell
-- [~] Theme tokens (dark/light) + fonts + `useTheme`
-- [~] Shared components: Button, IconButton, ListRow, Chip, EmptyState, Header, TextField
-- [~] Projects store + home screen (empty state, list)
-- [~] Create a project from a template (JS, Python, Web); rename and delete
-- [~] Workspace screen with the bottom dock (Code, Git, Run, Agent)
-- [~] Explorer drawer with a file tree (read-only)
+- [x] Theme tokens (dark/light) + fonts + `useTheme`
+- [x] Shared components: Button, IconButton, ListRow, Chip, EmptyState, Header, TextField
+- [x] Projects store + home screen (empty state, list)
+- [x] Create a project from a template (JS, Python, Web); rename and delete
+- [x] Workspace screen with the bottom dock (Code, Git, Run, Agent)
+- [x] Explorer drawer with a file tree (read-only)
 - [~] Settings screen skeleton (theme switch still to do: follows the phone for now)
 
 ## Phase 2: editor core
-- [ ] Spike: CM6 DOM component + native key row. The keyboard stays open when tapping keys.
-- [~] Languages + slate/chalk editor theme
-- [~] Open, edit, save, dirty state, autosave
-- [~] Tabs + tab sheet (header swipe still to do)
-- [~] Key row: symbols per language, arrows, undo/redo
+- [x] Spike: CM6 DOM component + native key row. The keyboard stays open when tapping keys.
+- [x] Languages + slate/chalk editor theme
+- [x] Open, edit, save, dirty state, autosave
+- [x] Tabs + tab sheet (header swipe still to do)
+- [x] Key row: symbols per language, arrows, undo/redo
 - [~] Trackpad caret movement on the key row
 - [~] Suggestion chips + usage memory
-- [~] Find and replace
-- [~] Pinch zoom, read lock, go to line (hardware keyboard Ctrl+S still to do)
+- [x] Find and replace
+- [~] Pinch zoom, read lock, go to line (read lock device-tested; pinch and Ctrl+S still to check)
 - [~] Large-file guard (over 2 MB opens read-only)
 
 ## Phase 3: explorer and search
 - [ ] New, rename, delete and duplicate files and folders (long-press sheet)
 - [ ] Git status colors on rows
-- [ ] Fuzzy quick-open
-- [ ] Project-wide text search
+- [x] Fuzzy quick-open
+- [x] Project-wide text search
 
 ## Phase 4: Git
 - [ ] Git identity in settings; init a repo
