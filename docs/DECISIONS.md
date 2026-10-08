@@ -26,3 +26,5 @@ Short records of why things are the way they are. Newest at the bottom. Each dep
 | expo-dev-client | our own dev build of the app (needed for native modules and Maestro tests) |
 | expo-font, expo-asset, @expo-google-fonts/atkinson-hyperlegible-next, @expo-google-fonts/jetbrains-mono | the two app fonts (UI and code), see UI.md |
 | @expo/vector-icons (Octicons set only) | icons; Octicons is GitHub's set and has every code/git icon we need |
+| zustand, @react-native-async-storage/async-storage | small app state stores, saved between launches with zustand `persist` |
+| expo-file-system | reading and writing project files (new `File` / `Directory` API) |
