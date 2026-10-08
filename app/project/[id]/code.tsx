@@ -1,5 +1,5 @@
 import { router, useLocalSearchParams } from 'expo-router';
-import { memo, useCallback, useMemo, useRef, useState } from 'react';
+import { memo, useCallback, useMemo, useState } from 'react';
 import { useColorScheme } from 'react-native';
 import { KeyboardAvoidingView, useKeyboardState } from 'react-native-keyboard-controller';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -7,8 +7,9 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Button } from '../../../src/components/Button';
 import { EmptyState } from '../../../src/components/EmptyState';
 import CodeEditorView from '../../../src/features/editor/CodeEditor.dom';
-import type { EditorAction, EditorCommand } from '../../../src/features/editor/editorCommand';
+import { useEditorCommands } from '../../../src/features/editor/editorCommand';
 import { EditorHeader } from '../../../src/features/editor/EditorHeader';
+import { useEditorSettings } from '../../../src/features/editor/editorSettingsStore';
 import { isDirty, useEditorStore } from '../../../src/features/editor/editorStore';
 import { saveFile } from '../../../src/features/editor/fileActions';
 import { KeyRow } from '../../../src/features/editor/KeyRow';
@@ -30,15 +31,21 @@ export default function CodeScreen() {
   const file = useEditorStore((s) => s.files.find((f) => f.path === s.activePath));
   const tabCount = useEditorStore((s) => s.files.length);
   const keyboardOpen = useKeyboardState((s) => s.isVisible);
-  const [command, setCommand] = useState<EditorCommand | null>(null);
-  const [suggestions, setSuggestions] = useState<string[]>([]);
+  const { command, send } = useEditorCommands();
+  const { fontSize, wrap, readOnly, setFontSize } = useEditorSettings();
   const memory = useMemoryStore((s) => s.words);
-  const memoryWords = useMemo(() => topItems(memory, 200), [memory]);
-  const nextId = useRef(1);
+  const [suggestions, setSuggestions] = useState<string[]>([]);
   useAutosave(id);
 
+  const look = useMemo(
+    () => ({ colors, dark, fontSize, wrap, readOnly }),
+    [colors, dark, fontSize, wrap, readOnly],
+  );
+  const memoryWords = useMemo(() => topItems(memory, 200), [memory]);
   // The text the editor starts with; only changes when another file is opened.
   const startText = useMemo(() => file?.text ?? '', [file?.path]); // eslint-disable-line react-hooks/exhaustive-deps
+  const domProps = useMemo(() => ({ style: { flex: 1 } }), []);
+
   const onChange = useCallback(async (path: string, text: string) => {
     useEditorStore.getState().updateText(path, text);
   }, []);
@@ -46,12 +53,8 @@ export default function CodeScreen() {
   const onAccepted = useCallback(async (label: string) => {
     useMemoryStore.getState().useWord(label);
   }, []);
-  const domProps = useMemo(() => ({ style: { flex: 1 } }), []);
+  const onFontSize = useCallback(async (size: number) => setFontSize(size), [setFontSize]);
 
-  const showFiles = () => setExplorerOpen(true);
-  const send = useCallback((action: EditorAction) => {
-    setCommand({ ...action, id: nextId.current++ });
-  }, []);
   // Stable handlers, so the key row's trackpad gesture is not rebuilt mid-drag.
   const keys = useMemo(
     () => ({
@@ -63,6 +66,7 @@ export default function CodeScreen() {
     }),
     [send],
   );
+  const showFiles = () => setExplorerOpen(true);
 
   return (
     <SafeAreaView edges={['top']} style={{ flex: 1, backgroundColor: colors.bg }}>
@@ -72,6 +76,7 @@ export default function CodeScreen() {
         tabCount={tabCount}
         onShowFiles={showFiles}
         onShowTabs={() => router.push({ pathname: '/open-files', params: { projectId: id } })}
+        onShowMenu={() => router.push('/editor-menu')}
         onSave={() => file && saveFile(id, file.path)}
       />
       {file ? (
@@ -79,14 +84,13 @@ export default function CodeScreen() {
           <CodeEditor
             path={file.path}
             text={startText}
-            colors={colors}
-            dark={dark}
-            fontSize={14}
+            look={look}
             command={command}
             memoryWords={memoryWords}
             onChange={onChange}
             onSuggestions={onSuggestions}
             onAccepted={onAccepted}
+            onFontSize={onFontSize}
             dom={domProps}
           />
           {keyboardOpen && (

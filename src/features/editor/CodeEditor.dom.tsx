@@ -3,78 +3,78 @@
 // This file runs inside a WebView (an Expo "DOM component"), so it can use CodeMirror,
 // which is a web editor. Props come in from the native side; function props are async calls back out.
 
-import { cursorLineDown, cursorLineUp, redo, undo } from '@codemirror/commands';
 import { EditorState } from '@codemirror/state';
 import { EditorView } from '@codemirror/view';
 import type { DOMProps } from 'expo/dom';
 import { useEffect, useRef } from 'react';
 
-import type { Colors } from '../../theme/colors';
-import { buildExtensions } from './cm/setup';
+import { runCommand } from './cm/commands';
+import { pinchZoom } from './cm/pinchZoom';
+import { buildExtensions, lookCompartment, lookExtensions, type LookSettings } from './cm/setup';
 import { acceptSuggestion } from './cm/suggestions';
 import type { EditorCommand } from './editorCommand';
 
 type Props = {
   path: string; // a different path means a different file: the editor starts fresh
   text: string; // the file's text when it was opened
-  colors: Colors;
-  dark: boolean;
-  fontSize: number;
+  look: LookSettings;
   command: EditorCommand | null; // the latest key-row / menu action
   memoryWords: string[]; // words you used before, offered as suggestions
   onChange: (path: string, text: string) => Promise<void>;
   onSuggestions: (labels: string[]) => Promise<void>;
   onAccepted: (label: string) => Promise<void>;
+  onFontSize: (size: number) => Promise<void>;
   dom?: DOMProps;
 };
 
-export default function CodeEditor({
-  path,
-  text,
-  colors,
-  dark,
-  fontSize,
-  command,
-  memoryWords,
-  onChange,
-  onSuggestions,
-  onAccepted,
-}: Props) {
+export default function CodeEditor(props: Props) {
+  const { path, text, look, command } = props;
   const host = useRef<HTMLDivElement>(null);
   const view = useRef<EditorView | null>(null);
-  const memory = useRef(memoryWords);
+  // Latest props for callbacks that live inside CodeMirror.
+  const latest = useRef(props);
   useEffect(() => {
-    memory.current = memoryWords;
-  }, [memoryWords]);
+    latest.current = props;
+  });
 
+  // A new editor for each file.
   useEffect(() => {
     // Send the text back at most every 300ms while typing, and always before closing.
     let timer: ReturnType<typeof setTimeout> | undefined;
     const flush = (v: EditorView) => {
       clearTimeout(timer);
       timer = undefined;
-      onChange(path, v.state.doc.toString());
+      latest.current.onChange(path, v.state.doc.toString());
     };
+    const previewFontSize = (v: EditorView, fontSize: number) =>
+      v.dispatch({
+        effects: lookCompartment.reconfigure(lookExtensions({ ...latest.current.look, fontSize })),
+      });
 
-    const state = EditorState.create({
-      doc: text,
-      extensions: [
-        buildExtensions({
-          path,
-          colors,
-          fontSize,
-          dark,
-          getMemoryWords: () => memory.current,
-          onSuggestions,
-        }),
-        EditorView.updateListener.of((update) => {
-          if (!update.docChanged) return;
-          clearTimeout(timer);
-          timer = setTimeout(() => flush(update.view), 300);
-        }),
-      ],
+    const editor: EditorView = new EditorView({
+      parent: host.current!,
+      state: EditorState.create({
+        doc: text,
+        extensions: [
+          buildExtensions({
+            path,
+            look,
+            getMemoryWords: () => latest.current.memoryWords,
+            onSuggestions: (labels) => latest.current.onSuggestions(labels),
+          }),
+          pinchZoom(
+            () => latest.current.look.fontSize,
+            (size) => previewFontSize(editor, size),
+            (size) => latest.current.onFontSize(size),
+          ),
+          EditorView.updateListener.of((update) => {
+            if (!update.docChanged) return;
+            clearTimeout(timer);
+            timer = setTimeout(() => flush(update.view), 300);
+          }),
+        ],
+      }),
     });
-    const editor = new EditorView({ state, parent: host.current! });
     view.current = editor;
 
     // The app may be closed right after typing, so don't wait for the timer.
@@ -88,9 +88,14 @@ export default function CodeEditor({
       if (timer) flush(editor);
       editor.destroy();
     };
-    // Only a new file (or look) rebuilds the editor; text changes come from typing inside it.
+    // Only a new file rebuilds the editor; everything else updates it in place.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [path, dark, fontSize]);
+  }, [path]);
+
+  // Theme, font size, wrap or read lock changed: update the open editor in place.
+  useEffect(() => {
+    view.current?.dispatch({ effects: lookCompartment.reconfigure(lookExtensions(look)) });
+  }, [look]);
 
   // Each command has a new id, so the same key pressed twice still runs twice.
   useEffect(() => {
@@ -98,39 +103,11 @@ export default function CodeEditor({
     if (!v || !command) return;
     if (command.name === 'accept') {
       const label = acceptSuggestion(v, command.index);
-      if (label) onAccepted(label);
+      if (label) latest.current.onAccepted(label);
       return;
     }
     runCommand(v, command);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [command]);
 
-  return <div ref={host} style={{ height: '100vh', backgroundColor: colors.bg }} />;
-}
-
-function runCommand(v: EditorView, command: EditorCommand) {
-  switch (command.name) {
-    case 'insert':
-      v.dispatch(v.state.replaceSelection(command.text), { scrollIntoView: true });
-      break;
-    case 'move': {
-      const pos = v.state.selection.main.head + command.by;
-      const clamped = Math.min(Math.max(pos, 0), v.state.doc.length);
-      v.dispatch({ selection: { anchor: clamped }, scrollIntoView: true });
-      break;
-    }
-    case 'moveLines':
-      for (let i = 0; i < Math.abs(command.by); i++) {
-        if (command.by > 0) cursorLineDown(v);
-        else cursorLineUp(v);
-      }
-      break;
-    case 'undo':
-      undo(v);
-      break;
-    case 'redo':
-      redo(v);
-      break;
-  }
-  v.focus();
+  return <div ref={host} style={{ height: '100vh', backgroundColor: look.colors.bg }} />;
 }
