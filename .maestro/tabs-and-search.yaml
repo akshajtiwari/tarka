@@ -1,0 +1,37 @@
+# Open two files, switch tabs, quick open and search in files.
+appId: com.akshajtiwari.tarka
+---
+- runFlow: common/open-app.yaml
+- runFlow: common/new-python-project.yaml
+- tapOn:
+    text: Show files
+    index: 0
+- tapOn: README.md
+- tapOn: Open files
+- takeScreenshot: open-files-sheet
+- tapOn: main.py
+- extendedWaitUntil:
+    visible: .*def greet.*
+    timeout: 10000
+- tapOn:
+    text: Show files
+    index: 0
+- tapOn: Go to file
+- inputText: rdm
+- takeScreenshot: quick-open
+- tapOn: Open README.md # (the explorer behind the sheet also has a README.md row)
+- extendedWaitUntil:
+    visible: .*My project.*
+    timeout: 10000
+- tapOn:
+    text: Show files
+    index: 0
+- tapOn: Search in files
+- inputText: greet
+- tapOn: Search
+- assertVisible: 2 matches
+- takeScreenshot: search-results
+- tapOn: main.py:4
+- extendedWaitUntil:
+    visible: .*def greet.*
+    timeout: 10000

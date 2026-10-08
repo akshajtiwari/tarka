@@ -12,14 +12,16 @@ type Props = {
   onPress?: () => void;
   onLongPress?: () => void;
   right?: React.ReactNode;
+  label?: string; // what screen readers (and UI tests) call this row, when the title is not enough
 };
 
-export function ListRow({ title, subtitle, icon, onPress, onLongPress, right }: Props) {
+export function ListRow({ title, subtitle, icon, onPress, onLongPress, right, label }: Props) {
   const colors = useTheme();
 
   return (
     <Pressable
       accessibilityRole="button"
+      accessibilityLabel={label}
       onPress={onPress}
       onLongPress={onLongPress}
       style={({ pressed }) => [styles.row, pressed && { backgroundColor: colors.raised }]}

@@ -41,6 +41,7 @@ export default function QuickOpenSheet() {
             icon="file"
             title={item.split('/').pop()!}
             subtitle={item}
+            label={`Open ${item}`}
             onPress={() => open(item)}
           />
         )}

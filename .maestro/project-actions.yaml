@@ -1,0 +1,18 @@
+# Long-press a project to rename it, then delete it.
+appId: com.akshajtiwari.tarka
+---
+- runFlow: common/open-app.yaml
+- runFlow: common/new-python-project.yaml
+- back
+- longPressOn: demo
+- takeScreenshot: project-actions
+- tapOn: Name
+- eraseText
+- inputText: renamed
+- hideKeyboard
+- tapOn: Rename
+- assertVisible: renamed
+- longPressOn: renamed
+- tapOn: Delete project
+- tapOn: Delete
+- assertVisible: No projects yet
