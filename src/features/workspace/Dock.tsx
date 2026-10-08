@@ -19,8 +19,8 @@ const items: Record<
 
 // Only the parts of the tab navigator's props that the dock uses.
 type Props = {
-  state: { index: number; routes: { key: string; name: string }[] };
-  navigation: { navigate: (name: string) => void };
+  state: { index: number; routes: { key: string; name: string; params?: object }[] };
+  navigation: { navigate: (name: string, params?: object) => void };
 };
 
 export function Dock({ state, navigation }: Props) {
@@ -49,7 +49,8 @@ export function Dock({ state, navigation }: Props) {
             accessibilityRole="tab"
             accessibilityLabel={item.label}
             accessibilityState={{ selected: active }}
-            onPress={() => navigation.navigate(route.name)}
+            // Pass the current params on, or the other tabs would not know which project is open.
+            onPress={() => navigation.navigate(route.name, state.routes[state.index].params)}
             style={styles.item}
           >
             <Octicons name={item.icon} size={20} color={iconColor} />
