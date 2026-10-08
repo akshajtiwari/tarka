@@ -13,6 +13,8 @@ Start with `docs/HANDOFF.md`. It tells you what to read, where the work stopped 
   A `fix:` or `feat:` prefix is optional, not required.
 - Keep commits small and realistic: one step each, roughly 30–300 lines of diff. No giant dumps.
 - Only commit when the step passes its checks (see section 4).
+- **Commit and push always go together.** `.githooks/post-commit` pushes every commit to `origin` (a private GitHub repo,
+  `akshajtiwari/tarka`). If the push fails, run `git push` before you do anything else. Never force-push `main`.
 
 ## 2. Code style (keep it readable for a normal developer)
 
