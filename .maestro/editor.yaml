@@ -1,0 +1,30 @@
+# Typing marks the file dirty, the key row inserts symbols without closing the keyboard,
+# autosave writes the file, and the edit is still there after reopening it.
+appId: com.akshajtiwari.tarka
+---
+- runFlow: common/open-app.yaml
+- runFlow: common/new-python-project.yaml
+- tapOn: .*print.*
+- assertVisible: Tab # key row is up, so the keyboard is open
+- inputText: "x = 1"
+- tapOn: "("
+- assertVisible: Tab # still open after tapping a key
+- takeScreenshot: editor-keyboard
+# Autosave runs 1.5 s after typing stops (the Save button is only up that long, too short to
+# assert reliably). The reopen below proves the file was written.
+- extendedWaitUntil:
+    notVisible: Save
+    timeout: 8000
+- hideKeyboard
+- back
+- tapOn: demo
+- tapOn:
+    text: Show files
+    index: 0
+- tapOn: main.py
+# Checked after reopening: the WebView's accessibility text only refreshes on a fresh load.
+# "()" also proves the key row auto-closed the bracket. (?s) lets .* cross line breaks.
+- extendedWaitUntil:
+    visible: '(?s).*x = 1\(\).*'
+    timeout: 20000
+- takeScreenshot: editor-reopened
