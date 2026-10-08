@@ -1,4 +1,4 @@
-import { Redirect, Tabs, useLocalSearchParams } from 'expo-router';
+import { Redirect, router, Tabs, useLocalSearchParams } from 'expo-router';
 import { useEffect } from 'react';
 import { Alert, StyleSheet, View } from 'react-native';
 import { Drawer } from 'react-native-drawer-layout';
@@ -41,6 +41,10 @@ export default function WorkspaceLayout() {
             projectId={project.id}
             projectName={project.name}
             activeFile={activePath}
+            onQuickOpen={() =>
+              router.push({ pathname: '/quick-open', params: { projectId: project.id } })
+            }
+            onSearch={() => router.push({ pathname: '/search', params: { projectId: project.id } })}
             onOpenFile={(path) => {
               const error = openFileFromDisk(project.id, path);
               if (error) Alert.alert('Cannot open file', error);

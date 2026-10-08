@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react';
 import { FlatList, StyleSheet, Text, View } from 'react-native';
 
+import { IconButton } from '../../components/IconButton';
 import { listEntries } from '../../lib/projectFs';
 import { font, fontSize } from '../../theme/fonts';
 import { space } from '../../theme/spacing';
@@ -13,9 +14,12 @@ type Props = {
   projectName: string;
   activeFile: string | null;
   onOpenFile: (path: string) => void;
+  onQuickOpen: () => void;
+  onSearch: () => void;
 };
 
-export function FileTree({ projectId, projectName, activeFile, onOpenFile }: Props) {
+export function FileTree(props: Props) {
+  const { projectId, projectName, activeFile, onOpenFile, onQuickOpen, onSearch } = props;
   const colors = useTheme();
   const [expanded, setExpanded] = useState<Set<string>>(new Set());
 
@@ -33,9 +37,13 @@ export function FileTree({ projectId, projectName, activeFile, onOpenFile }: Pro
 
   return (
     <View style={[styles.tree, { backgroundColor: colors.surface }]}>
-      <Text numberOfLines={1} style={[styles.title, { color: colors.text }]}>
-        {projectName}
-      </Text>
+      <View style={styles.top}>
+        <Text numberOfLines={1} style={[styles.title, { color: colors.text }]}>
+          {projectName}
+        </Text>
+        <IconButton icon="file-code" label="Go to file" onPress={onQuickOpen} />
+        <IconButton icon="search" label="Search in files" onPress={onSearch} />
+      </View>
       <FlatList
         data={rows}
         keyExtractor={(row) => row.path}
@@ -54,5 +62,6 @@ export function FileTree({ projectId, projectName, activeFile, onOpenFile }: Pro
 
 const styles = StyleSheet.create({
   tree: { flex: 1 },
-  title: { padding: space.lg, fontFamily: font.uiBold, fontSize: fontSize.title },
+  top: { flexDirection: 'row', alignItems: 'center', paddingRight: space.xs },
+  title: { flex: 1, padding: space.lg, fontFamily: font.uiBold, fontSize: fontSize.title },
 });
