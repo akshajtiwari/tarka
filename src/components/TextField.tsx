@@ -11,9 +11,11 @@ type Props = {
   placeholder?: string;
   autoFocus?: boolean;
   mono?: boolean; // use the code font, e.g. for URLs and file names
+  secret?: boolean; // hide what is typed (tokens, passwords)
 };
 
-export function TextField({ label, value, onChangeText, placeholder, autoFocus, mono }: Props) {
+export function TextField(props: Props) {
+  const { label, value, onChangeText, placeholder, autoFocus, mono, secret } = props;
   const colors = useTheme();
 
   return (
@@ -26,6 +28,7 @@ export function TextField({ label, value, onChangeText, placeholder, autoFocus, 
         placeholder={placeholder}
         placeholderTextColor={colors.muted}
         autoFocus={autoFocus}
+        secureTextEntry={secret}
         autoCapitalize="none"
         autoCorrect={false}
         style={[

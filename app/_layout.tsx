@@ -5,6 +5,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 
+import { dark } from '../src/theme/colors';
 import { fontFiles } from '../src/theme/fonts';
 import { radius } from '../src/theme/spacing';
 import { useTheme } from '../src/theme/useTheme';
@@ -29,7 +30,7 @@ export default function RootLayout() {
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <KeyboardProvider>
-        <StatusBar style="auto" />
+        <StatusBar style={colors === dark ? 'light' : 'dark'} />
         <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: colors.bg } }}>
           <Stack.Screen name="new-project" options={sheet} />
           <Stack.Screen name="project-actions" options={sheet} />

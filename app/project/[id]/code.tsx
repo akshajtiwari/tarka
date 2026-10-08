@@ -1,6 +1,6 @@
 import { router, useLocalSearchParams } from 'expo-router';
 import { memo, useCallback, useMemo, useState } from 'react';
-import { Alert, useColorScheme } from 'react-native';
+import { Alert } from 'react-native';
 import { KeyboardAvoidingView, useKeyboardState } from 'react-native-keyboard-controller';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -18,6 +18,7 @@ import { SuggestionStrip } from '../../../src/features/editor/SuggestionStrip';
 import { useAutosave } from '../../../src/features/editor/useAutosave';
 import { useWorkspaceStore } from '../../../src/features/workspace/workspaceStore';
 import { topItems } from '../../../src/lib/usageMemory';
+import { dark as darkColors } from '../../../src/theme/colors';
 import { useTheme } from '../../../src/theme/useTheme';
 
 // Only re-render the WebView when its props really change (not on every keystroke).
@@ -25,7 +26,7 @@ const CodeEditor = memo(CodeEditorView);
 
 export default function CodeScreen() {
   const colors = useTheme();
-  const dark = useColorScheme() !== 'light';
+  const dark = colors === darkColors;
   const { id } = useLocalSearchParams<{ id: string }>();
   const setExplorerOpen = useWorkspaceStore((s) => s.setExplorerOpen);
   const file = useEditorStore((s) => s.files.find((f) => f.path === s.activePath));

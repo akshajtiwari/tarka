@@ -34,3 +34,5 @@ Short records of why things are the way they are. Newest at the bottom. Each dep
 | react-native-keyboard-controller | keyboard state + keyboard-aware layout so the key row sits right above the keyboard |
 | expo-haptics | light ticks for the key-row trackpad |
 | isomorphic-git, buffer | Git in pure JavaScript (no native code); buffer is the Node Buffer it expects |
+| expo-secure-store | keeps the git access token in the Android Keystore, not in plain storage |
+| diff (jsdiff) | line-by-line diffs for the Git diff view |

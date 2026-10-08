@@ -17,11 +17,8 @@ Last refreshed: 2026-10-09, end of phases 1–3 (part).
 - `src/lib/gitFs.ts:83`: `lstat` is the same as `stat`.
   - **Limit:** no symlink support (expo-file-system has none).
   - **Upgrade:** if repos with symlinks matter.
-- `src/theme/useTheme.ts:5`: the theme follows the phone's dark/light setting only.
-  - **Limit:** no manual choice.
-  - **Upgrade:** when Settings gets a theme switch.
 - `src/features/workspace/PanelPlaceholder.tsx:12`: placeholder panels for Git, Run and Agent.
   - **Limit:** the panels don't exist yet.
   - **Upgrade:** delete as each panel is built.
 
-5 markers, all with an upgrade trigger.
+4 markers, all with an upgrade trigger.
