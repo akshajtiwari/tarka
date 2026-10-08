@@ -3,7 +3,7 @@
 // This file runs inside a WebView (an Expo "DOM component"), so it can use CodeMirror,
 // which is a web editor. Props come in from the native side; function props are async calls back out.
 
-import { redo, undo } from '@codemirror/commands';
+import { cursorLineDown, cursorLineUp, redo, undo } from '@codemirror/commands';
 import { EditorState } from '@codemirror/state';
 import { EditorView } from '@codemirror/view';
 import type { DOMProps } from 'expo/dom';
@@ -119,6 +119,12 @@ function runCommand(v: EditorView, command: EditorCommand) {
       v.dispatch({ selection: { anchor: clamped }, scrollIntoView: true });
       break;
     }
+    case 'moveLines':
+      for (let i = 0; i < Math.abs(command.by); i++) {
+        if (command.by > 0) cursorLineDown(v);
+        else cursorLineUp(v);
+      }
+      break;
     case 'undo':
       undo(v);
       break;

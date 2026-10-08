@@ -1,8 +1,11 @@
 // Actions the native side sends into the editor WebView.
+export type EditorAction =
+  | { name: 'insert'; text: string }
+  | { name: 'move'; by: number } // characters
+  | { name: 'moveLines'; by: number }
+  | { name: 'undo' }
+  | { name: 'redo' }
+  | { name: 'accept'; index: number }; // tap on a suggestion chip
+
 // `id` goes up by one every time, so pressing the same key twice is two commands.
-export type EditorCommand =
-  | { id: number; name: 'insert'; text: string }
-  | { id: number; name: 'move'; by: number }
-  | { id: number; name: 'undo' }
-  | { id: number; name: 'redo' }
-  | { id: number; name: 'accept'; index: number }; // tap on a suggestion chip
+export type EditorCommand = EditorAction & { id: number };

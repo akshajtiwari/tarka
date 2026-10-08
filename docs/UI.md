@@ -98,7 +98,7 @@ Light uses darker versions of the same hues (see `src/theme/colors.ts`).
 
 keyboard up:
 │ [useState] [useEffect] […] │  suggestion chips (40)
-│ ⇥ { } ( ) ; = " ← → ↶ ↷  │  key row (44), drag sideways = move caret
+│ ⇥ { } ( ) ; = " ← → ↶ ↷  │  key row (44), hold + slide = trackpad
 │ [        keyboard        ] │
 ```
 
@@ -115,7 +115,7 @@ keyboard up:
   A dirty file shows a brass dot and a save icon in the header.
 - Pinch to zoom the code font (10–24), and the size is remembered.
 - **Key row keys:** Tab, symbols for the current language, ← →, undo, redo. Long-press a key for its pair, for example `(` → `()`.
-- **Trackpad:** drag along the key row, and the caret moves one character per step with a light haptic tick.
+- **Trackpad:** press and hold the key row, then slide. Sideways moves the caret by characters, up/down moves it by lines, with a light haptic tick for each step.
 - **Suggestions** come from keywords, project words, snippets and usage memory. They show as chips; tap one to insert it.
 
 ## Motion

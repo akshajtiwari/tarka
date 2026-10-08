@@ -32,3 +32,4 @@ Short records of why things are the way they are. Newest at the bottom. Each dep
 | codemirror, @codemirror/* (state, view, commands, language, autocomplete, search, lang-*), @lezer/highlight | the code editor (runs in a WebView via a DOM component) |
 | react-native-web, @expo/metro-runtime | required by Expo DOM components (`'use dom'` files) |
 | react-native-keyboard-controller | keyboard state + keyboard-aware layout so the key row sits right above the keyboard |
+| expo-haptics | light ticks for the key-row trackpad |

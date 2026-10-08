@@ -9,7 +9,7 @@ import { EmptyState } from '../../../src/components/EmptyState';
 import { Header } from '../../../src/components/Header';
 import { IconButton } from '../../../src/components/IconButton';
 import CodeEditorView from '../../../src/features/editor/CodeEditor.dom';
-import type { EditorCommand } from '../../../src/features/editor/editorCommand';
+import type { EditorAction, EditorCommand } from '../../../src/features/editor/editorCommand';
 import { isDirty, useEditorStore } from '../../../src/features/editor/editorStore';
 import { saveFile } from '../../../src/features/editor/fileActions';
 import { KeyRow } from '../../../src/features/editor/KeyRow';
@@ -49,8 +49,20 @@ export default function CodeScreen() {
   const domProps = useMemo(() => ({ style: { flex: 1 } }), []);
 
   const showFiles = () => setExplorerOpen(true);
-  const run = (cmd: EditorCommand) => setCommand(cmd);
-  const newId = () => nextId.current++;
+  const send = useCallback((action: EditorAction) => {
+    setCommand({ ...action, id: nextId.current++ });
+  }, []);
+  // Stable handlers, so the key row's trackpad gesture is not rebuilt mid-drag.
+  const keys = useMemo(
+    () => ({
+      onInsert: (text: string) => send({ name: 'insert', text }),
+      onMove: (by: number) => send({ name: 'move', by }),
+      onMoveLines: (by: number) => send({ name: 'moveLines', by }),
+      onUndo: () => send({ name: 'undo' }),
+      onRedo: () => send({ name: 'redo' }),
+    }),
+    [send],
+  );
 
   return (
     <SafeAreaView edges={['top']} style={{ flex: 1, backgroundColor: colors.bg }}>
@@ -79,17 +91,10 @@ export default function CodeScreen() {
           {keyboardOpen && (
             <SuggestionStrip
               labels={suggestions}
-              onPick={(index) => run({ id: newId(), name: 'accept', index })}
+              onPick={(index) => send({ name: 'accept', index })}
             />
           )}
-          {keyboardOpen && (
-            <KeyRow
-              onInsert={(text) => run({ id: newId(), name: 'insert', text })}
-              onMove={(by) => run({ id: newId(), name: 'move', by })}
-              onUndo={() => run({ id: newId(), name: 'undo' })}
-              onRedo={() => run({ id: newId(), name: 'redo' })}
-            />
-          )}
+          {keyboardOpen && <KeyRow {...keys} />}
         </KeyboardAvoidingView>
       ) : (
         <EmptyState
