@@ -1,4 +1,4 @@
-import { useLocalSearchParams } from 'expo-router';
+import { router, useLocalSearchParams } from 'expo-router';
 import { memo, useCallback, useMemo, useRef, useState } from 'react';
 import { useColorScheme } from 'react-native';
 import { KeyboardAvoidingView, useKeyboardState } from 'react-native-keyboard-controller';
@@ -6,10 +6,9 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { Button } from '../../../src/components/Button';
 import { EmptyState } from '../../../src/components/EmptyState';
-import { Header } from '../../../src/components/Header';
-import { IconButton } from '../../../src/components/IconButton';
 import CodeEditorView from '../../../src/features/editor/CodeEditor.dom';
 import type { EditorAction, EditorCommand } from '../../../src/features/editor/editorCommand';
+import { EditorHeader } from '../../../src/features/editor/EditorHeader';
 import { isDirty, useEditorStore } from '../../../src/features/editor/editorStore';
 import { saveFile } from '../../../src/features/editor/fileActions';
 import { KeyRow } from '../../../src/features/editor/KeyRow';
@@ -29,6 +28,7 @@ export default function CodeScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const setExplorerOpen = useWorkspaceStore((s) => s.setExplorerOpen);
   const file = useEditorStore((s) => s.files.find((f) => f.path === s.activePath));
+  const tabCount = useEditorStore((s) => s.files.length);
   const keyboardOpen = useKeyboardState((s) => s.isVisible);
   const [command, setCommand] = useState<EditorCommand | null>(null);
   const [suggestions, setSuggestions] = useState<string[]>([]);
@@ -66,12 +66,13 @@ export default function CodeScreen() {
 
   return (
     <SafeAreaView edges={['top']} style={{ flex: 1, backgroundColor: colors.bg }}>
-      <Header
-        title={file ? file.path.split('/').pop()! : 'No file open'}
-        left={<IconButton icon="three-bars" label="Show files" onPress={showFiles} />}
-        right={
-          file && isDirty(file) && <Button label="Save" onPress={() => saveFile(id, file.path)} />
-        }
+      <EditorHeader
+        fileName={file ? file.path.split('/').pop()! : null}
+        dirty={!!file && isDirty(file)}
+        tabCount={tabCount}
+        onShowFiles={showFiles}
+        onShowTabs={() => router.push({ pathname: '/open-files', params: { projectId: id } })}
+        onSave={() => file && saveFile(id, file.path)}
       />
       {file ? (
         <KeyboardAvoidingView behavior="padding" style={{ flex: 1 }}>

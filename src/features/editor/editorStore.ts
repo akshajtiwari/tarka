@@ -7,6 +7,7 @@ type EditorState = {
   files: OpenFile[];
   activePath: string | null;
   openFile: (path: string, text: string) => void;
+  setActive: (path: string) => void;
   updateText: (path: string, text: string) => void;
   markSaved: (path: string, text: string) => void;
   closeFile: (path: string) => void;
@@ -24,6 +25,8 @@ export const useEditorStore = create<EditorState>()((set) => ({
       const files = alreadyOpen ? state.files : [...state.files, { path, text, savedText: text }];
       return { files, activePath: path };
     }),
+
+  setActive: (path) => set({ activePath: path }),
 
   updateText: (path, text) =>
     set((state) => ({ files: state.files.map((f) => (f.path === path ? { ...f, text } : f)) })),
