@@ -81,5 +81,12 @@ export const gitFs = {
     },
     stat,
     lstat: stat, // shortcut: no symlink support, expo-file-system has none; upgrade if repos with symlinks matter
+    // isomorphic-git expects these two even though phone storage has no symlinks.
+    async readlink(path: string): Promise<string> {
+      throw fsError('ENOSYS', `symlinks are not supported: ${path}`);
+    },
+    async symlink(_target: string, path: string): Promise<void> {
+      throw fsError('ENOSYS', `symlinks are not supported: ${path}`);
+    },
   },
 };
