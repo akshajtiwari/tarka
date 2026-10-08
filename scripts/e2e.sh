@@ -6,6 +6,13 @@ set -euo pipefail
 cd "$(dirname "$0")/.."
 source scripts/env.sh
 
+# Restart the emulator if it has grown too big (its GPU renderer can leak memory over time).
+rss_kb=$(ps -o rss= -C qemu-system-x86_64-headless | head -1)
+if [ "${rss_kb:-0}" -gt 6000000 ]; then
+  echo "== emulator uses $((rss_kb / 1024)) MB, restarting it"
+  adb emu kill > /dev/null 2>&1 || true
+  sleep 8
+fi
 scripts/emulator.sh
 export ANDROID_SERIAL=$(adb devices | awk '/^emulator-/ {print $1; exit}')
 

@@ -14,7 +14,7 @@ window_flag="-no-window"
 if [ "${1:-}" = "--show" ]; then window_flag=""; fi
 
 mkdir -p .artifacts
-nohup emulator -avd tarka $window_flag -no-audio -no-boot-anim -gpu host -no-snapshot -memory 2048 \
+nohup emulator -avd tarka $window_flag -no-audio -no-boot-anim -gpu guest -no-snapshot -memory 2048 \
   > .artifacts/emulator.log 2>&1 &
 
 adb wait-for-device
