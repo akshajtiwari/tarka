@@ -94,7 +94,7 @@ export default function CodeScreen() {
               onPick={(index) => send({ name: 'accept', index })}
             />
           )}
-          {keyboardOpen && <KeyRow {...keys} />}
+          {keyboardOpen && <KeyRow path={file.path} {...keys} />}
         </KeyboardAvoidingView>
       ) : (
         <EmptyState

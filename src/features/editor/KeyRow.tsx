@@ -5,36 +5,11 @@ import { GestureDetector } from 'react-native-gesture-handler';
 import { font, fontSize } from '../../theme/fonts';
 import { size, space } from '../../theme/spacing';
 import { useTheme } from '../../theme/useTheme';
+import { symbolsFor } from './keySymbols';
 import { useTrackpad } from './useTrackpad';
 
-// shortcut: one symbol set for every language, make it language-aware in the key row step.
-const symbols = [
-  '{',
-  '}',
-  '(',
-  ')',
-  '[',
-  ']',
-  ';',
-  '=',
-  '"',
-  "'",
-  ':',
-  ',',
-  '.',
-  '<',
-  '>',
-  '/',
-  '_',
-  '-',
-  '+',
-  '*',
-  '!',
-  '&',
-  '|',
-];
-
 type Props = {
+  path: string; // the open file, used to pick the symbols
   onInsert: (text: string) => void;
   onMove: (by: number) => void;
   onMoveLines: (by: number) => void;
@@ -44,7 +19,7 @@ type Props = {
 
 // Sits right above the keyboard while editing. Press and hold, then slide, to use it as a trackpad. Taps must never close the keyboard,
 // so the scroll view keeps taps (keyboardShouldPersistTaps) and nothing here takes focus.
-export function KeyRow({ onInsert, onMove, onMoveLines, onUndo, onRedo }: Props) {
+export function KeyRow({ path, onInsert, onMove, onMoveLines, onUndo, onRedo }: Props) {
   const colors = useTheme();
   const trackpad = useTrackpad(onMove, onMoveLines);
 
@@ -85,7 +60,7 @@ export function KeyRow({ onInsert, onMove, onMoveLines, onUndo, onRedo }: Props)
           keyboardShouldPersistTaps="always"
           showsHorizontalScrollIndicator={false}
         >
-          {symbols.map((s) => key(s, () => onInsert(s)))}
+          {symbolsFor(path).map((s) => key(s, () => onInsert(s)))}
         </ScrollView>
         {iconKey('arrow-left', 'Cursor left', () => onMove(-1))}
         {iconKey('arrow-right', 'Cursor right', () => onMove(1))}
