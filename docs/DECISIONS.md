@@ -28,3 +28,4 @@ Short records of why things are the way they are. Newest at the bottom. Each dep
 | @expo/vector-icons (Octicons set only) | icons; Octicons is GitHub's set and has every code/git icon we need |
 | zustand, @react-native-async-storage/async-storage | small app state stores, saved between launches with zustand `persist` |
 | expo-file-system | reading and writing project files (new `File` / `Directory` API) |
+| react-native-drawer-layout | the swipe-in file explorer drawer (made by the React Navigation team) |
