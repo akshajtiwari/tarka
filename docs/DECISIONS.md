@@ -17,3 +17,4 @@ Short records of why things are the way they are. Newest at the bottom. Each dep
 | Package | Why |
 |---|---|
 | expo, react, react-native, expo-status-bar | from the Expo template |
+| expo-router, expo-linking, expo-constants, react-native-screens, react-native-safe-area-context | file-based navigation (screens in `app/`) |
