@@ -12,6 +12,9 @@ export ANDROID_SERIAL=$(adb devices | awk '/^emulator-/ {print $1; exit}')
 # The dev build must be installed once (and again after native changes).
 if ! adb shell pm list packages | grep -q com.akshajtiwari.tarka; then
   npx expo run:android --no-bundler
+  # The Gradle and Kotlin daemons keep ~4 GB after a build; free it for the emulator.
+  (cd android && ./gradlew --stop > /dev/null)
+  pkill -f "[K]otlinCompileDaemon" || true
 fi
 
 # The dev build loads JavaScript from Metro, so make sure Metro is running.
@@ -21,4 +24,11 @@ if ! curl -s localhost:8081/status | grep -q running; then
   until curl -s localhost:8081/status | grep -q running; do sleep 2; done
 fi
 
-maestro --device "$ANDROID_SERIAL" test --test-output-dir .artifacts/maestro "${@:-.maestro}"
+run_dir=".artifacts/maestro/$(date +%Y%m%d-%H%M%S)"
+status=0
+maestro --device "$ANDROID_SERIAL" test --test-output-dir "$run_dir" "${@:-.maestro}" || status=$?
+
+# Collect the screenshots the flows took (takeScreenshot: <name>) in one place.
+mkdir -p .artifacts/screens
+find "$run_dir" -path '*takeScreenshot*' -name '*.png' -exec cp {} .artifacts/screens/ \;
+exit $status

@@ -1,0 +1,16 @@
+# Create a project from a template, open a file, come back home and see it listed.
+appId: com.akshajtiwari.tarka
+---
+- runFlow: common/open-app.yaml
+- tapOn: New project
+- takeScreenshot: new-project-sheet
+- back
+- runFlow: common/new-python-project.yaml
+- takeScreenshot: editor-main-py
+- tapOn: Show files
+- takeScreenshot: explorer
+- back
+- back
+- assertVisible: demo
+- assertVisible: Opened just now
+- takeScreenshot: home-with-project

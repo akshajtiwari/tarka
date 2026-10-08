@@ -1,0 +1,19 @@
+# Creates a project called "demo" from the Python template and opens main.py.
+appId: com.akshajtiwari.tarka
+---
+- tapOn: New project
+- tapOn: Name
+- inputText: demo
+- tapOn: Python
+- hideKeyboard
+- tapOn: Create project
+- extendedWaitUntil:
+    visible: Open a file
+    timeout: 10000
+- tapOn:
+    text: Show files
+    index: 0
+- tapOn: main.py
+- extendedWaitUntil:
+    visible: .*def greet.*
+    timeout: 20000
