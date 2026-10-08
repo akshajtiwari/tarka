@@ -18,3 +18,6 @@ Short records of why things are the way they are. Newest at the bottom. Each dep
 |---|---|
 | expo, react, react-native, expo-status-bar | from the Expo template |
 | expo-router, expo-linking, expo-constants, react-native-screens, react-native-safe-area-context | file-based navigation (screens in `app/`) |
+| react-native-reanimated, react-native-worklets, react-native-gesture-handler | drawer swipe, cursor trackpad, smooth sheets (standard Expo animation stack) |
+| react-dom (pinned to the same version as react) | needed by DOM components; pinned because npm otherwise picks a newer react-dom that conflicts |
+| eslint, eslint-config-expo | linting with Expo's recommended rules |
