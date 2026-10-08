@@ -42,6 +42,7 @@ export function newFolder(projectId: string, folder: string, name: string): stri
 }
 
 export function renameEntry(projectId: string, path: string, isDir: boolean, newName: string) {
+  if (newName.trim() === path.split('/').pop()) return; // name unchanged: nothing to do
   const newPath = joinPath(parentOf(path), newName.trim());
   ensureFree(projectId, newPath);
   if (isDir) dirAt(projectId, path).rename(newName.trim());
