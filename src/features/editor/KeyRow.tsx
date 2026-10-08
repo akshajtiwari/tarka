@@ -17,50 +17,55 @@ type Props = {
   onRedo: () => void;
 };
 
-// Sits right above the keyboard while editing. Press and hold, then slide, to use it as a trackpad. Taps must never close the keyboard,
-// so the scroll view keeps taps (keyboardShouldPersistTaps) and nothing here takes focus.
+// Sits right above the keyboard while editing. Press and hold, then slide, to use it as a trackpad.
+// Taps must never close the keyboard, so the scroll view keeps taps (keyboardShouldPersistTaps)
+// and nothing here takes focus.
 export function KeyRow({ path, onInsert, onMove, onMoveLines, onUndo, onRedo }: Props) {
   const colors = useTheme();
   const trackpad = useTrackpad(onMove, onMoveLines);
 
-  const key = (label: string, onPress: () => void, a11y = label) => (
-    <Pressable
-      key={a11y}
-      accessibilityRole="button"
-      accessibilityLabel={a11y}
-      onPress={onPress}
-      style={({ pressed }) => [styles.key, pressed && { backgroundColor: colors.raised }]}
-    >
-      <Text style={[styles.keyText, { color: colors.text }]}>{label}</Text>
-    </Pressable>
-  );
+  function textKey(label: string, onPress: () => void, a11y = label) {
+    return (
+      <Pressable
+        key={a11y}
+        accessibilityRole="button"
+        accessibilityLabel={a11y}
+        onPress={onPress}
+        style={({ pressed }) => [styles.key, pressed && { backgroundColor: colors.raised }]}
+      >
+        <Text style={[styles.keyText, { color: colors.text }]}>{label}</Text>
+      </Pressable>
+    );
+  }
 
-  const iconKey = (
+  function iconKey(
     icon: React.ComponentProps<typeof Octicons>['name'],
     a11y: string,
     onPress: () => void,
-  ) => (
-    <Pressable
-      key={a11y}
-      accessibilityRole="button"
-      accessibilityLabel={a11y}
-      onPress={onPress}
-      style={({ pressed }) => [styles.key, pressed && { backgroundColor: colors.raised }]}
-    >
-      <Octicons name={icon} size={16} color={colors.muted} />
-    </Pressable>
-  );
+  ) {
+    return (
+      <Pressable
+        key={a11y}
+        accessibilityRole="button"
+        accessibilityLabel={a11y}
+        onPress={onPress}
+        style={({ pressed }) => [styles.key, pressed && { backgroundColor: colors.raised }]}
+      >
+        <Octicons name={icon} size={16} color={colors.muted} />
+      </Pressable>
+    );
+  }
 
   return (
     <GestureDetector gesture={trackpad}>
       <View style={[styles.row, { backgroundColor: colors.surface, borderColor: colors.line }]}>
-        {key('⇥', () => onInsert('  '), 'Tab')}
+        {textKey('⇥', () => onInsert('  '), 'Tab')}
         <ScrollView
           horizontal
           keyboardShouldPersistTaps="always"
           showsHorizontalScrollIndicator={false}
         >
-          {symbolsFor(path).map((s) => key(s, () => onInsert(s)))}
+          {symbolsFor(path).map((symbol) => textKey(symbol, () => onInsert(symbol)))}
         </ScrollView>
         {iconKey('arrow-left', 'Cursor left', () => onMove(-1))}
         {iconKey('arrow-right', 'Cursor right', () => onMove(1))}

@@ -3,6 +3,13 @@ import { EditorView } from '@codemirror/view';
 
 import { clampFont } from '../fontLimits';
 
+function fingerDistance(e: TouchEvent) {
+  return Math.hypot(
+    e.touches[0].clientX - e.touches[1].clientX,
+    e.touches[0].clientY - e.touches[1].clientY,
+  );
+}
+
 // Two-finger pinch changes the font size. `preview` runs while pinching, `done` once at the end.
 export function pinchZoom(
   getSize: () => number,
@@ -13,22 +20,17 @@ export function pinchZoom(
   let baseSize = 0;
   let size = 0;
 
-  const distance = (e: TouchEvent) =>
-    Math.hypot(
-      e.touches[0].clientX - e.touches[1].clientX,
-      e.touches[0].clientY - e.touches[1].clientY,
-    );
-
   return EditorView.domEventHandlers({
     touchstart(e) {
       if (e.touches.length !== 2) return false;
-      startDistance = distance(e);
-      baseSize = size = getSize();
+      startDistance = fingerDistance(e);
+      baseSize = getSize();
+      size = baseSize;
       return false;
     },
     touchmove(e) {
       if (e.touches.length !== 2 || startDistance === 0) return false;
-      const next = clampFont((baseSize * distance(e)) / startDistance);
+      const next = clampFont((baseSize * fingerDistance(e)) / startDistance);
       if (next !== size) {
         size = next;
         preview(next);

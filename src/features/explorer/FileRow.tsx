@@ -15,7 +15,8 @@ type Props = {
 
 export function FileRow({ row, expanded, active, onPress }: Props) {
   const colors = useTheme();
-  const icon = row.isDir ? (expanded ? 'file-directory-open-fill' : 'file-directory-fill') : 'file';
+  const folderIcon = expanded ? 'file-directory-open-fill' : 'file-directory-fill';
+  const icon = row.isDir ? folderIcon : 'file';
 
   return (
     <Pressable

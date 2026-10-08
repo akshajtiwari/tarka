@@ -67,7 +67,14 @@ export default function CodeScreen() {
     }),
     [send],
   );
-  const showFiles = () => setExplorerOpen(true);
+
+  function showFiles() {
+    setExplorerOpen(true);
+  }
+
+  function save() {
+    if (file) saveFile(id, file.path);
+  }
 
   return (
     <SafeAreaView edges={['top']} style={{ flex: 1, backgroundColor: colors.bg }}>
@@ -78,7 +85,7 @@ export default function CodeScreen() {
         onShowFiles={showFiles}
         onShowTabs={() => router.push({ pathname: '/open-files', params: { projectId: id } })}
         onShowMenu={() => router.push('/editor-menu')}
-        onSave={() => file && saveFile(id, file.path)}
+        onSave={save}
       />
       {file ? (
         <KeyboardAvoidingView behavior="padding" style={{ flex: 1 }}>

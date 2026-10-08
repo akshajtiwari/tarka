@@ -26,6 +26,11 @@ export default function OpenFilesSheet() {
     if (files.length === 1) router.back();
   }
 
+  function switchTo(file: OpenFile) {
+    setActive(file.path);
+    router.back();
+  }
+
   return (
     <View style={{ backgroundColor: colors.surface, paddingBottom: space.lg }}>
       <Text style={[styles.title, { color: colors.text }]}>Open files</Text>
@@ -35,10 +40,7 @@ export default function OpenFilesSheet() {
           icon={file.path === activePath ? 'dot-fill' : 'file'}
           title={file.path.split('/').pop()!}
           subtitle={isDirty(file) ? `${file.path}, not saved yet` : file.path}
-          onPress={() => {
-            setActive(file.path);
-            router.back();
-          }}
+          onPress={() => switchTo(file)}
           right={
             <View style={styles.right}>
               {isDirty(file) && <Octicons name="dot-fill" size={14} color={colors.accent} />}

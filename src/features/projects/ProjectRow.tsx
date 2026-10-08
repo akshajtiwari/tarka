@@ -1,5 +1,5 @@
-import { timeAgo } from '../../lib/timeAgo';
 import { ListRow } from '../../components/ListRow';
+import { timeAgo } from '../../lib/timeAgo';
 import type { Project } from './projectStore';
 
 type Props = {

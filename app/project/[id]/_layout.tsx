@@ -29,6 +29,12 @@ export default function WorkspaceLayout() {
 
   if (!project) return <Redirect href="/" />;
 
+  function openFile(path: string) {
+    const error = openFileFromDisk(id, path);
+    if (error) Alert.alert('Cannot open file', error);
+    else setExplorerOpen(false);
+  }
+
   return (
     <Drawer
       open={explorerOpen}
@@ -45,11 +51,7 @@ export default function WorkspaceLayout() {
               router.push({ pathname: '/quick-open', params: { projectId: project.id } })
             }
             onSearch={() => router.push({ pathname: '/search', params: { projectId: project.id } })}
-            onOpenFile={(path) => {
-              const error = openFileFromDisk(project.id, path);
-              if (error) Alert.alert('Cannot open file', error);
-              else setExplorerOpen(false);
-            }}
+            onOpenFile={openFile}
           />
         </View>
       )}

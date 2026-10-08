@@ -41,9 +41,9 @@ export const useEditorStore = create<EditorState>()((set) => ({
   closeFile: (path) =>
     set((state) => {
       const files = state.files.filter((f) => f.path !== path);
-      const activePath =
-        state.activePath === path ? (files.at(-1)?.path ?? null) : state.activePath;
-      return { files, activePath };
+      if (state.activePath !== path) return { files };
+      // The closed file was showing, so switch to the last tab (or none).
+      return { files, activePath: files.at(-1)?.path ?? null };
     }),
 
   reset: () => set({ files: [], activePath: null }),

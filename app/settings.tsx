@@ -1,5 +1,4 @@
 import { router } from 'expo-router';
-import { View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { EmptyState } from '../src/components/EmptyState';
@@ -16,12 +15,10 @@ export default function SettingsScreen() {
         title="Settings"
         left={<IconButton icon="arrow-left" label="Back" onPress={() => router.back()} />}
       />
-      <View>
-        <EmptyState
-          title="Nothing to set yet"
-          body="Theme, editor and git settings will live here."
-        />
-      </View>
+      <EmptyState
+        title="Nothing to set yet"
+        body="Theme, editor and git settings will live here."
+      />
     </SafeAreaView>
   );
 }

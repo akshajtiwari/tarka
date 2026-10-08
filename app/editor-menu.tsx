@@ -21,8 +21,10 @@ export default function EditorMenuSheet() {
     send(action);
   }
 
-  const check = (on: boolean) =>
-    on ? <Octicons name="check" size={18} color={colors.accent} /> : null;
+  function checkMark(on: boolean) {
+    if (!on) return null;
+    return <Octicons name="check" size={18} color={colors.accent} />;
+  }
 
   return (
     <View style={{ backgroundColor: colors.surface, paddingBottom: space.lg }}>
@@ -36,12 +38,12 @@ export default function EditorMenuSheet() {
         title="Go to line"
         onPress={() => runAndClose({ name: 'gotoLine' })}
       />
-      <ListRow icon="fold" title="Wrap long lines" right={check(wrap)} onPress={toggleWrap} />
+      <ListRow icon="fold" title="Wrap long lines" right={checkMark(wrap)} onPress={toggleWrap} />
       <ListRow
         icon="lock"
         title="Read lock"
         subtitle="Tapping the code won't open the keyboard"
-        right={check(readOnly)}
+        right={checkMark(readOnly)}
         onPress={toggleReadOnly}
       />
       <View style={styles.fontRow}>

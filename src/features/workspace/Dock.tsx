@@ -26,7 +26,7 @@ type Props = {
 export function Dock({ state, navigation }: Props) {
   const colors = useTheme();
   const insets = useSafeAreaInsets();
-  const keyboardOpen = useKeyboardState((state) => state.isVisible);
+  const keyboardOpen = useKeyboardState((s) => s.isVisible);
 
   // While typing, the key row takes this space.
   if (keyboardOpen) return null;
@@ -42,7 +42,7 @@ export function Dock({ state, navigation }: Props) {
         const item = items[route.name];
         if (!item) return null;
         const active = i === state.index;
-        const color = active ? colors.accent : colors.muted;
+        const iconColor = active ? colors.accent : colors.muted;
         return (
           <Pressable
             key={route.key}
@@ -52,7 +52,7 @@ export function Dock({ state, navigation }: Props) {
             onPress={() => navigation.navigate(route.name)}
             style={styles.item}
           >
-            <Octicons name={item.icon} size={20} color={color} />
+            <Octicons name={item.icon} size={20} color={iconColor} />
             <Text style={[styles.label, { color: active ? colors.text : colors.muted }]}>
               {item.label}
             </Text>

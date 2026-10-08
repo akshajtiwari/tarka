@@ -7,7 +7,7 @@ import { font, fontSize } from '../../theme/fonts';
 import { space } from '../../theme/spacing';
 import { useTheme } from '../../theme/useTheme';
 import { FileRow } from './FileRow';
-import { buildRows } from './treeRows';
+import { buildRows, type TreeRow } from './treeRows';
 
 type Props = {
   projectId: string;
@@ -18,8 +18,14 @@ type Props = {
   onSearch: () => void;
 };
 
-export function FileTree(props: Props) {
-  const { projectId, projectName, activeFile, onOpenFile, onQuickOpen, onSearch } = props;
+export function FileTree({
+  projectId,
+  projectName,
+  activeFile,
+  onOpenFile,
+  onQuickOpen,
+  onSearch,
+}: Props) {
   const colors = useTheme();
   const [expanded, setExpanded] = useState<Set<string>>(new Set());
 
@@ -33,6 +39,11 @@ export function FileTree(props: Props) {
     if (next.has(path)) next.delete(path);
     else next.add(path);
     setExpanded(next);
+  }
+
+  function pressRow(row: TreeRow) {
+    if (row.isDir) toggleFolder(row.path);
+    else onOpenFile(row.path);
   }
 
   return (
@@ -52,7 +63,7 @@ export function FileTree(props: Props) {
             row={item}
             expanded={expanded.has(item.path)}
             active={item.path === activeFile}
-            onPress={() => (item.isDir ? toggleFolder(item.path) : onOpenFile(item.path))}
+            onPress={() => pressRow(item)}
           />
         )}
       />

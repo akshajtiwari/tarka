@@ -7,18 +7,18 @@ export function fuzzyScore(query: string, text: string): number {
   const t = text.toLowerCase();
   const nameStart = t.lastIndexOf('/') + 1;
   let score = 0;
-  let ti = 0;
-  let previous = -2;
+  let searchFrom = 0;
+  let previous = -2; // so the first letter never counts as "next to" another
 
   for (const ch of q) {
-    const found = t.indexOf(ch, ti);
+    const found = t.indexOf(ch, searchFrom);
     if (found === -1) return -1; // a letter is missing: no match
     score += 1;
     if (found === previous + 1) score += 3; // letters next to each other
     if (found === 0 || '/.-_'.includes(t[found - 1])) score += 2; // start of a word
     if (found >= nameStart) score += 1; // inside the file name, not the folder
     previous = found;
-    ti = found + 1;
+    searchFrom = found + 1;
   }
   return score - text.length / 100; // prefer shorter paths when scores tie
 }
