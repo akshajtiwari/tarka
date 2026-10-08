@@ -3,4 +3,5 @@
 # If the push fails (offline, rejected), the commit is kept and we just warn.
 branch=$(git rev-parse --abbrev-ref HEAD)
 if [ "$branch" = "HEAD" ]; then exit 0; fi   # detached HEAD (e.g. mid-rebase): skip
-git push --quiet origin "$branch" 2>/dev/null || echo "post-commit: push failed, run 'git push' later" >&2
+push() { git push --quiet origin "$branch" 2>/dev/null; }
+push || { sleep 5; push; } || echo "post-commit: push failed, run 'git push' later" >&2
