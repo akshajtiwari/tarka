@@ -1,0 +1,10 @@
+# The app opens and shows the home screen.
+appId: com.akshajtiwari.tarka
+---
+- launchApp:
+    clearState: true
+- openLink: exp+tarka://expo-development-client/?url=http%3A%2F%2F10.0.2.2%3A8081&disableOnboarding=1
+- extendedWaitUntil:
+    visible: TARKA
+    timeout: 120000
+- takeScreenshot: .artifacts/screens/launch

@@ -23,3 +23,4 @@ Short records of why things are the way they are. Newest at the bottom. Each dep
 | eslint, eslint-config-expo | linting with Expo's recommended rules |
 | jest, jest-expo, @types/jest, @testing-library/react-native | unit and component tests (Expo's standard test setup) |
 | prettier | consistent formatting (`npm run format`) |
+| expo-dev-client | our own dev build of the app (needed for native modules and Maestro tests) |

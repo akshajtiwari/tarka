@@ -3,8 +3,13 @@
   "version": "1.0.0",
   "main": "expo-router/entry",
   "dependencies": {
+    "@expo-google-fonts/atkinson-hyperlegible-next": "^0.4.1",
+    "@expo-google-fonts/jetbrains-mono": "^0.4.1",
     "expo": "~57.0.27",
+    "expo-asset": "~57.0.19",
     "expo-constants": "~57.0.21",
+    "expo-dev-client": "~57.0.19",
+    "expo-font": "~57.0.4",
     "expo-linking": "~57.0.12",
     "expo-router": "~57.0.25",
     "expo-status-bar": "~57.0.1",
@@ -36,7 +41,8 @@
     "format": "prettier --write .",
     "test": "jest",
     "check": "npm run typecheck && npm run lint && npm test -- --ci",
-    "prepare": "git config core.hooksPath .githooks"
+    "prepare": "git config core.hooksPath .githooks",
+    "e2e": "scripts/e2e.sh"
   },
   "private": true,
   "jest": {
