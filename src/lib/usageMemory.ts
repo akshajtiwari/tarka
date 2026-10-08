@@ -14,9 +14,22 @@ export function remember(memory: UsageMemory, item: string, now = Date.now()): U
 }
 
 // Items that start with `prefix`, best first. The prefix itself is never suggested.
-export function suggest(memory: UsageMemory, prefix: string, limit = 5, now = Date.now()): string[] {
+export function suggest(
+  memory: UsageMemory,
+  prefix: string,
+  limit = 5,
+  now = Date.now(),
+): string[] {
   return Object.entries(memory)
     .filter(([item]) => item.startsWith(prefix) && item !== prefix)
+    .sort(([, a], [, b]) => score(b, now) - score(a, now))
+    .slice(0, limit)
+    .map(([item]) => item);
+}
+
+// The best `limit` items overall (used to feed the editor's suggestions).
+export function topItems(memory: UsageMemory, limit: number, now = Date.now()): string[] {
+  return Object.entries(memory)
     .sort(([, a], [, b]) => score(b, now) - score(a, now))
     .slice(0, limit)
     .map(([item]) => item);
