@@ -31,3 +31,23 @@ test('closing the active file switches to the last open one', () => {
   closeFile('a.js');
   expect(useEditorStore.getState().activePath).toBeNull();
 });
+
+test('renaming a folder moves the tabs inside it', () => {
+  const { openFile, renamePath } = useEditorStore.getState();
+  openFile('src/a.js', '');
+  openFile('srcx.js', '');
+  renamePath('src', 'lib');
+  const state = useEditorStore.getState();
+  expect(state.files.map((f) => f.path)).toEqual(['lib/a.js', 'srcx.js']);
+  expect(state.activePath).toBe('srcx.js');
+});
+
+test('deleting a folder closes the tabs inside it', () => {
+  const { openFile, closePathsUnder } = useEditorStore.getState();
+  openFile('keep.js', '');
+  openFile('src/a.js', '');
+  closePathsUnder('src');
+  const state = useEditorStore.getState();
+  expect(state.files.map((f) => f.path)).toEqual(['keep.js']);
+  expect(state.activePath).toBe('keep.js');
+});

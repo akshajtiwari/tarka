@@ -12,6 +12,8 @@ type EditorState = {
   updateText: (path: string, text: string) => void;
   markSaved: (path: string, text: string) => void;
   closeFile: (path: string) => void;
+  renamePath: (oldPath: string, newPath: string) => void;
+  closePathsUnder: (path: string) => void;
   reset: () => void;
 };
 
@@ -46,8 +48,32 @@ export const useEditorStore = create<EditorState>()((set) => ({
       return { files, activePath: files.at(-1)?.path ?? null };
     }),
 
+  // A file or folder was renamed: open tabs inside it follow along.
+  renamePath: (oldPath, newPath) =>
+    set((state) => {
+      const rename = (p: string) => (isUnder(p, oldPath) ? newPath + p.slice(oldPath.length) : p);
+      return {
+        files: state.files.map((f) => ({ ...f, path: rename(f.path) })),
+        activePath: state.activePath && rename(state.activePath),
+      };
+    }),
+
+  // A file or folder was deleted: close its tabs.
+  closePathsUnder: (path) =>
+    set((state) => {
+      const files = state.files.filter((f) => !isUnder(f.path, path));
+      const activeGone = state.activePath !== null && isUnder(state.activePath, path);
+      if (!activeGone) return { files };
+      return { files, activePath: files.at(-1)?.path ?? null };
+    }),
+
   reset: () => set({ files: [], activePath: null }),
 }));
+
+// True for the path itself and anything inside it ("src" contains "src/a.js", not "srcx.js").
+function isUnder(path: string, folderOrFile: string): boolean {
+  return path === folderOrFile || path.startsWith(folderOrFile + '/');
+}
 
 export function isDirty(file: OpenFile): boolean {
   return file.text !== file.savedText;
