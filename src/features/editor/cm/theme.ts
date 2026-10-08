@@ -37,7 +37,11 @@ export function editorTheme(colors: Colors, fontSize: number, dark: boolean): Ex
       '.cm-selectionMatch': { backgroundColor: colors.raised },
       '.cm-searchMatch': { backgroundColor: colors.raised, outline: `1px solid ${colors.accent}` },
       // Find/replace and go-to-line panels, sized for fingers.
-      '.cm-panels': { backgroundColor: colors.surface, color: colors.text, borderColor: colors.line },
+      '.cm-panels': {
+        backgroundColor: colors.surface,
+        color: colors.text,
+        borderColor: colors.line,
+      },
       '.cm-panel': { padding: '8px', fontFamily: 'sans-serif', fontSize: '15px' },
       '.cm-textfield': {
         minHeight: '36px',

@@ -37,9 +37,10 @@ export default function CodeScreen() {
   const [suggestions, setSuggestions] = useState<string[]>([]);
   useAutosave(id);
 
+  const locked = !!file?.locked;
   const look = useMemo(
-    () => ({ colors, dark, fontSize, wrap, readOnly }),
-    [colors, dark, fontSize, wrap, readOnly],
+    () => ({ colors, dark, fontSize, wrap, readOnly: readOnly || locked }),
+    [colors, dark, fontSize, wrap, readOnly, locked],
   );
   const memoryWords = useMemo(() => topItems(memory, 200), [memory]);
   // The text the editor starts with; only changes when another file is opened.

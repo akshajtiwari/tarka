@@ -1,10 +1,18 @@
 import { fileAt } from '../../lib/projectFs';
 import { useEditorStore } from './editorStore';
+import { openModeFor } from './fileSizeGuard';
 
-// Reads a file from disk and opens it in a tab.
-export function openFileFromDisk(projectId: string, path: string) {
-  const text = fileAt(projectId, path).textSync();
-  useEditorStore.getState().openFile(path, text);
+// Reads a file from disk and opens it in a tab. Returns an error message if it could not be opened.
+export function openFileFromDisk(projectId: string, path: string): string | null {
+  try {
+    const file = fileAt(projectId, path);
+    const mode = openModeFor(file.size ?? 0);
+    if (mode === 'refuse') return `${path} is larger than 10 MB, too big to open on a phone.`;
+    useEditorStore.getState().openFile(path, file.textSync(), mode === 'read');
+    return null;
+  } catch (e) {
+    return `Could not open ${path}: ${String(e)}`;
+  }
 }
 
 // Writes the editor's text to disk. Returns false if the write failed.

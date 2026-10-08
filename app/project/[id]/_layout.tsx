@@ -1,6 +1,6 @@
 import { Redirect, Tabs, useLocalSearchParams } from 'expo-router';
 import { useEffect } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { Alert, StyleSheet, View } from 'react-native';
 import { Drawer } from 'react-native-drawer-layout';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -42,8 +42,9 @@ export default function WorkspaceLayout() {
             projectName={project.name}
             activeFile={activePath}
             onOpenFile={(path) => {
-              openFileFromDisk(project.id, path);
-              setExplorerOpen(false);
+              const error = openFileFromDisk(project.id, path);
+              if (error) Alert.alert('Cannot open file', error);
+              else setExplorerOpen(false);
             }}
           />
         </View>

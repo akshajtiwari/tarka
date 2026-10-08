@@ -10,7 +10,7 @@ test('opening a file makes it active, opening it again keeps unsaved edits', () 
 
   const { files, activePath } = useEditorStore.getState();
   expect(activePath).toBe('main.js');
-  expect(files).toEqual([{ path: 'main.js', text: 'ab', savedText: 'a' }]);
+  expect(files).toEqual([{ path: 'main.js', text: 'ab', savedText: 'a', locked: false }]);
   expect(isDirty(files[0])).toBe(true);
 });
 
