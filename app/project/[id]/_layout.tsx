@@ -1,6 +1,6 @@
 import { Redirect, router, Tabs, useLocalSearchParams } from 'expo-router';
 import { useEffect } from 'react';
-import { Alert, StyleSheet, View } from 'react-native';
+import { Alert, BackHandler, StyleSheet, View } from 'react-native';
 import { Drawer } from 'react-native-drawer-layout';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -26,6 +26,16 @@ export default function WorkspaceLayout() {
     setExplorerOpen(false);
     useEditorStore.getState().reset();
   }, [id, setExplorerOpen]);
+
+  // Android back button closes the explorer first, before leaving the workspace.
+  useEffect(() => {
+    if (!explorerOpen) return;
+    const sub = BackHandler.addEventListener('hardwareBackPress', () => {
+      setExplorerOpen(false);
+      return true;
+    });
+    return () => sub.remove();
+  }, [explorerOpen, setExplorerOpen]);
 
   if (!project) return <Redirect href="/" />;
 
