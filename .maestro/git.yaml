@@ -1,0 +1,55 @@
+# Git: set identity, start a repo, stage, commit, see history, edit a file, read its diff, make a branch.
+appId: com.akshajtiwari.tarka
+---
+- runFlow: common/open-app.yaml
+# Identity is needed to commit.
+- tapOn: Settings
+- tapOn: Your name
+- inputText: Test User
+- hideKeyboard # Maestro mis-aims taps while the keyboard is up
+- tapOn: Your email
+- inputText: test@example.com
+- hideKeyboard
+- tapOn: Save git settings
+- tapOn: OK
+- back
+- runFlow: common/new-python-project.yaml
+- tapOn: Git
+- tapOn: Start a git repository
+- assertVisible: untracked main.py
+- takeScreenshot: git-new-repo
+- tapOn: Stage all changes
+- assertVisible: Staged \(2\)
+- tapOn: Commit message
+- inputText: first commit
+- hideKeyboard
+- tapOn: Commit 2 files
+- assertVisible: Staged \(0\)
+- assertVisible: Changes \(0\)
+- tapOn: History
+- assertVisible: first commit
+- takeScreenshot: git-history
+- back
+# Edit main.py, then its diff shows the new line.
+- tapOn: Code
+- tapOn: .*print.*
+- inputText: "z = 3"
+- hideKeyboard
+- extendedWaitUntil: # autosave
+    notVisible: Save
+    timeout: 8000
+- tapOn: Git
+- assertVisible: modified main.py
+- tapOn: modified main.py
+- extendedWaitUntil:
+    visible: .*z = 3.*
+    timeout: 10000
+- takeScreenshot: git-diff
+- back
+# Make a branch.
+- tapOn: Tap to switch or create a branch
+- tapOn: New branch
+- inputText: feature
+- hideKeyboard
+- tapOn: Create and switch
+- assertVisible: feature
