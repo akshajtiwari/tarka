@@ -43,13 +43,14 @@ export default function HomeScreen() {
         ListEmptyComponent={
           <EmptyState
             title="No projects yet"
-            body="Create one from a template. You can clone a git repository once Git is set up."
+            body="Create one from a template, or clone a git repository."
           />
         }
       />
 
       <View style={[styles.bottom, { borderColor: colors.line }]}>
         <Button label="New project" variant="primary" onPress={() => router.push('/new-project')} />
+        <Button label="Clone repository" onPress={() => router.push('/clone')} />
       </View>
     </SafeAreaView>
   );
@@ -65,5 +66,5 @@ const styles = StyleSheet.create({
     paddingVertical: space.md,
   },
   title: { flex: 1, fontFamily: font.uiBold, fontSize: fontSize.display },
-  bottom: { padding: space.lg, borderTopWidth: StyleSheet.hairlineWidth },
+  bottom: { padding: space.lg, gap: space.md, borderTopWidth: StyleSheet.hairlineWidth },
 });
