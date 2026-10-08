@@ -78,7 +78,12 @@
       "./jest.setup.js"
     ],
     "moduleNameMapper": {
-      "^isomorphic-git$": "<rootDir>/node_modules/isomorphic-git/index.cjs"
-    }
+      "^isomorphic-git$": "<rootDir>/node_modules/isomorphic-git/index.cjs",
+      "^isomorphic-git/http/web$": "<rootDir>/node_modules/isomorphic-git/http/node/index.cjs"
+    },
+    "testPathIgnorePatterns": [
+      "/node_modules/",
+      "/__tests__/helpers/"
+    ]
   }
 }

@@ -1,4 +1,5 @@
 import * as git from 'isomorphic-git';
+import http from 'isomorphic-git/http/web';
 
 import { stagedChanges, unstagedChanges, type Change, type StatusRow } from './changes';
 
@@ -83,4 +84,23 @@ export async function committedText(fs: Fs, dir: string, path: string): Promise<
   } catch {
     return '';
   }
+}
+
+// Remote work (clone, pull, push) over HTTPS. The token is sent as the password, which works
+// for GitHub and GitLab personal access tokens. No token = public repos only.
+function auth(token?: string | null) {
+  return token ? () => ({ username: 'x-access-token', password: token }) : undefined;
+}
+
+// Shallow, single-branch clone: much faster on a phone, and enough to edit and push.
+export function clone(fs: Fs, dir: string, url: string, token?: string | null) {
+  return git.clone({ fs, http, dir, url, singleBranch: true, depth: 1, onAuth: auth(token) });
+}
+
+export function pull(fs: Fs, dir: string, author: Author, token?: string | null) {
+  return git.pull({ fs, http, dir, author, singleBranch: true, onAuth: auth(token) });
+}
+
+export function push(fs: Fs, dir: string, token?: string | null) {
+  return git.push({ fs, http, dir, onAuth: auth(token) });
 }
