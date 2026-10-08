@@ -13,7 +13,7 @@ appId: com.akshajtiwari.tarka
 - tapOn:
     text: Show files
     index: 0
-- tapOn: main.py
+- tapOn: File main.py
 - extendedWaitUntil:
     visible: .*def greet.*
     timeout: 20000

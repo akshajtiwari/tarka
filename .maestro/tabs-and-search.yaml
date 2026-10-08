@@ -6,7 +6,7 @@ appId: com.akshajtiwari.tarka
 - tapOn:
     text: Show files
     index: 0
-- tapOn: README.md
+- tapOn: File README.md
 - tapOn: Open files
 - takeScreenshot: open-files-sheet
 - tapOn: main.py

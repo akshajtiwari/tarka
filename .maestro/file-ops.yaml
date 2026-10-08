@@ -1,0 +1,57 @@
+# Explorer file actions: new folder, new file inside it, duplicate, rename, delete.
+# Then the new empty file is used to check that suggestion chips appear and insert text.
+appId: com.akshajtiwari.tarka
+---
+- runFlow: common/open-app.yaml
+- runFlow: common/new-python-project.yaml
+- tapOn:
+    text: Show files
+    index: 0
+- tapOn: New file or folder
+- tapOn: New folder
+- inputText: lib
+- hideKeyboard # Maestro mis-aims taps in a sheet the keyboard has pushed up
+- tapOn: Done
+- assertVisible: Folder lib
+- longPressOn: Folder lib
+- tapOn: New file
+- inputText: util.py
+- hideKeyboard # Maestro mis-aims taps in a sheet the keyboard has pushed up
+- tapOn: Done
+- tapOn: Folder lib # expand it
+- assertVisible: File lib/util.py
+- longPressOn: File main.py
+- tapOn: Duplicate
+- assertVisible: File main copy.py
+- longPressOn: File main copy.py
+- tapOn: Rename
+- eraseText
+- inputText: other.py
+- hideKeyboard # Maestro mis-aims taps in a sheet the keyboard has pushed up
+- tapOn: Done
+- assertVisible: File other.py
+- takeScreenshot: explorer-file-ops
+- longPressOn: File other.py
+- tapOn: Delete
+- tapOn: Delete # confirm
+- assertNotVisible: File other.py
+# Suggestions: in the empty util.py, type "pri" and pick the "print" chip.
+- tapOn: File lib/util.py
+- tapOn:
+    point: 50%,30%
+- inputText: pri
+- extendedWaitUntil:
+    visible: print
+    timeout: 5000
+- takeScreenshot: suggestion-chips
+- tapOn: print
+- tapOn:
+    text: Show files
+    index: 0
+- tapOn: File main.py
+- tapOn:
+    text: Open files
+- tapOn: util.py
+- extendedWaitUntil: # the chip inserted the word (checked after reopening the tab)
+    visible: '(?s).*print.*'
+    timeout: 10000
