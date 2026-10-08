@@ -4,4 +4,5 @@ export type EditorCommand =
   | { id: number; name: 'insert'; text: string }
   | { id: number; name: 'move'; by: number }
   | { id: number; name: 'undo' }
-  | { id: number; name: 'redo' };
+  | { id: number; name: 'redo' }
+  | { id: number; name: 'accept'; index: number }; // tap on a suggestion chip

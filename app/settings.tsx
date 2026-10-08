@@ -17,7 +17,10 @@ export default function SettingsScreen() {
         left={<IconButton icon="arrow-left" label="Back" onPress={() => router.back()} />}
       />
       <View>
-        <EmptyState title="Nothing to set yet" body="Theme, editor and git settings will live here." />
+        <EmptyState
+          title="Nothing to set yet"
+          body="Theme, editor and git settings will live here."
+        />
       </View>
     </SafeAreaView>
   );

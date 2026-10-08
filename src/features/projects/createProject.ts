@@ -8,7 +8,10 @@ import { templates } from './templates';
 export function createProject(name: string, templateId: string): string {
   const template = templates.find((t) => t.id === templateId) ?? templates[0];
   const { projects, addProject } = useProjectStore.getState();
-  const id = makeProjectId(name, projects.map((p) => p.id));
+  const id = makeProjectId(
+    name,
+    projects.map((p) => p.id),
+  );
 
   createProjectFolder(id, template.files);
 

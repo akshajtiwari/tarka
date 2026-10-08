@@ -36,6 +36,8 @@ export function editorTheme(colors: Colors, fontSize: number, dark: boolean): Ex
       },
       '.cm-selectionMatch': { backgroundColor: colors.raised },
       '.cm-searchMatch': { backgroundColor: colors.raised, outline: `1px solid ${colors.accent}` },
+      // Suggestions are shown as native chips instead (see SuggestionStrip).
+      '.cm-tooltip-autocomplete': { display: 'none' },
     },
     { dark },
   );

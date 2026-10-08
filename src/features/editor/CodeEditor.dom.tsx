@@ -11,6 +11,7 @@ import { useEffect, useRef } from 'react';
 
 import type { Colors } from '../../theme/colors';
 import { buildExtensions } from './cm/setup';
+import { acceptSuggestion } from './cm/suggestions';
 import type { EditorCommand } from './editorCommand';
 
 type Props = {
@@ -20,7 +21,10 @@ type Props = {
   dark: boolean;
   fontSize: number;
   command: EditorCommand | null; // the latest key-row / menu action
+  memoryWords: string[]; // words you used before, offered as suggestions
   onChange: (path: string, text: string) => Promise<void>;
+  onSuggestions: (labels: string[]) => Promise<void>;
+  onAccepted: (label: string) => Promise<void>;
   dom?: DOMProps;
 };
 
@@ -31,10 +35,17 @@ export default function CodeEditor({
   dark,
   fontSize,
   command,
+  memoryWords,
   onChange,
+  onSuggestions,
+  onAccepted,
 }: Props) {
   const host = useRef<HTMLDivElement>(null);
   const view = useRef<EditorView | null>(null);
+  const memory = useRef(memoryWords);
+  useEffect(() => {
+    memory.current = memoryWords;
+  }, [memoryWords]);
 
   useEffect(() => {
     // Send the text back at most every 300ms while typing, and always before closing.
@@ -48,7 +59,14 @@ export default function CodeEditor({
     const state = EditorState.create({
       doc: text,
       extensions: [
-        buildExtensions(path, colors, fontSize, dark),
+        buildExtensions({
+          path,
+          colors,
+          fontSize,
+          dark,
+          getMemoryWords: () => memory.current,
+          onSuggestions,
+        }),
         EditorView.updateListener.of((update) => {
           if (!update.docChanged) return;
           clearTimeout(timer);
@@ -77,7 +95,14 @@ export default function CodeEditor({
   // Each command has a new id, so the same key pressed twice still runs twice.
   useEffect(() => {
     const v = view.current;
-    if (v && command) runCommand(v, command);
+    if (!v || !command) return;
+    if (command.name === 'accept') {
+      const label = acceptSuggestion(v, command.index);
+      if (label) onAccepted(label);
+      return;
+    }
+    runCommand(v, command);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [command]);
 
   return <div ref={host} style={{ height: '100vh', backgroundColor: colors.bg }} />;
@@ -101,4 +126,5 @@ function runCommand(v: EditorView, command: EditorCommand) {
       redo(v);
       break;
   }
+  v.focus();
 }

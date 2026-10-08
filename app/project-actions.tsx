@@ -26,18 +26,22 @@ export default function ProjectActionsSheet() {
   }
 
   function confirmDelete() {
-    Alert.alert(`Delete ${project!.name}?`, 'This removes the project and all its files from the phone.', [
-      { text: 'Cancel', style: 'cancel' },
-      {
-        text: 'Delete',
-        style: 'destructive',
-        onPress: () => {
-          deleteProjectFolder(project!.id);
-          removeProject(project!.id);
-          router.back();
+    Alert.alert(
+      `Delete ${project!.name}?`,
+      'This removes the project and all its files from the phone.',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Delete',
+          style: 'destructive',
+          onPress: () => {
+            deleteProjectFolder(project!.id);
+            removeProject(project!.id);
+            router.back();
+          },
         },
-      },
-    ]);
+      ],
+    );
   }
 
   return (

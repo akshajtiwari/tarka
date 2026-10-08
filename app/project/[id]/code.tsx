@@ -13,8 +13,11 @@ import type { EditorCommand } from '../../../src/features/editor/editorCommand';
 import { isDirty, useEditorStore } from '../../../src/features/editor/editorStore';
 import { saveFile } from '../../../src/features/editor/fileActions';
 import { KeyRow } from '../../../src/features/editor/KeyRow';
+import { useMemoryStore } from '../../../src/features/editor/memoryStore';
+import { SuggestionStrip } from '../../../src/features/editor/SuggestionStrip';
 import { useAutosave } from '../../../src/features/editor/useAutosave';
 import { useWorkspaceStore } from '../../../src/features/workspace/workspaceStore';
+import { topItems } from '../../../src/lib/usageMemory';
 import { useTheme } from '../../../src/theme/useTheme';
 
 // Only re-render the WebView when its props really change (not on every keystroke).
@@ -28,6 +31,9 @@ export default function CodeScreen() {
   const file = useEditorStore((s) => s.files.find((f) => f.path === s.activePath));
   const keyboardOpen = useKeyboardState((s) => s.isVisible);
   const [command, setCommand] = useState<EditorCommand | null>(null);
+  const [suggestions, setSuggestions] = useState<string[]>([]);
+  const memory = useMemoryStore((s) => s.words);
+  const memoryWords = useMemo(() => topItems(memory, 200), [memory]);
   const nextId = useRef(1);
   useAutosave(id);
 
@@ -35,6 +41,10 @@ export default function CodeScreen() {
   const startText = useMemo(() => file?.text ?? '', [file?.path]); // eslint-disable-line react-hooks/exhaustive-deps
   const onChange = useCallback(async (path: string, text: string) => {
     useEditorStore.getState().updateText(path, text);
+  }, []);
+  const onSuggestions = useCallback(async (labels: string[]) => setSuggestions(labels), []);
+  const onAccepted = useCallback(async (label: string) => {
+    useMemoryStore.getState().useWord(label);
   }, []);
   const domProps = useMemo(() => ({ style: { flex: 1 } }), []);
 
@@ -60,9 +70,18 @@ export default function CodeScreen() {
             dark={dark}
             fontSize={14}
             command={command}
+            memoryWords={memoryWords}
             onChange={onChange}
+            onSuggestions={onSuggestions}
+            onAccepted={onAccepted}
             dom={domProps}
           />
+          {keyboardOpen && (
+            <SuggestionStrip
+              labels={suggestions}
+              onPick={(index) => run({ id: newId(), name: 'accept', index })}
+            />
+          )}
           {keyboardOpen && (
             <KeyRow
               onInsert={(text) => run({ id: newId(), name: 'insert', text })}

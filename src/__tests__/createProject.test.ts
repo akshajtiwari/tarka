@@ -14,7 +14,10 @@ test('writes the template files and lists the new project', () => {
     'hello-py',
     expect.objectContaining({ 'main.py': expect.any(String) }),
   );
-  expect(useProjectStore.getState().projects[0]).toMatchObject({ id: 'hello-py', name: 'Hello Py' });
+  expect(useProjectStore.getState().projects[0]).toMatchObject({
+    id: 'hello-py',
+    name: 'Hello Py',
+  });
 });
 
 test('gives a second project with the same name its own folder', () => {

@@ -1,4 +1,4 @@
-import { autocompletion, closeBrackets, closeBracketsKeymap } from '@codemirror/autocomplete';
+import { closeBrackets, closeBracketsKeymap } from '@codemirror/autocomplete';
 import { defaultKeymap, history, historyKeymap } from '@codemirror/commands';
 import { bracketMatching, indentOnInput, indentUnit } from '@codemirror/language';
 import { highlightSelectionMatches, search, searchKeymap } from '@codemirror/search';
@@ -13,17 +13,22 @@ import {
 
 import type { Colors } from '../../../theme/colors';
 import { languageFor } from './languages';
+import { suggestionExtensions } from './suggestions';
 import { editorTheme } from './theme';
 
 // Like CodeMirror's basicSetup, but tuned for phones:
 // no fold gutter, no custom-drawn selection (the phone's own selection handles work better),
 // and soft wrap on so there is no sideways scrolling.
-export function buildExtensions(
-  path: string,
-  colors: Colors,
-  fontSize: number,
-  dark: boolean,
-): Extension {
+type Options = {
+  path: string;
+  colors: Colors;
+  fontSize: number;
+  dark: boolean;
+  getMemoryWords: () => string[];
+  onSuggestions: (labels: string[]) => void;
+};
+
+export function buildExtensions(o: Options): Extension {
   return [
     lineNumbers(),
     highlightActiveLine(),
@@ -33,12 +38,12 @@ export function buildExtensions(
     indentOnInput(),
     bracketMatching(),
     closeBrackets(),
-    autocompletion(),
+    suggestionExtensions(o.getMemoryWords, o.onSuggestions),
     search({ top: true }),
     highlightSelectionMatches(),
     EditorView.lineWrapping,
     keymap.of([...closeBracketsKeymap, ...defaultKeymap, ...historyKeymap, ...searchKeymap]),
-    languageFor(path),
-    editorTheme(colors, fontSize, dark),
+    languageFor(o.path),
+    editorTheme(o.colors, o.fontSize, o.dark),
   ];
 }

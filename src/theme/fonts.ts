@@ -2,7 +2,10 @@ import {
   AtkinsonHyperlegibleNext_400Regular,
   AtkinsonHyperlegibleNext_600SemiBold,
 } from '@expo-google-fonts/atkinson-hyperlegible-next';
-import { JetBrainsMono_400Regular, JetBrainsMono_600SemiBold } from '@expo-google-fonts/jetbrains-mono';
+import {
+  JetBrainsMono_400Regular,
+  JetBrainsMono_600SemiBold,
+} from '@expo-google-fonts/jetbrains-mono';
 
 // Passed to useFonts() in app/_layout.tsx. The keys become the fontFamily names below.
 export const fontFiles = {
