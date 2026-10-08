@@ -30,6 +30,7 @@ export default function RootLayout() {
         <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: colors.bg } }}>
           <Stack.Screen name="new-project" options={sheet} />
           <Stack.Screen name="project-actions" options={sheet} />
+          <Stack.Screen name="open-files" options={sheet} />
         </Stack>
       </KeyboardProvider>
     </GestureHandlerRootView>
