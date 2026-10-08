@@ -1,0 +1,86 @@
+import * as git from 'isomorphic-git';
+
+import { stagedChanges, unstagedChanges, type Change, type StatusRow } from './changes';
+
+// All git work goes through these small functions. They take `fs` as a parameter so the app
+// passes its expo-file-system adapter and the tests pass Node's real `fs`.
+// `dir` is the repo folder, e.g. "/projects/demo".
+
+type Fs = Parameters<typeof git.init>[0]['fs'];
+export type Author = { name: string; email: string };
+
+export async function isRepo(fs: Fs, dir: string): Promise<boolean> {
+  try {
+    await git.resolveRef({ fs, dir, ref: 'HEAD' });
+    return true;
+  } catch {
+    // A brand-new repo has no commit yet, so HEAD does not resolve. Look for .git instead.
+    return git.findRoot({ fs, filepath: dir }).then(
+      (root) => root === dir,
+      () => false,
+    );
+  }
+}
+
+export function initRepo(fs: Fs, dir: string) {
+  return git.init({ fs, dir, defaultBranch: 'main' });
+}
+
+export async function getChanges(
+  fs: Fs,
+  dir: string,
+): Promise<{ staged: Change[]; unstaged: Change[] }> {
+  const rows = (await git.statusMatrix({ fs, dir })) as StatusRow[];
+  return { staged: stagedChanges(rows), unstaged: unstagedChanges(rows) };
+}
+
+// Staging a deleted file means removing it from the index.
+export function stage(fs: Fs, dir: string, change: Change) {
+  if (change.kind === 'deleted') return git.remove({ fs, dir, filepath: change.path });
+  return git.add({ fs, dir, filepath: change.path });
+}
+
+export function unstage(fs: Fs, dir: string, path: string) {
+  return git.resetIndex({ fs, dir, filepath: path });
+}
+
+export function commit(fs: Fs, dir: string, message: string, author: Author) {
+  return git.commit({ fs, dir, message, author });
+}
+
+export async function history(fs: Fs, dir: string, depth = 50) {
+  const commits = await git.log({ fs, dir, depth });
+  return commits.map((c) => ({
+    oid: c.oid,
+    message: c.commit.message.trim(),
+    author: c.commit.author.name,
+    time: c.commit.author.timestamp * 1000,
+  }));
+}
+
+export function currentBranch(fs: Fs, dir: string) {
+  return git.currentBranch({ fs, dir });
+}
+
+export function listBranches(fs: Fs, dir: string) {
+  return git.listBranches({ fs, dir });
+}
+
+export function createBranch(fs: Fs, dir: string, name: string) {
+  return git.branch({ fs, dir, ref: name, checkout: true });
+}
+
+export function switchBranch(fs: Fs, dir: string, name: string) {
+  return git.checkout({ fs, dir, ref: name });
+}
+
+// The file as it was in the last commit, or "" if it is new.
+export async function committedText(fs: Fs, dir: string, path: string): Promise<string> {
+  try {
+    const oid = await git.resolveRef({ fs, dir, ref: 'HEAD' });
+    const { blob } = await git.readBlob({ fs, dir, oid, filepath: path });
+    return new TextDecoder().decode(blob);
+  } catch {
+    return '';
+  }
+}

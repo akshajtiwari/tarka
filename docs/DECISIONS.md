@@ -33,3 +33,4 @@ Short records of why things are the way they are. Newest at the bottom. Each dep
 | react-native-web, @expo/metro-runtime | required by Expo DOM components (`'use dom'` files) |
 | react-native-keyboard-controller | keyboard state + keyboard-aware layout so the key row sits right above the keyboard |
 | expo-haptics | light ticks for the key-row trackpad |
+| isomorphic-git, buffer | Git in pure JavaScript (no native code); buffer is the Node Buffer it expects |
