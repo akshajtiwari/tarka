@@ -1,0 +1,46 @@
+# Clone from the laptop's test git server, commit a new file, push it back.
+# scripts/e2e.sh starts the server at http://10.0.2.2:8090/demo.git.
+appId: com.akshajtiwari.tarka
+---
+- runFlow: common/open-app.yaml
+- tapOn: Settings
+- tapOn: Your name
+- inputText: Phone User
+- hideKeyboard
+- tapOn: Your email
+- inputText: phone@example.com
+- hideKeyboard
+- tapOn: Save git settings
+- tapOn: OK
+- back
+- tapOn: Clone repository
+- tapOn: Repository URL
+- inputText: http://10.0.2.2:8090/demo.git
+- hideKeyboard
+- tapOn: Clone
+- extendedWaitUntil:
+    visible: Open a file
+    timeout: 30000
+- tapOn:
+    text: Show files
+    index: 0
+- assertVisible: File a.txt
+- tapOn: New file or folder
+- tapOn: New file
+- inputText: from-phone.txt
+- hideKeyboard
+- tapOn: Done
+- back # close the explorer
+- tapOn: Git
+- assertVisible: untracked from-phone.txt
+- tapOn: Stage from-phone.txt
+- tapOn: Commit message
+- inputText: added from the phone
+- hideKeyboard
+- tapOn: Commit 1 file
+- tapOn: Push
+- extendedWaitUntil:
+    visible: Your commits were pushed.
+    timeout: 30000
+- takeScreenshot: git-pushed
+- tapOn: OK

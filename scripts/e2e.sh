@@ -31,6 +31,17 @@ if ! curl -s localhost:8081/status | grep -q running; then
   until curl -s localhost:8081/status | grep -q running; do sleep 2; done
 fi
 
+# A throwaway git server for the clone/push flow: http://10.0.2.2:8090/demo.git from the emulator.
+remote=.artifacts/git-remote
+rm -rf "$remote" && mkdir -p "$remote"
+git init -q -b main "$remote/seed"
+echo hello > "$remote/seed/a.txt"
+git -C "$remote/seed" add . && git -C "$remote/seed" -c user.name=t -c user.email=t@t commit -qm "first commit"
+git clone -q --bare "$remote/seed" "$remote/demo.git" && git -C "$remote/demo.git" config http.receivepack true
+node scripts/git-server.cjs "$PWD/$remote" 8090 > .artifacts/git-server.log 2>&1 &
+server_pid=$!
+trap 'kill $server_pid 2> /dev/null || true' EXIT
+
 run_dir=".artifacts/maestro/$(date +%Y%m%d-%H%M%S)"
 mkdir -p .artifacts/screens
 flows=("$@")
