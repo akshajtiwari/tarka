@@ -1,4 +1,4 @@
-import { remember, suggest, type UsageMemory } from '../lib/usageMemory';
+import { remember, topItems, type UsageMemory } from '../lib/usageMemory';
 
 const now = 10 * 24 * 60 * 60 * 1000;
 const day = 24 * 60 * 60 * 1000;
@@ -10,13 +10,12 @@ test('counts every use', () => {
   expect(memory.console).toEqual({ count: 2, lastUsed: now });
 });
 
-test('suggests matching items, most used first', () => {
+test('most used items come first', () => {
   let memory: UsageMemory = {};
   memory = remember(memory, 'const', now);
   memory = remember(memory, 'console', now);
   memory = remember(memory, 'console', now);
-  memory = remember(memory, 'print', now);
-  expect(suggest(memory, 'con', 5, now)).toEqual(['console', 'const']);
+  expect(topItems(memory, 5, now)).toEqual(['console', 'const']);
 });
 
 test('recent use beats old use with the same count', () => {
@@ -24,10 +23,5 @@ test('recent use beats old use with the same count', () => {
     'git status': { count: 3, lastUsed: now - 5 * day },
     'git stash': { count: 3, lastUsed: now },
   };
-  expect(suggest(memory, 'git st', 5, now)).toEqual(['git stash', 'git status']);
-});
-
-test('never suggests exactly what you already typed', () => {
-  const memory = remember({}, 'print', now);
-  expect(suggest(memory, 'print', 5, now)).toEqual([]);
+  expect(topItems(memory, 5, now)).toEqual(['git stash', 'git status']);
 });

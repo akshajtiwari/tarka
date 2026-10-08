@@ -28,6 +28,7 @@ export default function SearchScreen() {
   const [results, setResults] = useState<SearchMatch[] | null>(null);
 
   function search() {
+    // shortcut: reads every file on the UI thread, freezes on very large repos; move off the UI thread once git clone lands
     const paths = allFilePaths((p) => listEntries(projectId, p));
     setResults(searchText(paths, (p) => readForSearch(projectId, p), query, { caseSensitive }));
   }

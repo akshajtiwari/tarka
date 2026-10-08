@@ -17,6 +17,7 @@ export default function QuickOpenSheet() {
   const colors = useTheme();
   const { projectId } = useLocalSearchParams<{ projectId: string }>();
   const [query, setQuery] = useState('');
+  // shortcut: walks the whole project on the UI thread, slow on very large repos; cache or move off-thread once git clone lands
   const paths = useMemo(() => allFilePaths((p) => listEntries(projectId, p)), [projectId]);
   const results = fuzzyFilter(query, paths, 30);
 
