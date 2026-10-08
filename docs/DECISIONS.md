@@ -24,3 +24,4 @@ Short records of why things are the way they are. Newest at the bottom. Each dep
 | jest, jest-expo, @types/jest, @testing-library/react-native | unit and component tests (Expo's standard test setup) |
 | prettier | consistent formatting (`npm run format`) |
 | expo-dev-client | our own dev build of the app (needed for native modules and Maestro tests) |
+| expo-font, expo-asset, @expo-google-fonts/atkinson-hyperlegible-next, @expo-google-fonts/jetbrains-mono | the two app fonts (UI and code), see UI.md |
