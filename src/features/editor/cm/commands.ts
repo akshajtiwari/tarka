@@ -34,6 +34,11 @@ export function runCommand(v: EditorView, command: EditorCommand) {
     case 'gotoLine':
       gotoLine(v);
       return;
+    case 'jumpTo': {
+      const line = v.state.doc.line(Math.min(Math.max(command.line, 1), v.state.doc.lines));
+      v.dispatch({ selection: { anchor: line.from }, scrollIntoView: true });
+      return; // just show the line, don't open the keyboard
+    }
   }
   v.focus();
 }

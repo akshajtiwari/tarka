@@ -9,7 +9,8 @@ export type EditorAction =
   | { name: 'redo' }
   | { name: 'accept'; index: number } // tap on a suggestion chip
   | { name: 'find' }
-  | { name: 'gotoLine' };
+  | { name: 'gotoLine' } // asks for a line number
+  | { name: 'jumpTo'; line: number }; // e.g. from a search result
 
 // `id` goes up by one every time, so pressing the same key twice is two commands.
 export type EditorCommand = EditorAction & { id: number };
