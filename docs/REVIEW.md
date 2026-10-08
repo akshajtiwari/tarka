@@ -20,6 +20,15 @@ Screenshots live in `.artifacts/screens/`. That folder is not committed; regener
 3. Type `pri` in a Python file. Do suggestion chips show up above the keys?
 4. Pinch the code to zoom. Turn on read lock in the ⋯ menu, then scroll: the keyboard should not pop up.
 
-### Blockers
-- The first dev build was slow. The laptop ran low on memory (15 GB total, with the emulator, Gradle and the browser all open).
-  I stopped the emulator while Gradle compiled.
+### Blockers / heads-up
+- **Memory.** At 23:15 the kernel's out-of-memory killer closed one of your browser tabs: the emulator had grown to 10 GB because of a renderer memory leak. That is fixed with guest rendering plus an automatic restart above 6 GB. Sorry about the tab.
+- **First build.** It took about 25 minutes because of two network drops. Gradle now forces IPv4.
+
+### Screenshots worth a look (`.artifacts/screens/`)
+- `editor-main-py.png`: the editor with the brass active-line bar.
+- `editor-keyboard.png`: the key row sitting on the keyboard.
+- `suggestion-chips.png`: chips above the key row.
+- `find-panel.png`: touch-sized find/replace.
+- `explorer.png` and `explorer-file-ops.png`: the explorer drawer.
+- `new-project-sheet.png`: the new-project sheet.
+- `home-with-project.png`: the home screen with a project.

@@ -2,39 +2,41 @@
 
 Newest session first. Each entry lists what was done, what's next, and known issues.
 
-## Session 1: 2026-10-08 (night)
+## Session 1: 2026-10-08 night → 2026-10-09
 
-### Done
-- **Phase 0:**
-  - Repo from the Expo blank-typescript template (SDK 57.0.27, RN 0.86.3).
-  - Commit hooks: no attribution lines, auto push to the private GitHub repo `akshajtiwari/tarka`.
-  - AGENTS.md and all docs.
-  - Android toolchain installed by `scripts/setup-android.sh`: JDK 17, SDK 36, NDK 27.1, AVD `tarka`, Maestro 2.11.
-  - expo-router, eslint, prettier, jest (28 tests).
-- **Phase 1 (built, device test pending):**
-  - Slate/brass theme tokens and fonts (Atkinson Hyperlegible Next and JetBrains Mono).
-  - Shared components.
-  - Projects home, plus new-project and rename/delete sheets with three templates.
-  - Workspace with the bottom dock and the explorer drawer.
-  - Settings stub.
-- **Phase 2 (built, device test pending):**
-  - CodeMirror 6 in an Expo DOM component (`src/features/editor/CodeEditor.dom.tsx`).
-  - Open files, dirty dot, Save, autosave after 1.5 seconds and on app background.
-  - Tabs sheet.
-  - Key row: language-aware symbols, arrows, undo/redo, hold-and-slide trackpad.
-  - Suggestion chips with usage memory.
-  - Editor menu: find/replace, go to line, wrap, read lock, font size.
-  - Pinch zoom and the large-file guard.
+### Done (verified on the emulator unless marked)
+- **Phase 0:** repo, hooks (no attribution lines, auto push to the private repo `akshajtiwari/tarka`), docs, the Android toolchain, and the dev build.
+- **Phase 1:**
+  - Slate/brass theme, fonts and components.
+  - Projects home and templates; rename/delete.
+  - Workspace dock and explorer drawer.
+- **Phase 2:**
+  - CodeMirror 6 editor in a DOM component.
+  - Key row that keeps the keyboard open; brackets auto-close.
+  - Suggestion chips; autosave; save when leaving a project.
+  - Tabs sheet; ⋯ menu with find/replace, read lock and font size.
+- **Phase 3 (part):** quick-open, search in files, and new/rename/duplicate/delete files and folders.
+- **Git layer (no UI yet):** `src/features/git/gitService.ts`, tested against real repos with Node `fs`. `src/lib/gitFs.ts` is the expo-file-system adapter, not yet run on a device.
+- **Test suite:**
+  - 45 unit tests.
+  - 8 Maestro flows in `.maestro/`, all passing with `npm run e2e`.
+- **First `/ponytail-review` done.** All 6 findings fixed, including a data-loss bug: leaving a project within 1.5 seconds of typing used to lose the edit.
 
 ### Next up
-1. Get the first dev build onto the emulator (`npm run android`). The first try failed on a network drop; the retry is in progress.
-2. Run `npm run e2e`: the flows `launch`, `projects` and `editor` in `.maestro/`. Fix whatever breaks.
-   Look at the screenshots, then turn the `[~]` items in ROADMAP.md into `[x]`.
-3. The most important thing to prove: **tapping a key-row button keeps the keyboard open** (see the `editor.yaml` flow).
-   If it doesn't, fall back to rendering the key row inside the WebView (see the "Risks" section of the plan in DECISIONS.md).
-4. Then do the rest of Phase 2 (header swipe between tabs, Ctrl+S), then Phase 3.
+1. **Phase 4: Git UI.**
+   - The Git tab: init, then a status list with stage/unstage.
+   - Diff view, commit with identity in Settings, history, branches.
+   - Clone, pull and push with a token.
+   - Check `gitFs` on the emulator first, with a flow that inits a repo and commits.
+2. Phase 3 leftover: git status colors on explorer rows (needs Phase 4).
+3. Phase 2 leftovers: swipe between tabs in the header, and Ctrl+S on hardware keyboards.
 
-### Known issues
-- The theme follows the phone's dark/light setting only. A manual switch in Settings is still to do.
-- Not verified yet: whether `@expo/dom-webview` loads the JetBrains Mono font inside the editor.
-  CSS asks for `JetBrains Mono, monospace`, so the fallback is the system monospace font.
+### Known issues / gotchas for the next agent
+- **Emulator memory:** the renderer leaks memory (it reached 10 GB with `swiftshader_indirect`).
+  `scripts/emulator.sh` now uses `-gpu guest`, and `scripts/e2e.sh` restarts the emulator above 6 GB. Host GPU mode crashed.
+- **Maestro taps in sheets:** while the keyboard has pushed a sheet up, Maestro aims taps wrongly. Use `hideKeyboard` before tapping a sheet's buttons.
+  Also, views behind sheets and drawers still match text, so give rows unique `accessibilityLabel`s (e.g. "File main.py").
+- **WebView accessibility text** only refreshes on a fresh load. Check editor text after reopening the file, with a `(?s)` regex.
+- **Maestro sometimes dies mid-step** under memory pressure. `e2e.sh` retries each failed flow once.
+- **Gradle needs IPv4.** `scripts/env.sh` sets `JAVA_TOOL_OPTIONS=-Djava.net.preferIPv4Stack=true`.
+- **Never run `pkill -f <name>`** where `<name>` also appears in your own command line. Use the `"[K]otlin…"` bracket trick.
