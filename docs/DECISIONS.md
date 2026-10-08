@@ -21,3 +21,5 @@ Short records of why things are the way they are. Newest at the bottom. Each dep
 | react-native-reanimated, react-native-worklets, react-native-gesture-handler | drawer swipe, cursor trackpad, smooth sheets (standard Expo animation stack) |
 | react-dom (pinned to the same version as react) | needed by DOM components; pinned because npm otherwise picks a newer react-dom that conflicts |
 | eslint, eslint-config-expo | linting with Expo's recommended rules |
+| jest, jest-expo, @types/jest, @testing-library/react-native | unit and component tests (Expo's standard test setup) |
+| prettier | consistent formatting (`npm run format`) |
