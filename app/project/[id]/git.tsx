@@ -11,6 +11,7 @@ import type { Change } from '../../../src/features/git/changes';
 import { ChangeRow } from '../../../src/features/git/ChangeRow';
 import { CommitBox } from '../../../src/features/git/CommitBox';
 import * as gitService from '../../../src/features/git/gitService';
+import { pullProject, pushProject } from '../../../src/features/git/remoteActions';
 import { gitFs, repoDir } from '../../../src/features/git/repo';
 import { useGitStatus } from '../../../src/features/git/useGitStatus';
 import { font, fontSize } from '../../../src/theme/fonts';
@@ -27,6 +28,15 @@ export default function GitScreen() {
   async function run(action: () => Promise<unknown>) {
     try {
       await action();
+    } catch (e) {
+      Alert.alert('Git error', String(e));
+    }
+    await git.refresh();
+  }
+
+  async function remote(action: () => Promise<string>) {
+    try {
+      Alert.alert('Done', await action());
     } catch (e) {
       Alert.alert('Git error', String(e));
     }
@@ -68,6 +78,16 @@ export default function GitScreen() {
               icon="history"
               label="History"
               onPress={() => router.push({ pathname: '/history', params: { projectId: id } })}
+            />
+            <IconButton
+              icon="arrow-down"
+              label="Pull"
+              onPress={() => remote(() => pullProject(id))}
+            />
+            <IconButton
+              icon="arrow-up"
+              label="Push"
+              onPress={() => remote(() => pushProject(id))}
             />
             <IconButton icon="sync" label="Refresh" onPress={git.refresh} />
           </>
