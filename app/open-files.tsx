@@ -18,8 +18,9 @@ export default function OpenFilesSheet() {
 
   // Never lose edits: save before closing.
   function close(file: OpenFile) {
-    if (isDirty(file) && !saveFile(projectId, file.path)) {
-      Alert.alert('Could not save', `${file.path} is still open so your changes are not lost.`);
+    const error = isDirty(file) ? saveFile(projectId, file.path) : null;
+    if (error) {
+      Alert.alert('Could not save', `${error}\nThe file stays open so your changes are not lost.`);
       return;
     }
     closeFile(file.path);

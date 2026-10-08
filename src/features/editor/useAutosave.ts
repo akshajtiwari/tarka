@@ -2,13 +2,7 @@ import { useEffect } from 'react';
 import { AppState } from 'react-native';
 
 import { isDirty, useEditorStore } from './editorStore';
-import { saveFile } from './fileActions';
-
-function saveAllDirty(projectId: string) {
-  for (const file of useEditorStore.getState().files) {
-    if (isDirty(file)) saveFile(projectId, file.path);
-  }
-}
+import { saveAllDirty } from './fileActions';
 
 // Saves changed files 1.5 seconds after typing stops, and right away when the app goes to the background.
 export function useAutosave(projectId: string) {

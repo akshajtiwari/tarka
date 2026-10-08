@@ -1,6 +1,6 @@
 import { router, useLocalSearchParams } from 'expo-router';
 import { memo, useCallback, useMemo, useState } from 'react';
-import { useColorScheme } from 'react-native';
+import { Alert, useColorScheme } from 'react-native';
 import { KeyboardAvoidingView, useKeyboardState } from 'react-native-keyboard-controller';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -73,7 +73,9 @@ export default function CodeScreen() {
   }
 
   function save() {
-    if (file) saveFile(id, file.path);
+    if (!file) return;
+    const error = saveFile(id, file.path);
+    if (error) Alert.alert('Could not save', error);
   }
 
   return (

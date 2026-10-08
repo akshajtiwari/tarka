@@ -1,0 +1,18 @@
+# Typing and leaving the project right away (before autosave's 1.5 s) must not lose the edit.
+appId: com.akshajtiwari.tarka
+---
+- runFlow: common/open-app.yaml
+- runFlow: common/new-python-project.yaml
+- tapOn: .*print.*
+- inputText: "y = 2"
+- hideKeyboard
+- back # leave the project immediately
+- assertVisible: Projects
+- tapOn: demo
+- tapOn:
+    text: Show files
+    index: 0
+- tapOn: File main.py
+- extendedWaitUntil:
+    visible: '(?s).*y = 2.*'
+    timeout: 20000

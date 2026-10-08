@@ -5,7 +5,7 @@ import { Drawer } from 'react-native-drawer-layout';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { useEditorStore } from '../../../src/features/editor/editorStore';
-import { openFileFromDisk } from '../../../src/features/editor/fileActions';
+import { openFileFromDisk, saveAllDirty } from '../../../src/features/editor/fileActions';
 import { FileTree } from '../../../src/features/explorer/FileTree';
 import { useProjectStore } from '../../../src/features/projects/projectStore';
 import { Dock } from '../../../src/features/workspace/Dock';
@@ -21,10 +21,14 @@ export default function WorkspaceLayout() {
   const { explorerOpen, setExplorerOpen } = useWorkspaceStore();
   const activePath = useEditorStore((s) => s.activePath);
 
-  // Each project starts with a closed explorer and no tabs.
+  // Each project starts with a closed explorer. When leaving, save any changes first
+  // (the autosave timer would be cancelled), then close the tabs.
   useEffect(() => {
     setExplorerOpen(false);
-    useEditorStore.getState().reset();
+    return () => {
+      saveAllDirty(id);
+      useEditorStore.getState().reset();
+    };
   }, [id, setExplorerOpen]);
 
   // Android back button closes the explorer first, before leaving the workspace.

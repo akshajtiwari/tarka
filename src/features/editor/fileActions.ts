@@ -1,5 +1,5 @@
 import { fileAt } from '../../lib/projectFs';
-import { useEditorStore } from './editorStore';
+import { isDirty, useEditorStore } from './editorStore';
 import { openModeFor } from './fileSizeGuard';
 
 // Reads a file from disk and opens it in a tab. Returns an error message if it could not be opened.
@@ -15,15 +15,22 @@ export function openFileFromDisk(projectId: string, path: string): string | null
   }
 }
 
-// Writes the editor's text to disk. Returns false if the write failed.
-export function saveFile(projectId: string, path: string): boolean {
+// Writes the editor's text to disk. Returns an error message if the write failed.
+export function saveFile(projectId: string, path: string): string | null {
   const file = useEditorStore.getState().files.find((f) => f.path === path);
-  if (!file) return false;
+  if (!file) return null;
   try {
     fileAt(projectId, path).write(file.text);
     useEditorStore.getState().markSaved(path, file.text);
-    return true;
-  } catch {
-    return false;
+    return null;
+  } catch (e) {
+    return `Could not save ${path}: ${String(e)}`;
+  }
+}
+
+// Saves every open file that has changes (used by autosave and when leaving a project).
+export function saveAllDirty(projectId: string) {
+  for (const file of useEditorStore.getState().files) {
+    if (isDirty(file)) saveFile(projectId, file.path);
   }
 }
