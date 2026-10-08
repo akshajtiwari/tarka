@@ -12,10 +12,14 @@ appId: com.akshajtiwari.tarka
 - tapOn:
     text: Continue
     optional: true
+# While the dev menu is open, switch off its floating "Tools button": it sits on top of our header.
 - runFlow:
     when:
       visible: Go home
     commands:
+      - scrollUntilVisible:
+          element: Tools button
+      - tapOn: Tools button
       - back
 - extendedWaitUntil:
     visible: Projects

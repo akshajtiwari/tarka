@@ -1,0 +1,21 @@
+# The ⋯ menu: font size, find and replace, read lock.
+appId: com.akshajtiwari.tarka
+---
+- runFlow: common/open-app.yaml
+- runFlow: common/new-python-project.yaml
+- tapOn: Editor menu
+- takeScreenshot: editor-menu
+- tapOn: Bigger text
+- assertVisible: Font size 15
+- tapOn: Find and replace
+- extendedWaitUntil: # CodeMirror's search panel opened inside the editor
+    visible: Find|next
+    timeout: 5000
+- takeScreenshot: find-panel
+- tapOn: close # the search panel's × button
+- tapOn: Editor menu
+- tapOn: Read lock
+- back
+- tapOn: .*print.*
+- assertNotVisible: Tab # read lock: tapping the code does not open the keyboard
+- takeScreenshot: read-lock

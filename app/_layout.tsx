@@ -1,6 +1,7 @@
 import { useFonts } from 'expo-font';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { KeyboardProvider } from 'react-native-keyboard-controller';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 
@@ -11,6 +12,7 @@ import { useTheme } from '../src/theme/useTheme';
 export default function RootLayout() {
   const [fontsLoaded] = useFonts(fontFiles);
   const colors = useTheme();
+  const insets = useSafeAreaInsets();
 
   // Fonts are bundled with the app, so this is only a blink on startup.
   if (!fontsLoaded) return null;
@@ -20,7 +22,8 @@ export default function RootLayout() {
     sheetAllowedDetents: 'fitToContents',
     sheetGrabberVisible: true,
     sheetCornerRadius: radius.lg,
-    contentStyle: { backgroundColor: colors.surface },
+    // Keep the last button clear of the phone's gesture bar.
+    contentStyle: { backgroundColor: colors.surface, paddingBottom: insets.bottom },
   } as const;
 
   return (

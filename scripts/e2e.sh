@@ -25,10 +25,26 @@ if ! curl -s localhost:8081/status | grep -q running; then
 fi
 
 run_dir=".artifacts/maestro/$(date +%Y%m%d-%H%M%S)"
-status=0
-maestro --device "$ANDROID_SERIAL" test --test-output-dir "$run_dir" "${@:-.maestro}" || status=$?
+mkdir -p .artifacts/screens
+flows=("$@")
+if [ ${#flows[@]} -eq 0 ]; then flows=(.maestro/*.yaml); fi
+
+# Run each flow on its own. On this laptop Maestro sometimes dies mid-step when memory
+# is tight, so a failed flow gets one retry. A real bug fails twice and is reported.
+failed=()
+for flow in "${flows[@]}"; do
+  name=$(basename "$flow" .yaml)
+  if ! maestro --device "$ANDROID_SERIAL" test --test-output-dir "$run_dir/$name" "$flow"; then
+    echo "== $name failed, retrying once"
+    maestro --device "$ANDROID_SERIAL" test --test-output-dir "$run_dir/$name-retry" "$flow" || failed+=("$name")
+  fi
+done
 
 # Collect the screenshots the flows took (takeScreenshot: <name>) in one place.
-mkdir -p .artifacts/screens
 find "$run_dir" -path '*takeScreenshot*' -name '*.png' -exec cp {} .artifacts/screens/ \;
-exit $status
+
+if [ ${#failed[@]} -gt 0 ]; then
+  echo "== FAILED: ${failed[*]}"
+  exit 1
+fi
+echo "== all flows passed"
