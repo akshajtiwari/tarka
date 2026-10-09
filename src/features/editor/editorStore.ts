@@ -8,12 +8,14 @@ type EditorState = {
   projectId: string | null; // which project these tabs belong to
   files: OpenFile[];
   activePath: string | null;
+  reloads: number; // goes up when a file was changed on disk by someone else (the agent)
   enterProject: (projectId: string) => void;
   openFile: (path: string, text: string, locked?: boolean) => void;
   setActive: (path: string) => void;
   updateText: (path: string, text: string) => void;
   markSaved: (path: string, text: string) => void;
   closeFile: (path: string) => void;
+  reloadFile: (path: string, text: string) => void;
   renamePath: (oldPath: string, newPath: string) => void;
   closePathsUnder: (path: string) => void;
   reset: () => void;
@@ -23,6 +25,7 @@ export const useEditorStore = create<EditorState>()((set) => ({
   projectId: null,
   files: [],
   activePath: null,
+  reloads: 0,
 
   // Tabs from another project must never stay open (saving would write into the wrong folder).
   enterProject: (projectId) =>
@@ -56,6 +59,13 @@ export const useEditorStore = create<EditorState>()((set) => ({
       // The closed file was showing, so switch to the last tab (or none).
       return { files, activePath: files.at(-1)?.path ?? null };
     }),
+
+  // The file was rewritten on disk (by the agent): show the new text if it is open.
+  reloadFile: (path, text) =>
+    set((state) => ({
+      files: state.files.map((f) => (f.path === path ? { ...f, text, savedText: text } : f)),
+      reloads: state.reloads + 1,
+    })),
 
   // A file or folder was renamed: open tabs inside it follow along.
   renamePath: (oldPath, newPath) =>

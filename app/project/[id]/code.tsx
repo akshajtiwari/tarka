@@ -31,6 +31,7 @@ export default function CodeScreen() {
   const setExplorerOpen = useWorkspaceStore((s) => s.setExplorerOpen);
   const file = useEditorStore((s) => s.files.find((f) => f.path === s.activePath));
   const tabCount = useEditorStore((s) => s.files.length);
+  const reloads = useEditorStore((s) => s.reloads);
   const keyboardOpen = useKeyboardState((s) => s.isVisible);
   const { command, send } = useEditorCommands();
   const { fontSize, wrap, readOnly, setFontSize } = useEditorSettings();
@@ -45,7 +46,7 @@ export default function CodeScreen() {
   );
   const memoryWords = useMemo(() => topItems(memory, 200), [memory]);
   // The text the editor starts with; only changes when another file is opened.
-  const startText = useMemo(() => file?.text ?? '', [file?.path]); // eslint-disable-line react-hooks/exhaustive-deps
+  const startText = useMemo(() => file?.text ?? '', [file?.path, reloads]); // eslint-disable-line react-hooks/exhaustive-deps
   const domProps = useMemo(() => ({ style: { flex: 1 } }), []);
 
   const onChange = useCallback(async (path: string, text: string) => {
@@ -95,6 +96,7 @@ export default function CodeScreen() {
           <CodeEditor
             path={file.path}
             text={startText}
+            version={reloads}
             look={look}
             command={command}
             memoryWords={memoryWords}

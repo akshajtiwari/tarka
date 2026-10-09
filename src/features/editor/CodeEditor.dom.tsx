@@ -17,6 +17,7 @@ import type { EditorCommand } from './editorCommand';
 type Props = {
   path: string; // a different path means a different file: the editor starts fresh
   text: string; // the file's text when it was opened
+  version: number; // goes up when the file was changed on disk: reload the text
   look: LookSettings;
   command: EditorCommand | null; // the latest key-row / menu action
   memoryWords: string[]; // words you used before, offered as suggestions
@@ -88,9 +89,10 @@ export default function CodeEditor(props: Props) {
       if (timer) flush(editor);
       editor.destroy();
     };
-    // Only a new file rebuilds the editor; everything else updates it in place.
+    // Only a new file (or a file changed on disk) rebuilds the editor; everything else
+    // updates it in place.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [path]);
+  }, [path, props.version]);
 
   // Theme, font size, wrap or read lock changed: update the open editor in place.
   // Props arrive as fresh copies after every re-render, so compare by content, not identity.
