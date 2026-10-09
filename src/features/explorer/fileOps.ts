@@ -43,7 +43,8 @@ export function duplicateFile(projectId: string, path: string): string {
   const folder = parentOf(path);
   const taken = listEntries(projectId, folder).map((e) => e.name);
   const copyPath = joinPath(folder, copyName(path.split('/').pop()!, taken));
-  fileAt(projectId, path).copy(fileAt(projectId, copyPath));
+  // copySync: copy() is async, and the tree would read the folder before the copy exists.
+  fileAt(projectId, path).copySync(fileAt(projectId, copyPath));
   refresh();
   return copyPath;
 }
