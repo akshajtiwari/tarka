@@ -1,4 +1,4 @@
-# Open two files, switch tabs, quick open and search in files.
+# Open two files, switch tabs (sheet and header swipe), quick open and search in files.
 appId: com.akshajtiwari.tarka
 ---
 - runFlow: common/open-app.yaml
@@ -32,6 +32,23 @@ appId: com.akshajtiwari.tarka
 - assertVisible: 2 matches
 - takeScreenshot: search-results
 - tapOn: main.py:4
+- extendedWaitUntil:
+    visible: .*def greet.*
+    timeout: 10000
+# Swiping the header moves between open files.
+- swipe:
+    from:
+      text: Open files
+    direction: LEFT
+    duration: 150
+- extendedWaitUntil:
+    visible: .*My project.*
+    timeout: 10000
+- swipe:
+    from:
+      text: Open files
+    direction: RIGHT
+    duration: 150
 - extendedWaitUntil:
     visible: .*def greet.*
     timeout: 10000
