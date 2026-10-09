@@ -33,7 +33,7 @@ export const useSettings = create<Settings>()(
       aiProvider: 'anthropic',
       aiModels: {},
       aiBaseUrl: '',
-      projectsLocation: 'app',
+      projectsLocation: 'documents', // suggested in setup; without file access, projects stay inside TARKA
       setProjectsLocation: (projectsLocation) => set({ projectsLocation }),
       onboarded: false,
       setOnboarded: (onboarded) => set({ onboarded }),

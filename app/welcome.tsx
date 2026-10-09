@@ -28,11 +28,6 @@ export default function WelcomeScreen() {
   const python = usePythonInstall(); // starts downloading right away, in the background
   const step = STEPS[index];
 
-  // Documents/TARKA is the suggested folder; the folder step shows it selected.
-  useEffect(() => {
-    useSettings.getState().setProjectsLocation('documents');
-  }, []);
-
   // Android back goes to the previous step.
   useEffect(() => {
     const sub = BackHandler.addEventListener('hardwareBackPress', () => {
@@ -83,7 +78,9 @@ export default function WelcomeScreen() {
         {step.body && <Text style={[styles.body, { color: colors.muted }]}>{step.body}</Text>}
         {step.key === 'theme' && <ThemeSettings />}
         {step.key === 'folder' && <ProjectsFolderSettings />}
-        {step.key === 'python' && <PythonStep status={python.status} onRetry={python.retry} />}
+        {step.key === 'python' && (
+          <PythonStep status={python.status} slow={python.slow} onRetry={python.retry} />
+        )}
         {step.key === 'git' && <GitSettings onSaved={next} />}
         {step.key === 'ai' && <AiSettings onSaved={next} />}
         {step.key === 'termux' && <TermuxSettings />}

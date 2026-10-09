@@ -7,10 +7,10 @@ import { space } from '../../theme/spacing';
 import { useTheme } from '../../theme/useTheme';
 import type { InstallStatus } from './usePythonInstall';
 
-type Props = { status: InstallStatus; onRetry: () => void };
+type Props = { status: InstallStatus; slow: boolean; onRetry: () => void };
 
 // Shows how the Python download is going. Setup can't continue until Python is ready.
-export function PythonStep({ status, onRetry }: Props) {
+export function PythonStep({ status, slow, onRetry }: Props) {
   const colors = useTheme();
 
   return (
@@ -20,6 +20,14 @@ export function PythonStep({ status, onRetry }: Props) {
           <ActivityIndicator color={colors.accent} />
           <Text style={[styles.text, { color: colors.text }]}>Downloading Python…</Text>
         </View>
+      )}
+      {status === 'installing' && slow && (
+        <>
+          <Text style={[styles.text, { color: colors.muted }]}>
+            This is taking a while. On a slow or broken connection, try again.
+          </Text>
+          <Button label="Try again" onPress={onRetry} />
+        </>
       )}
       {status === 'ready' && (
         <View style={styles.row}>

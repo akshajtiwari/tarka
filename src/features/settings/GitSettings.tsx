@@ -15,9 +15,13 @@ export function GitSettings({ onSaved }: Props) {
   const [name, setName] = useState(gitName);
   const [email, setEmail] = useState(gitEmail);
   const [token, setToken] = useState('');
+  const [tokenLoaded, setTokenLoaded] = useState(false); // saving before then would erase it
 
   useEffect(() => {
-    getGitToken().then((saved) => setToken(saved ?? ''));
+    getGitToken().then((saved) => {
+      setToken(saved ?? '');
+      setTokenLoaded(true);
+    });
   }, []);
 
   async function save() {
@@ -44,7 +48,7 @@ export function GitSettings({ onSaved }: Props) {
         mono
         secret
       />
-      <Button label="Save git settings" variant="primary" onPress={save} />
+      <Button label="Save git settings" variant="primary" onPress={save} disabled={!tokenLoaded} />
     </View>
   );
 }
