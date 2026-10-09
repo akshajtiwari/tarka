@@ -84,7 +84,14 @@ export default function WorkspaceLayout() {
     >
       <Tabs
         tabBar={(props) => <Dock {...props} />}
-        screenOptions={{ headerShown: false, tabBarPosition: rail ? 'left' : 'bottom' }}
+        screenOptions={{
+          headerShown: false,
+          tabBarPosition: rail ? 'left' : 'bottom',
+          // The bottom dock pads itself for the system nav bar; with the rail, each tab must.
+          sceneStyle: rail
+            ? { paddingBottom: insets.bottom, backgroundColor: colors.bg }
+            : undefined,
+        }}
       >
         <Tabs.Screen name="code" />
         <Tabs.Screen name="git" />
