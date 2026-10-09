@@ -1,39 +1,46 @@
-import Anthropic from '@anthropic-ai/sdk';
-import { fetch as expoFetch } from 'expo/fetch';
-
 import { SYSTEM_PROMPT } from '../tools';
 import type { Provider } from '../types';
-import { fromAnthropic, toAnthropicMessages, toAnthropicTools } from './anthropicMessages';
+import {
+  fromAnthropic,
+  toAnthropicMessages,
+  toAnthropicTools,
+  type AnthropicBlock,
+} from './anthropicMessages';
+import { postJson } from './http';
 
 export const DEFAULT_ANTHROPIC_MODEL = 'claude-opus-5-5';
 
+// Calls the Claude Messages API with plain fetch. (The official SDK crashes when React
+// Native's bundler loads it, see docs/DECISIONS.md.)
 export function anthropicProvider(apiKey: string, model: string): Provider {
-  const client = new Anthropic({
-    apiKey,
-    fetch: expoFetch as unknown as typeof fetch, // expo's fetch can stream the reply as it is written
-    dangerouslyAllowBrowser: true, // the user's own key on their own phone (bring your own key)
-  });
-
   return {
+    // shortcut: not streamed, the answer appears when the turn is complete; stream it (SSE) if turns feel slow.
     async reply(history, tools, onText, signal) {
-      const stream = client.beta.messages.stream(
+      const data = await postJson(
+        'https://api.anthropic.com/v1/messages',
+        {
+          'x-api-key': apiKey,
+          'anthropic-version': '2023-06-01',
+          // If a safety check declines the request, the API retries it on a suitable model.
+          'anthropic-beta': 'server-side-fallback-2026-07-01',
+        },
         {
           model: model || DEFAULT_ANTHROPIC_MODEL,
-          max_tokens: 64000,
+          max_tokens: 16000,
           system: SYSTEM_PROMPT,
           thinking: { type: 'adaptive' },
           output_config: { effort: 'high' },
-          // If a safety check declines the request, the API retries it on a suitable model.
-          betas: ['server-side-fallback-2026-07-01'],
           fallbacks: 'default',
           tools: toAnthropicTools(tools),
           messages: toAnthropicMessages(history),
         },
-        { signal },
+        signal,
+        'Anthropic',
       );
-      stream.on('text', onText);
-      const message = await stream.finalMessage();
-      return fromAnthropic(message.content, message.stop_reason);
+      const content = (data.content ?? []) as AnthropicBlock[];
+      const reply = fromAnthropic(content, (data.stop_reason as string | undefined) ?? null);
+      if (reply.text) onText(reply.text);
+      return reply;
     },
   };
 }

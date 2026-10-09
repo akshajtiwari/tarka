@@ -50,13 +50,9 @@ test('openai: system first, tool calls with JSON arguments, one tool message per
 
 test('openai: unreadable arguments do not crash', () => {
   const reply = fromOpenAI({
-    index: 0,
     finish_reason: 'tool_calls',
-    logprobs: null,
     message: {
-      role: 'assistant',
       content: null,
-      refusal: null,
       tool_calls: [
         { id: 'a', type: 'function', function: { name: 'read_file', arguments: '{bad' } },
       ],

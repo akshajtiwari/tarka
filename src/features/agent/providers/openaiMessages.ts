@@ -1,9 +1,15 @@
-import type { ChatCompletion, ChatCompletionMessageParam } from 'openai/resources/chat/completions';
-
 import type { ModelReply, ToolSpec, Turn } from '../types';
 
 // The OpenAI chat format, which Ollama, OpenRouter, LM Studio and many others also speak.
-type ChatMessage = ChatCompletionMessageParam;
+type FunctionCall = { id: string; type: 'function'; function: { name: string; arguments: string } };
+export type ChatMessage =
+  | { role: 'system' | 'user'; content: string }
+  | { role: 'assistant'; content: string | null; tool_calls?: FunctionCall[] }
+  | { role: 'tool'; tool_call_id: string; content: string };
+export type ChatChoice = {
+  finish_reason: string | null;
+  message: { content?: string | null; tool_calls?: FunctionCall[] | null };
+};
 
 export function toOpenAIMessages(system: string, history: Turn[]): ChatMessage[] {
   const messages: ChatMessage[] = [{ role: 'system', content: system }];
@@ -36,13 +42,8 @@ export function toOpenAITools(tools: ToolSpec[]) {
   }));
 }
 
-type Choice = ChatCompletion.Choice;
-
-export function fromOpenAI(choice: Choice): ModelReply {
-  const functionCalls = (choice.message.tool_calls ?? []).flatMap((c) =>
-    c.type === 'function' ? [c] : [],
-  );
-  const toolCalls = functionCalls.map((c) => {
+export function fromOpenAI(choice: ChatChoice): ModelReply {
+  const toolCalls = (choice.message.tool_calls ?? []).map((c) => {
     let input: Record<string, unknown> = {};
     try {
       input = JSON.parse(c.function.arguments || '{}');

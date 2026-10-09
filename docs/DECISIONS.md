@@ -37,11 +37,15 @@ Short records of why things are the way they are. Newest at the bottom. Each dep
 | expo-secure-store | keeps the git access token in the Android Keystore, not in plain storage |
 | diff (jsdiff) | line-by-line diffs for the Git diff view |
 | sucrase | strips TypeScript types so .ts files can run in the on-device runner (small and fast) |
-| @anthropic-ai/sdk | official Claude SDK for the agent (streams through expo/fetch) |
-| openai | official OpenAI SDK, used for any OpenAI-compatible server (OpenRouter, Ollama, …) |
+| ~~@anthropic-ai/sdk, openai~~ | removed: see "Agent decisions" |
 
 ## Agent decisions
 - **The agent loop is ours (`src/features/agent/loop.ts`), not the SDK's tool runner.** We need an approval gate before writes, loop detection and a step budget, and the same loop must also drive OpenAI-compatible servers.
+- **No AI SDKs: both providers use plain `fetch`** (`src/features/agent/providers/http.ts`).
+  - The official Anthropic SDK crashed the whole app at startup under React Native's bundler, with "Cannot read property 'BetaToolRunner' of undefined" (a circular import in its build). The OpenAI SDK was untested on the device.
+  - Two direct HTTP calls of about 30 lines each are simpler to read and have no such risk.
+  - Revisit if the SDK gains React Native support.
+- **Replies are not streamed yet** (marked `shortcut:`). The answer appears when a turn finishes, and the tool rows show progress meanwhile.
 - **Tool inputs are buffered, not streamed** (no `eager_input_streaming`), so the API checks the JSON for us. Phone-sized files make the latency fine. Inputs are still checked (`requireString`) because they come from the model.
 - **Default model `claude-opus-5-5`** with adaptive thinking, `effort: 'high'`, and `fallbacks: 'default'` (server-side retry on a safety decline).
 - **UI tests use a fake OpenAI-compatible server** (`scripts/fake-ai.cjs`) with a fixed script. The local `qwen2.5-coder:3b` returned tool calls as plain text, so it cannot test tools reliably.
