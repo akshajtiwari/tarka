@@ -1,4 +1,5 @@
 import Octicons from '@expo/vector-icons/Octicons';
+import { useMemo } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { Directions, Gesture, GestureDetector } from 'react-native-gesture-handler';
 
@@ -32,15 +33,20 @@ export function EditorHeader({
   onSwipe,
 }: Props) {
   const colors = useTheme();
-  const swipe = Gesture.Race(
-    Gesture.Fling()
-      .direction(Directions.LEFT)
-      .runOnJS(true)
-      .onEnd(() => onSwipe(1)),
-    Gesture.Fling()
-      .direction(Directions.RIGHT)
-      .runOnJS(true)
-      .onEnd(() => onSwipe(-1)),
+  // Built once: the header re-renders while you type.
+  const swipe = useMemo(
+    () =>
+      Gesture.Race(
+        Gesture.Fling()
+          .direction(Directions.LEFT)
+          .runOnJS(true)
+          .onEnd(() => onSwipe(1)),
+        Gesture.Fling()
+          .direction(Directions.RIGHT)
+          .runOnJS(true)
+          .onEnd(() => onSwipe(-1)),
+      ),
+    [onSwipe],
   );
 
   return (
