@@ -93,11 +93,15 @@ export default function CodeEditor(props: Props) {
   }, [path]);
 
   // Theme, font size, wrap or read lock changed: update the open editor in place.
+  // Props arrive as fresh copies after every re-render, so compare by content, not identity.
+  const lookKey = JSON.stringify(look);
   useEffect(() => {
     view.current?.dispatch({ effects: lookCompartment.reconfigure(lookExtensions(look)) });
-  }, [look]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [lookKey]);
 
-  // Each command has a new id, so the same key pressed twice still runs twice.
+  // Each command has a new id, so the same key pressed twice still runs twice, and a
+  // re-sent copy of the same command (same id) never runs again.
   useEffect(() => {
     const v = view.current;
     if (!v || !command) return;
@@ -107,7 +111,8 @@ export default function CodeEditor(props: Props) {
       return;
     }
     runCommand(v, command);
-  }, [command]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [command?.id]);
 
   return <div ref={host} style={{ height: '100vh', backgroundColor: look.colors.bg }} />;
 }
