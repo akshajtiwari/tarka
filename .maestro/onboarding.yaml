@@ -1,0 +1,50 @@
+# The whole first-launch setup: theme, projects in Documents/TARKA (Android's file access switch),
+# Python, git and a Gemini key, the tips, and then a project lands in Documents/TARKA.
+appId: com.akshajtiwari.tarka
+---
+- runFlow: common/start-app.yaml
+- tapOn: Start setup
+- tapOn: Dark (slate)
+- takeScreenshot: setup-theme
+- tapOn: Continue
+- assertVisible: Documents/TARKA
+- tapOn: Allow file access
+- extendedWaitUntil:
+    visible: .*(all files|All files).*
+    timeout: 10000
+- tapOn: .*(Allow access to manage all files|Allow access).*
+- back
+- extendedWaitUntil:
+    visible: /storage/emulated/0/Documents/TARKA
+    timeout: 10000
+- takeScreenshot: setup-folder
+- tapOn: Continue
+- extendedWaitUntil:
+    visible: Python is ready
+    timeout: 180000
+- tapOn: Continue
+- tapOn: Your name
+- inputText: Ada Lovelace
+- tapOn: Your email
+- inputText: ada@example.com
+- hideKeyboard
+- tapOn: Save git settings
+- assertVisible: AI agent
+- tapOn: Google Gemini
+- tapOn: API key
+- inputText: AIza-test-key
+- hideKeyboard
+- takeScreenshot: setup-ai
+- tapOn: Save AI settings
+- assertVisible: A few phone tricks
+- takeScreenshot: setup-tips
+- tapOn: Continue
+- tapOn: Start coding
+- extendedWaitUntil:
+    visible: Projects
+    timeout: 10000
+- runFlow: common/new-python-project.yaml
+- tapOn: Editor menu
+- tapOn: Go to projects
+- longPressOn: demo
+- assertVisible: /storage/emulated/0/Documents/TARKA/demo.*

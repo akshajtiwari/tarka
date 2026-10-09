@@ -1,9 +1,16 @@
-# The app opens on the empty projects list, with tips until you dismiss them.
+# First launch opens the setup, and it can't be skipped past Python.
 appId: com.akshajtiwari.tarka
 ---
-- runFlow: common/open-app.yaml
-- assertVisible: No projects yet
-- takeScreenshot: home-empty
-- assertVisible: Coding on a phone
-- tapOn: Got it
-- assertNotVisible: Coding on a phone
+- runFlow: common/start-app.yaml
+- takeScreenshot: welcome
+- tapOn: Start setup
+- tapOn: Continue
+- tapOn: Inside TARKA
+- tapOn: Continue
+- assertVisible: Installing Python
+- takeScreenshot: setup-python
+- extendedWaitUntil:
+    visible: Python is ready
+    timeout: 180000
+- tapOn: Continue
+- assertVisible: Your name for git

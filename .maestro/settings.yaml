@@ -4,9 +4,11 @@ appId: com.akshajtiwari.tarka
 ---
 - runFlow: common/open-app.yaml
 - tapOn: Settings
+- assertVisible: 'Not set up yet: add a key to use the agent.'
 - scrollUntilVisible:
     element:
       text: Access token.*
+- assertVisible: 'Not set up yet: commits need your name and email.'
 - tapOn: Access token.*
 - inputText: ghp_example
 - assertVisible: Save git settings

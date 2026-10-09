@@ -1,0 +1,34 @@
+# Fresh app, JavaScript loaded from Metro on the laptop (10.0.2.2 from the emulator).
+# Ends on the first-launch setup screen.
+appId: com.akshajtiwari.tarka
+---
+- clearState
+# Opening the dev-client link starts the app and loads the bundle in one go
+# (a separate launchApp first races with the link and stays on the launcher screen).
+- openLink: exp+tarka://expo-development-client/?url=http%3A%2F%2F10.0.2.2%3A8081&disableOnboarding=1
+# On a fresh install the dev build pops up its developer menu (or its intro) over the app.
+- extendedWaitUntil:
+    visible: Welcome to TARKA|Go home|Continue
+    timeout: 120000
+- tapOn:
+    text: Continue
+    optional: true
+# While the dev menu is open, switch off its floating "Tools button": it sits on top of our header.
+- runFlow:
+    when:
+      visible: Go home
+    commands:
+      - scrollUntilVisible:
+          element: Tools button
+      - tapOn: Tools button
+      # On some boots the toggle asks for "Display over other apps" first: close that page.
+      - waitForAnimationToEnd
+      - runFlow:
+          when:
+            visible: Display over other apps
+          commands:
+            - back
+      - back
+- extendedWaitUntil:
+    visible: Welcome to TARKA
+    timeout: 10000
