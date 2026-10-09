@@ -1,7 +1,8 @@
 import { router, useLocalSearchParams } from 'expo-router';
-import { useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Alert, FlatList, StyleSheet, View } from 'react-native';
 
+import { BusyLine } from '../src/components/BusyLine';
 import { Hint } from '../src/components/Hint';
 import { ListRow } from '../src/components/ListRow';
 import { TextField } from '../src/components/TextField';
@@ -18,9 +19,24 @@ export default function QuickOpenSheet() {
   const colors = useTheme();
   const { projectId } = useLocalSearchParams<{ projectId: string }>();
   const [query, setQuery] = useState('');
-  // shortcut: walks the whole project on the UI thread, slow on very large repos; cache or move off-thread once git clone lands
-  const paths = useMemo(() => allFilePaths((p) => listEntries(projectId, p)), [projectId]);
-  const results = fuzzyFilter(query, paths, 30);
+  const [paths, setPaths] = useState<string[] | null>(null);
+  const results = fuzzyFilter(query, paths ?? [], 30);
+
+  // The file list is read a frame after the sheet opens, so "Listing files…" shows meanwhile.
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      // shortcut: walks the whole project on the UI thread, slow on very large repos; cache or move it off-thread when that bites
+      setPaths(allFilePaths((p) => listEntries(projectId, p)));
+    }, 16);
+    return () => clearTimeout(timer);
+  }, [projectId]);
+
+  function emptyList() {
+    if (!paths) return <BusyLine label="Listing files…" />;
+    return (
+      <Hint text={paths.length === 0 ? 'This project has no files yet.' : 'No file names match.'} />
+    );
+  }
 
   function open(path: string) {
     const error = openFileFromDisk(projectId, path);
@@ -38,11 +54,7 @@ export default function QuickOpenSheet() {
         data={results}
         keyExtractor={(p) => p}
         keyboardShouldPersistTaps="handled"
-        ListEmptyComponent={
-          <Hint
-            text={paths.length === 0 ? 'This project has no files yet.' : 'No file names match.'}
-          />
-        }
+        ListEmptyComponent={emptyList()}
         renderItem={({ item }) => (
           <ListRow
             icon="file"

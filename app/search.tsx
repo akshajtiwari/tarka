@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { Alert, FlatList, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { BusyLine } from '../src/components/BusyLine';
 import { Button } from '../src/components/Button';
 import { Chip } from '../src/components/Chip';
 import { Header } from '../src/components/Header';
@@ -26,11 +27,17 @@ export default function SearchScreen() {
   const [query, setQuery] = useState('');
   const [caseSensitive, setCaseSensitive] = useState(false);
   const [results, setResults] = useState<SearchMatch[] | null>(null);
+  const [searching, setSearching] = useState(false);
 
+  // Searching starts a frame later, so "Searching…" shows before the work begins.
   function search() {
-    // shortcut: reads every file on the UI thread, freezes on very large repos; move off the UI thread once git clone lands
-    const paths = allFilePaths((p) => listEntries(projectId, p));
-    setResults(searchText(paths, (p) => readForSearch(projectId, p), query, { caseSensitive }));
+    setSearching(true);
+    setTimeout(() => {
+      // shortcut: reads every file on the UI thread, slow on very large repos; move it off the UI thread when that bites
+      const paths = allFilePaths((p) => listEntries(projectId, p));
+      setResults(searchText(paths, (p) => readForSearch(projectId, p), query, { caseSensitive }));
+      setSearching(false);
+    }, 16);
   }
 
   function open(match: SearchMatch) {
@@ -53,8 +60,9 @@ export default function SearchScreen() {
           label={caseSensitive ? 'Match case: on' : 'Match case: off'}
           onPress={() => setCaseSensitive(!caseSensitive)}
         />
-        <Button label="Search" variant="primary" onPress={search} disabled={!query} />
+        <Button label="Search" variant="primary" onPress={search} disabled={!query || searching} />
       </View>
+      {searching && <BusyLine label="Searching…" />}
       {results && (
         <Text style={[styles.count, { color: colors.muted }]}>
           {results.length === 0 ? 'No matches' : `${results.length} matches`}
