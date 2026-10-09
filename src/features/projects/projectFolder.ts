@@ -16,11 +16,15 @@ export function documentsRoot(): Directory | null {
   return new Directory(`file://${TarkaAndroid.documentsPath()}`, 'TARKA');
 }
 
-// The folder a new project with this id goes into, following the setting in Settings.
+// Where new projects go, following the setting (inside the app until Documents is allowed).
+export function newProjectsRoot(): Directory {
+  const documents = useSettings.getState().projectsLocation === 'documents' && documentsRoot();
+  return documents || insideApp();
+}
+
 export function newProjectDir(id: string): Directory {
   checkId(id);
-  const documents = useSettings.getState().projectsLocation === 'documents' && documentsRoot();
-  return new Directory(documents || insideApp(), id);
+  return new Directory(newProjectsRoot(), id);
 }
 
 export function projectDir(id: string): Directory {

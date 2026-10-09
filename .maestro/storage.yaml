@@ -1,0 +1,43 @@
+# Projects in Documents/TARKA: allow "All files access" from Settings (Android's own switch),
+# create a project there, see its location, and use git on it.
+appId: com.akshajtiwari.tarka
+---
+- runFlow: common/open-app.yaml
+- tapOn: Settings
+- tapOn: Documents/TARKA
+- assertVisible: Allow file access
+- tapOn: Allow file access
+# Android's settings page: flip the switch, then come back.
+- extendedWaitUntil:
+    visible: .*(all files|All files).*
+    timeout: 10000
+- tapOn: .*(Allow access to manage all files|Allow access).*
+- back
+- extendedWaitUntil:
+    visible: /storage/emulated/0/Documents/TARKA
+    timeout: 10000
+- takeScreenshot: settings-projects-folder
+- scrollUntilVisible:
+    element:
+      text: Save git settings
+- tapOn: Your name
+- inputText: Test User
+- tapOn: Your email
+- inputText: test@example.com
+- hideKeyboard
+- tapOn: Save git settings
+- tapOn: OK
+- back
+- runFlow: common/new-python-project.yaml
+- tapOn: Git
+- tapOn: Start a git repository
+- tapOn: Stage all changes
+- tapOn: Commit message
+- inputText: first commit
+- hideKeyboard
+- tapOn: Commit 2 files
+- assertVisible: Staged \(0\)
+- tapOn: Go to projects
+- longPressOn: demo
+- assertVisible: /storage/emulated/0/Documents/TARKA/demo.*
+- takeScreenshot: project-location

@@ -31,6 +31,9 @@ if ! curl -s localhost:8081/status | grep -q running; then
   until curl -s localhost:8081/status | grep -q running; do sleep 2; done
 fi
 
+# clearState doesn't reach shared storage: start every run without old Documents/TARKA projects.
+adb shell rm -rf /storage/emulated/0/Documents/TARKA > /dev/null 2>&1 || true
+
 # A throwaway git server for the clone/push flow: http://10.0.2.2:8090/demo.git from the emulator.
 remote=.artifacts/git-remote
 rm -rf "$remote" && mkdir -p "$remote"

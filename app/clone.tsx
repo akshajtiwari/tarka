@@ -9,6 +9,7 @@ import { Header } from '../src/components/Header';
 import { IconButton } from '../src/components/IconButton';
 import { TextField } from '../src/components/TextField';
 import { cloneProject, nameFromUrl } from '../src/features/projects/cloneProject';
+import { folderPath, newProjectsRoot } from '../src/features/projects/projectFolder';
 import { font, fontSize } from '../src/theme/fonts';
 import { space } from '../src/theme/spacing';
 import { useTheme } from '../src/theme/useTheme';
@@ -62,6 +63,9 @@ export default function CloneScreen() {
         />
         <Text style={[styles.note, { color: colors.muted }]}>
           Only the latest commit of the main branch is downloaded, to keep it fast on a phone.
+        </Text>
+        <Text selectable style={[styles.note, { color: colors.muted }]}>
+          Saves into {folderPath(newProjectsRoot())}
         </Text>
         {busy ? (
           <View style={styles.progress}>

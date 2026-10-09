@@ -4,7 +4,11 @@ import { Alert, StyleSheet, Text, View } from 'react-native';
 
 import { Button } from '../src/components/Button';
 import { TextField } from '../src/components/TextField';
-import { deleteProjectFolder } from '../src/features/projects/projectFolder';
+import {
+  deleteProjectFolder,
+  folderPath,
+  projectDir,
+} from '../src/features/projects/projectFolder';
 import { useProjectStore } from '../src/features/projects/projectStore';
 import { font, fontSize } from '../src/theme/fonts';
 import { space } from '../src/theme/spacing';
@@ -47,6 +51,10 @@ export default function ProjectActionsSheet() {
   return (
     <View style={[styles.sheet, { backgroundColor: colors.surface }]}>
       <Text style={[styles.title, { color: colors.text }]}>{project.name}</Text>
+      <Text style={[styles.label, { color: colors.muted }]}>Location (long-press to copy)</Text>
+      <Text selectable style={[styles.path, { color: colors.text }]}>
+        {folderPath(projectDir(project.id))}
+      </Text>
       <TextField label="Name" value={name} onChangeText={setName} />
       <Button label="Rename" variant="primary" onPress={rename} disabled={!name.trim()} />
       <Button label="Delete project" onPress={confirmDelete} />
@@ -57,4 +65,6 @@ export default function ProjectActionsSheet() {
 const styles = StyleSheet.create({
   sheet: { padding: space.lg, gap: space.md },
   title: { fontFamily: font.uiBold, fontSize: fontSize.title },
+  label: { fontFamily: font.ui, fontSize: fontSize.small },
+  path: { fontFamily: font.code, fontSize: fontSize.small, marginTop: -space.sm },
 });
