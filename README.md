@@ -22,12 +22,16 @@ and open it. Android 7.0 or newer, 64-bit (arm64).
   - Suggestion chips that learn the words you pick.
   - Tabs (swipe the header to switch), autosave, find and replace, go to line, pinch to zoom, and read lock.
   - Ctrl+S on a hardware keyboard.
-- **Files:** projects from templates or Git, an explorer drawer with file actions, quick open and search.
-- **Git:** init, stage, commit and diff, plus history with commit details, branches, and clone, pull and push
-  with a token.
-- **Run:** JavaScript, TypeScript, Python (Pyodide) and HTML preview, on the phone, with Stop for endless loops.
-- **Agent:** bring your own Claude or OpenAI-compatible key. Every write or delete waits for your approval.
-- Dark and light themes, and a side rail on tablets.
+- **Files:** projects from templates or Git, in `Documents/TARKA` where other apps can see them (or inside
+  TARKA, your choice in setup). An explorer drawer with file actions, quick open and search.
+- **Git:** init, stage, commit and diff, plus history with commit details, branches, and clone (with progress),
+  pull and push with a token.
+- **Terminal:** the Run button opens a terminal that runs JavaScript, TypeScript and Python (Pyodide) on the
+  phone, with live `input()`, a Python REPL, `pip install`, `npm install`, Stop and command history.
+  HTML files open in a preview.
+- **Termux bridge:** `termux <command>` runs real Linux tools (gcc, java, go, …) in the Termux app on your project.
+- **Agent:** bring your own Claude, Gemini or OpenAI-compatible key. Every write or delete waits for your approval.
+- A short setup on first launch, dark and light themes, and a side rail on tablets.
 
 ## Build from source
 
@@ -57,6 +61,6 @@ as described in [docs/RELEASE.md](docs/RELEASE.md).
 ## Docs
 
 - [docs/HANDOFF.md](docs/HANDOFF.md): start here when you pick up the project.
-- [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md): how the editor, Git, runner and agent fit together.
+- [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md): how the editor, Git, terminal and agent fit together.
 - [docs/ROADMAP.md](docs/ROADMAP.md): what's done and what's next.
 - [docs/UI.md](docs/UI.md): design rules. [docs/COMPILERS.md](docs/COMPILERS.md): options for running more languages.

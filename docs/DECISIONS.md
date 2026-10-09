@@ -43,7 +43,7 @@ Short records of why things are the way they are. Newest at the bottom. Each dep
 - **Read lock closes the keyboard from inside the WebView** (focus + blur a throwaway `inputmode="none"` input).
   Native dismiss calls only know React Native text inputs. Found by inspecting the WebView over Chrome DevTools.
 - **The tablet rail uses React Navigation's `tabBarPosition: 'left'`** with the same `Dock` component, so no second tab bar.
-- **Tips live in the settings store** (`tipsDone`), so clearing app data shows them again. No separate onboarding screens.
+- ~~**Tips live in the settings store** (`tipsDone`)~~ replaced in v0.2 by the setup screens (`onboarded`).
 
 ## Agent decisions
 - **The agent loop is ours (`src/features/agent/loop.ts`), not the SDK's tool runner.** We need an approval gate before writes, loop detection and a step budget, and the same loop must also drive OpenAI-compatible servers.
@@ -55,3 +55,27 @@ Short records of why things are the way they are. Newest at the bottom. Each dep
 - **Tool inputs are buffered, not streamed** (no `eager_input_streaming`), so the API checks the JSON for us. Phone-sized files make the latency fine. Inputs are still checked (`requireString`) because they come from the model.
 - **Default model `claude-opus-5-5`** with adaptive thinking, `effort: 'high'`, and `fallbacks: 'default'` (server-side retry on a safety decline).
 - **UI tests use a fake OpenAI-compatible server** (`scripts/fake-ai.cjs`) with a fixed script. The local `qwen2.5-coder:3b` returned tool calls as plain text, so it cannot test tools reliably.
+
+## v0.2 decisions
+- **Git speed: cache and yield, not native code.** isomorphic-git's `cache`, a one-second memo for `.git` paths and
+  yielding every 12 ms took a status read on a real repo from 1.2–1.6 s of frozen UI to ~0.7 s in the background.
+  A native SHA-1 (`expo-crypto`) is kept in reserve for if release builds on phones are still slow.
+- **One shared git-status store, read only when someone is looking** (Git tab focused, explorer fully open),
+  instead of a read on every drawer open and tab focus.
+- **The Run tab became a terminal** (owner's choice: full screen, GitHub-dark navy). Python keeps one session per
+  project so Pyodide loads once and pip installs stay; JS gets a fresh worker per run.
+- **Live `input()` uses JSPI** (Chrome 137+). Without it, answers typed ahead are used. No SharedArrayBuffer:
+  Android WebView can't be cross-origin isolated.
+- **Packages:** `pip install` uses micropip and saves `requirements.txt`; `npm install` only writes `package.json`,
+  and packages load from esm.sh when the code runs (no node_modules on the phone). `node:*` modules point to Termux.
+- **Both terminals** (owner's choice): the in-app one needs no setup; the **Termux bridge** (`RUN_COMMAND`, one-shot,
+  output when done) gives a real Linux for compilers and shells. It copies the project into Termux's home instead of
+  sharing storage, because Termux can't read TARKA's private folder and the copy works for both project locations.
+- **Projects live in a visible folder chosen in setup** (owner's choice): `Documents/TARKA` by default ("All files
+  access"), or inside TARKA. Each project stores its own `root`, so old projects keep working without a migration.
+- **A small local Expo module in Kotlin** (`modules/tarka-android`) for the storage permission and Termux, rather
+  than third-party packages: it is ~160 lines that the owner can read, and needs no extra dependency.
+- **Gemini through its OpenAI-compatible endpoint**, reusing the OpenAI provider; the raw assistant message goes back
+  unchanged so thought signatures survive. The model is saved per provider.
+- **Setup is required, but only Python is mandatory** (owner's choice): Git, AI and Termux can be "Set up later".
+- **Compiled languages:** researched, not built yet. See COMPILERS.md for the options and the recommended order.

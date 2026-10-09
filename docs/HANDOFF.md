@@ -5,7 +5,7 @@ This page is for anyone picking up TARKA, human or AI agent, with no other conte
 ## What TARKA is
 
 TARKA is a mobile IDE for phones, Android first. It has a clean code editor, a file explorer, Git (status, diff, commit, push),
-on-device code running, and an AI agent that edits code with your approval.
+a terminal that runs code on the device (plus a bridge to Termux), and an AI agent that edits code with your approval.
 It is built with Expo (React Native), with CodeMirror 6 as the editor.
 The full product description is in [PROJECT.md](PROJECT.md).
 
@@ -19,12 +19,14 @@ The full product description is in [PROJECT.md](PROJECT.md).
 6. [DECISIONS.md](DECISIONS.md): why each library or approach was chosen.
 7. [DEBT.md](DEBT.md): known shortcuts and when to fix them.
 8. [RELEASE.md](RELEASE.md): building, signing and publishing an APK (the key lives outside the repo).
-9. [reference/nimotecode-notes.md](reference/nimotecode-notes.md): what we learned from NimoteCode, and which of its docs to re-read for each phase.
+9. [COMPILERS.md](COMPILERS.md): how code runs today, and the researched plan for compiled languages.
+10. [reference/nimotecode-notes.md](reference/nimotecode-notes.md): what we learned from NimoteCode, and which of its docs to re-read for each phase.
 
 ## How to continue
 
 1. Run `git log --oneline | head -20` and read `PROGRESS.md` → **Next up**.
 2. Run `source scripts/env.sh`, start the emulator with `scripts/emulator.sh`, and run `npm start`. Check that the current state is green with `npm run check` and `npm run e2e`.
+   After a change in `modules/` or `app.json` plugins, rebuild the dev app (`scripts/build-apk.sh`): Metro can't hot-reload native code.
 3. Take the next unchecked item in `ROADMAP.md`. Work in small steps, and finish each one by the definition of done below.
 4. Before you stop, update `PROGRESS.md` (done, next, issues) and `REVIEW.md` (what the owner should look at).
 

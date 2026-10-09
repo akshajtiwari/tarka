@@ -65,16 +65,28 @@ Check items off as they land (each must pass the definition of done in [HANDOFF.
 
 ## Phase 7: polish
 - [x] Tablet layout: side rail at 768 dp and wider (checked with `adb shell wm size 1600x2560` + `wm density 320`)
-- [x] Onboarding: a tips card on the home screen until "Got it"
+- [x] Onboarding: a tips card on the home screen until "Got it" (replaced by setup in v0.2)
 - [x] Empty states: hints for an empty console, file tree, quick-open and a clean Git tab
 - [ ] Large-file performance: only the guard exists (over 2 MB opens read-only); no measurements yet
 - [~] Unsaved edits when the app is killed: autosave runs when the app goes to the background, so only
       the last 1.5 s of typing before a crash can be lost. No restore-on-launch yet.
 - [x] Release APK (signed, tested on the emulator, attached to the GitHub release)
 
+## v0.2: fixes from the first phone test
+- [x] Git speed: shared cache, `.git` memo, yielding, one shared status store (numbers in PROGRESS.md)
+- [x] Clone progress and busy indicators on every slow action
+- [x] Keyboard-aware forms (Settings, clone, Git tab, sheets)
+- [x] Home button in every workspace tab; Settings and "Go to projects" in the editor menu; back goes home
+- [x] GitHub-style diff colors; GitHub-dark terminal
+- [x] Projects in `Documents/TARKA` (or inside TARKA), with the full path shown
+- [x] Gemini API key, model saved per provider
+- [x] Terminal: run, Python REPL, live `input()`, `pip install`, `npm install`, Stop, history; editor Run file button
+- [x] Termux bridge: `termux <command>` (jest-tested with real bash; see TESTING.md for the emulator flow)
+- [x] Setup flow: theme, projects folder, Python install (required), git, AI, Termux (optional), tips
+- [x] Compiler research (COMPILERS.md)
+
 ## Later
-- [ ] On-device compilers v2 (see COMPILERS.md)
-- [ ] Termux bridge (Android)
+- [ ] On-device compilers v2, in the order in COMPILERS.md: C (xcc), Lua and SQL, Java (teavm-javac), C++ (clang)
 - [ ] SSH workspaces + terminal (xterm.js)
 - [ ] AI inline completions (opt-in)
 - [ ] LSP diagnostics

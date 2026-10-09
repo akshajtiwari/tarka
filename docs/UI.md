@@ -34,7 +34,7 @@ The one memorable detail is the **brass caret and active-line bar** in the edito
 | running | `#79A7D3` | `#2B5F91` |
 | diff added: line / line-number column / `+` | `#2EA04326` / `#3FB9504D` / `#3FB950` | `#DAFBE1` / `#ACEEBB` / `#1A7F37` |
 | diff removed: line / line-number column / `-` | `#F8514926` / `#F851494D` / `#F85149` | `#FFEBE9` / `#FFCECB` / `#CF222E` |
-| terminal (`term`): bg / text / muted / error / prompt / success | `#0D1117` / `#E6EDF3` / `#8B949E` / `#FF7B72` / `#79C0FF` / `#3FB950` | same (the terminal is GitHub-dark navy in both themes) |
+| terminal (`term`): bg / text / muted / error / prompt | `#0D1117` / `#E6EDF3` / `#8B949E` / `#FF7B72` / `#79C0FF` | same (the terminal is GitHub-dark navy in both themes) |
 
 **Syntax colors (dark)**
 
@@ -108,8 +108,17 @@ keyboard up:
 - Sheets (tabs, file actions, branch) slide up from the bottom, with their actions in thumb reach.
 - At 768dp and wider the dock becomes a left rail (80 wide) that stays while typing. Each tab then pads its own bottom
   for the system nav bar. The explorer is still a drawer there (a pinned explorer is a later idea).
-- **First launch:** a tips card on the home screen lists the phone-only tricks (edge swipe, trackpad, pinch, read lock,
-  AI key) until "Got it".
+- **First launch: setup** (`app/welcome.tsx`) is required. One step per screen with a progress bar, and back works on
+  every step: welcome → theme → projects folder → **install Python** (required: Continue unlocks once Python has
+  started) → git → AI → Termux → phone tips → done. Git, AI and Termux have **"Set up later"**; Settings then shows a
+  "Not set up yet" line for each and has "Run setup again".
+- **Getting home:** a home icon ("Go to projects") sits in the explorer header and the Git, Run and Agent headers;
+  the editor's ⋯ menu has "Go to projects" and "Settings". Android back from any workspace tab goes home.
+- **Where files are:** project actions show the project's full folder (selectable), and the clone screen says
+  where the repository will be saved.
+- **Something is working:** every slow action shows a `BusyLine` (small spinner plus words such as "Pulling…",
+  "Reading history…", "Installing…") and disables the buttons that would start it again. The dock's Run item gets
+  a dot while a program runs, and the agent shows "Thinking…".
 - **Empty lists** get one quiet muted line (`Hint`) saying what shows up there; whole empty screens use `EmptyState`.
 
 ## Editor behavior
@@ -124,6 +133,13 @@ keyboard up:
 - **Key row keys:** Tab, symbols for the current language, ← →, undo, redo. Long-press a key for its pair, for example `(` → `()`.
 - **Trackpad:** press and hold the key row, then slide. Sideways moves the caret by characters, up/down moves it by lines, with a light haptic tick for each step.
 - **Suggestions** come from keywords, project words, snippets and usage memory. They show as chips; tap one to insert it.
+
+## Terminal
+
+- The Run tab is a full-screen terminal in GitHub-dark navy (`term` tokens) in both themes, in JetBrains Mono.
+- The prompt shows `$` (shell), `>>>` / `...` (Python REPL) or the program's own prompt while it waits for `input()`.
+- Chips above the input: **Stop** while something runs, **Exit Python** in the REPL, and recent commands to tap.
+- Errors are `term.error`, info lines `term.muted`, the typed command `term.prompt`.
 
 ## Motion
 
