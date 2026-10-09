@@ -36,6 +36,9 @@ appId: com.akshajtiwari.tarka
 - hideKeyboard
 - takeScreenshot: setup-ai
 - tapOn: Save AI settings
+- assertVisible: Real Linux tools \(optional\)
+- takeScreenshot: setup-termux
+- tapOn: Set up later
 - assertVisible: A few phone tricks
 - takeScreenshot: setup-tips
 - tapOn: Continue

@@ -13,6 +13,7 @@ appId: com.akshajtiwari.tarka
 - tapOn: Continue
 - tapOn: Set up later # git
 - tapOn: Set up later # AI
+- tapOn: Set up later # Termux
 - tapOn: Continue # tips
 - tapOn: Start coding
 - extendedWaitUntil:
