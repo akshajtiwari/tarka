@@ -1,0 +1,25 @@
+# `termux <command>` runs real Linux commands in the Termux app on a copy of the project.
+# Needs Termux on the emulator: run scripts/termux-setup.sh first. Not part of `npm run e2e`.
+appId: com.akshajtiwari.tarka
+---
+- runFlow: ../common/open-app.yaml
+- runFlow: ../common/new-python-project.yaml
+- tapOn: Run
+- tapOn: Terminal input
+- inputText: termux ls
+- pressKey: Enter
+- extendedWaitUntil:
+    visible: \[exit 0\]
+    timeout: 60000
+- assertVisible: .*main\.py.*
+- inputText: termux cat main.py
+- pressKey: Enter
+- extendedWaitUntil:
+    visible: .*def greet.*
+    timeout: 60000
+- inputText: termux exit 3
+- pressKey: Enter
+- extendedWaitUntil:
+    visible: \[exit 3\]
+    timeout: 60000
+- takeScreenshot: terminal-termux
