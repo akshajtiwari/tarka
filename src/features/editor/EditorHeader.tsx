@@ -1,5 +1,5 @@
 import Octicons from '@expo/vector-icons/Octicons';
-import { useMemo } from 'react';
+import { memo, useMemo } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { Directions, Gesture, GestureDetector } from 'react-native-gesture-handler';
 
@@ -22,7 +22,7 @@ type Props = {
 
 // ☰ | file name ● ▾ | Save ⋯. Tapping the name opens the list of open files,
 // swiping the header moves between them.
-export function EditorHeader({
+export const EditorHeader = memo(function EditorHeader({
   fileName,
   dirty,
   tabCount,
@@ -73,7 +73,7 @@ export function EditorHeader({
       </View>
     </GestureDetector>
   );
-}
+});
 
 const styles = StyleSheet.create({
   header: {

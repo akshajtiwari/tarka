@@ -1,3 +1,4 @@
+import { memo } from 'react';
 import { ScrollView, StyleSheet } from 'react-native';
 
 import { Chip } from '../../components/Chip';
@@ -10,7 +11,7 @@ type Props = {
 };
 
 // Completions as big chips in thumb reach, right above the key row.
-export function SuggestionStrip({ labels, onPick }: Props) {
+export const SuggestionStrip = memo(function SuggestionStrip({ labels, onPick }: Props) {
   const colors = useTheme();
   if (labels.length === 0) return null;
 
@@ -27,7 +28,7 @@ export function SuggestionStrip({ labels, onPick }: Props) {
       ))}
     </ScrollView>
   );
-}
+});
 
 const styles = StyleSheet.create({
   strip: { maxHeight: size.suggestions, borderTopWidth: StyleSheet.hairlineWidth },

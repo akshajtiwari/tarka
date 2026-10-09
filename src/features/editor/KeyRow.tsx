@@ -1,4 +1,5 @@
 import Octicons from '@expo/vector-icons/Octicons';
+import { memo } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { GestureDetector } from 'react-native-gesture-handler';
 
@@ -20,7 +21,14 @@ type Props = {
 // Sits right above the keyboard while editing. Press and hold, then slide, to use it as a trackpad.
 // Taps must never close the keyboard, so the scroll view keeps taps (keyboardShouldPersistTaps)
 // and nothing here takes focus.
-export function KeyRow({ path, onInsert, onMove, onMoveLines, onUndo, onRedo }: Props) {
+export const KeyRow = memo(function KeyRow({
+  path,
+  onInsert,
+  onMove,
+  onMoveLines,
+  onUndo,
+  onRedo,
+}: Props) {
   const colors = useTheme();
   const trackpad = useTrackpad(onMove, onMoveLines);
 
@@ -74,7 +82,7 @@ export function KeyRow({ path, onInsert, onMove, onMoveLines, onUndo, onRedo }: 
       </View>
     </GestureDetector>
   );
-}
+});
 
 const styles = StyleSheet.create({
   row: { height: size.keyRow, flexDirection: 'row', borderTopWidth: StyleSheet.hairlineWidth },

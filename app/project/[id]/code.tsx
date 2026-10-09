@@ -1,5 +1,4 @@
-import * as Haptics from 'expo-haptics';
-import { router, useIsFocused, useLocalSearchParams } from 'expo-router';
+import { useIsFocused, useLocalSearchParams } from 'expo-router';
 import { memo, useCallback, useEffect, useMemo, useState } from 'react';
 import { Alert } from 'react-native';
 import { KeyboardAvoidingView, useKeyboardState } from 'react-native-keyboard-controller';
@@ -16,8 +15,8 @@ import { saveFile } from '../../../src/features/editor/fileActions';
 import { KeyRow } from '../../../src/features/editor/KeyRow';
 import { useMemoryStore } from '../../../src/features/editor/memoryStore';
 import { SuggestionStrip } from '../../../src/features/editor/SuggestionStrip';
+import { useEditorActions } from '../../../src/features/editor/useEditorActions';
 import { useAutosave } from '../../../src/features/editor/useAutosave';
-import { useWorkspaceStore } from '../../../src/features/workspace/workspaceStore';
 import { topItems } from '../../../src/lib/usageMemory';
 import { dark as darkColors } from '../../../src/theme/colors';
 import { useTheme } from '../../../src/theme/useTheme';
@@ -29,7 +28,6 @@ export default function CodeScreen() {
   const colors = useTheme();
   const dark = colors === darkColors;
   const { id } = useLocalSearchParams<{ id: string }>();
-  const setExplorerOpen = useWorkspaceStore((s) => s.setExplorerOpen);
   const file = useEditorStore((s) => s.files.find((f) => f.path === s.activePath));
   const tabCount = useEditorStore((s) => s.files.length);
   const reloads = useEditorStore((s) => s.reloads);
@@ -38,6 +36,7 @@ export default function CodeScreen() {
   const { fontSize, wrap, readOnly, setFontSize } = useEditorSettings();
   const memory = useMemoryStore((s) => s.words);
   const [suggestions, setSuggestions] = useState<string[]>([]);
+  const actions = useEditorActions(id);
   useAutosave(id);
 
   const locked = !!file?.locked;
@@ -60,7 +59,10 @@ export default function CodeScreen() {
   const onChange = useCallback(async (path: string, text: string) => {
     useEditorStore.getState().updateText(path, text);
   }, []);
-  const onSuggestions = useCallback(async (labels: string[]) => setSuggestions(labels), []);
+  // The editor sends a list on almost every keystroke; only a different list redraws.
+  const onSuggestions = useCallback(async (labels: string[]) => {
+    setSuggestions((old) => (old.join('\n') === labels.join('\n') ? old : labels));
+  }, []);
   const onAccepted = useCallback(async (label: string) => {
     useMemoryStore.getState().useWord(label);
   }, []);
@@ -73,13 +75,6 @@ export default function CodeScreen() {
     },
     [id],
   );
-  const switchTab = useCallback((by: number) => {
-    const { files, activePath, setActive } = useEditorStore.getState();
-    const next = files[files.findIndex((f) => f.path === activePath) + by];
-    if (!next) return;
-    setActive(next.path);
-    Haptics.selectionAsync();
-  }, []);
 
   // Stable handlers, so the key row's trackpad gesture is not rebuilt mid-drag.
   const keys = useMemo(
@@ -92,16 +87,7 @@ export default function CodeScreen() {
     }),
     [send],
   );
-
-  function showFiles() {
-    setExplorerOpen(true);
-  }
-
-  function save() {
-    if (!file) return;
-    const error = saveFile(id, file.path);
-    if (error) Alert.alert('Could not save', error);
-  }
+  const pickSuggestion = useCallback((index: number) => send({ name: 'accept', index }), [send]);
 
   return (
     <SafeAreaView edges={['top']} style={{ flex: 1, backgroundColor: colors.bg }}>
@@ -109,11 +95,11 @@ export default function CodeScreen() {
         fileName={file ? file.path.split('/').pop()! : null}
         dirty={!!file && isDirty(file)}
         tabCount={tabCount}
-        onShowFiles={showFiles}
-        onShowTabs={() => router.push({ pathname: '/open-files', params: { projectId: id } })}
-        onShowMenu={() => router.push('/editor-menu')}
-        onSave={save}
-        onSwipe={switchTab}
+        onShowFiles={actions.showFiles}
+        onShowTabs={actions.showTabs}
+        onShowMenu={actions.showMenu}
+        onSave={actions.save}
+        onSwipe={actions.switchTab}
       />
       {file ? (
         <KeyboardAvoidingView behavior="padding" style={{ flex: 1 }}>
@@ -131,12 +117,7 @@ export default function CodeScreen() {
             onSave={onSave}
             dom={domProps}
           />
-          {keyboardOpen && (
-            <SuggestionStrip
-              labels={suggestions}
-              onPick={(index) => send({ name: 'accept', index })}
-            />
-          )}
+          {keyboardOpen && <SuggestionStrip labels={suggestions} onPick={pickSuggestion} />}
           {keyboardOpen && <KeyRow path={file.path} {...keys} />}
         </KeyboardAvoidingView>
       ) : (
@@ -144,7 +125,7 @@ export default function CodeScreen() {
           title="Open a file"
           body="Pick a file from the explorer to start reading or editing."
         >
-          <Button label="Show files" variant="primary" onPress={showFiles} />
+          <Button label="Show files" variant="primary" onPress={actions.showFiles} />
         </EmptyState>
       )}
     </SafeAreaView>
