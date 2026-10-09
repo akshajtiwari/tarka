@@ -1,7 +1,12 @@
-import { router, useLocalSearchParams } from 'expo-router';
-import { memo, useCallback, useMemo, useState } from 'react';
+import * as Haptics from 'expo-haptics';
+import { router, useIsFocused, useLocalSearchParams } from 'expo-router';
+import { memo, useCallback, useEffect, useMemo, useState } from 'react';
 import { Alert } from 'react-native';
-import { KeyboardAvoidingView, useKeyboardState } from 'react-native-keyboard-controller';
+import {
+  KeyboardAvoidingView,
+  KeyboardController,
+  useKeyboardState,
+} from 'react-native-keyboard-controller';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { Button } from '../../../src/components/Button';
@@ -44,6 +49,13 @@ export default function CodeScreen() {
     () => ({ colors, dark, fontSize, wrap, readOnly: readOnly || locked }),
     [colors, dark, fontSize, wrap, readOnly, locked],
   );
+  // Read lock means no keyboard here. Android's WebView can still bring it up (after the find
+  // panel was used), so close it whenever it shows. Only while this tab is on screen: other tabs
+  // and sheets have their own text fields.
+  const focused = useIsFocused();
+  useEffect(() => {
+    if (focused && look.readOnly && keyboardOpen) KeyboardController.dismiss();
+  }, [focused, look.readOnly, keyboardOpen]);
   const memoryWords = useMemo(() => topItems(memory, 200), [memory]);
   // The text the editor starts with; only changes when another file is opened.
   const startText = useMemo(() => file?.text ?? '', [file?.path, reloads]); // eslint-disable-line react-hooks/exhaustive-deps
@@ -57,6 +69,21 @@ export default function CodeScreen() {
     useMemoryStore.getState().useWord(label);
   }, []);
   const onFontSize = useCallback(async (size: number) => setFontSize(size), [setFontSize]);
+  const onSave = useCallback(
+    async (path: string, text: string) => {
+      useEditorStore.getState().updateText(path, text);
+      const error = saveFile(id, path);
+      if (error) Alert.alert('Could not save', error);
+    },
+    [id],
+  );
+  const switchTab = useCallback((by: number) => {
+    const { files, activePath, setActive } = useEditorStore.getState();
+    const next = files[files.findIndex((f) => f.path === activePath) + by];
+    if (!next) return;
+    setActive(next.path);
+    Haptics.selectionAsync();
+  }, []);
 
   // Stable handlers, so the key row's trackpad gesture is not rebuilt mid-drag.
   const keys = useMemo(
@@ -90,6 +117,7 @@ export default function CodeScreen() {
         onShowTabs={() => router.push({ pathname: '/open-files', params: { projectId: id } })}
         onShowMenu={() => router.push('/editor-menu')}
         onSave={save}
+        onSwipe={switchTab}
       />
       {file ? (
         <KeyboardAvoidingView behavior="padding" style={{ flex: 1 }}>
@@ -104,6 +132,7 @@ export default function CodeScreen() {
             onSuggestions={onSuggestions}
             onAccepted={onAccepted}
             onFontSize={onFontSize}
+            onSave={onSave}
             dom={domProps}
           />
           {keyboardOpen && (
