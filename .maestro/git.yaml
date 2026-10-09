@@ -4,6 +4,9 @@ appId: com.akshajtiwari.tarka
 - runFlow: common/open-app.yaml
 # Identity is needed to commit.
 - tapOn: Settings
+- scrollUntilVisible: # the git section is below the theme, folder and AI sections
+    element:
+      text: Save git settings
 - tapOn: Your name
 - inputText: Test User
 - hideKeyboard # Maestro mis-aims taps while the keyboard is up

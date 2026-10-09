@@ -1,13 +1,45 @@
-# Release build check, no Metro: the app starts, runs code, and code you run can't read app files.
-# Not part of `npm run e2e`. Install the release APK, then: maestro test .maestro/release/smoke.yaml
+# Release build check, no Metro: setup (projects in Documents/TARKA, Python installed), the terminal
+# runs JavaScript with input() and Python, code you run can't read app files, and the project's
+# folder is shown. Not part of `npm run e2e`. Install the release APK, then:
+#   maestro test .maestro/release/smoke.yaml
 appId: com.akshajtiwari.tarka
 ---
 - launchApp:
     clearState: true
 - extendedWaitUntil:
-    visible: Projects
+    visible: Start setup
     timeout: 30000
-- tapOn: Got it
+- tapOn: Start setup
+- tapOn: Continue # theme
+# Documents/TARKA is preselected. Allow file access unless Android still has it allowed.
+- runFlow:
+    when:
+      visible: Allow file access
+    commands:
+      - tapOn: Allow file access
+      - extendedWaitUntil:
+          visible: .*(all files|All files).*
+          timeout: 10000
+      - tapOn: .*(Allow access to manage all files|Allow access).*
+      - back
+- extendedWaitUntil:
+    visible: /storage/emulated/0/Documents/TARKA
+    timeout: 10000
+- tapOn: Continue
+- extendedWaitUntil: # downloads Pyodide from the CDN once
+    visible: Python is ready
+    timeout: 180000
+- takeScreenshot: release-setup-python
+- tapOn: Continue
+- tapOn: Set up later # git
+- tapOn: Set up later # AI
+- tapOn: Set up later # Termux
+- tapOn: Continue # tips
+- tapOn: Start coding
+- extendedWaitUntil:
+    visible: Projects
+    timeout: 10000
+# JavaScript in the terminal.
 - tapOn: New project
 - tapOn: Name
 - inputText: js
@@ -15,12 +47,17 @@ appId: com.akshajtiwari.tarka
 - hideKeyboard
 - tapOn: Create project
 - tapOn: Run
-- tapOn: Run main.js
+- tapOn: Terminal input
+- inputText: run main.js
+- pressKey: Enter
 - extendedWaitUntil:
     visible: hello, world
-    timeout: 15000
-- takeScreenshot: release-run-js
-# Release pages load from file://, and the WebView allows file reads: the worker must refuse them.
+    timeout: 20000
+- takeScreenshot: release-terminal-js
+# input(), and the file:// check: release pages load from file://, and the WebView allows
+# file reads, so the worker must refuse them.
+- tapOn: # tapping the output closes the keyboard
+    point: 50%,40%
 - tapOn: Code
 - tapOn:
     text: Show files
@@ -33,17 +70,23 @@ appId: com.akshajtiwari.tarka
 - tapOn: File probe.js
 - tapOn:
     point: 50%,30%
-- inputText: "fetch('file:///proc/self/status').then(() => console.log('READ'), (e) => console.log('BLOCKED ' + e.message))"
+- inputText: const n = await input("Name? ")
+- pressKey: Enter
+- inputText: "fetch('file:///proc/self/status').then(() => console.log('READ ' + n), (e) => console.log('BLOCKED ' + n + ' ' + e.message))"
 - hideKeyboard
-- tapOn: Run
-- tapOn: Run probe.js
+- tapOn: Run file
 - extendedWaitUntil:
-    visible: BLOCKED Only web addresses.*
+    visible: Name\?.*
+    timeout: 20000
+- tapOn: Terminal input
+- inputText: Ada
+- pressKey: Enter
+- extendedWaitUntil:
+    visible: BLOCKED Ada Only web addresses.*
     timeout: 15000
 - takeScreenshot: release-file-blocked
-# Python downloads Pyodide from the CDN on first use.
-- back
-- back
+# Python in the terminal (Pyodide was cached during setup).
+- tapOn: Go to projects
 - tapOn: New project
 - tapOn: Name
 - inputText: py
@@ -51,8 +94,15 @@ appId: com.akshajtiwari.tarka
 - hideKeyboard
 - tapOn: Create project
 - tapOn: Run
-- tapOn: Run main.py
+- tapOn: Terminal input
+- inputText: run main.py
+- pressKey: Enter
 - extendedWaitUntil:
     visible: hello, world
     timeout: 120000
-- takeScreenshot: release-run-python
+- takeScreenshot: release-terminal-python
+# The project lives in Documents/TARKA, and its folder is shown.
+- tapOn: Go to projects
+- longPressOn: py
+- assertVisible: /storage/emulated/0/Documents/TARKA/py.*
+- takeScreenshot: release-project-folder

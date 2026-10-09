@@ -6,15 +6,20 @@ set -euo pipefail
 cd "$(dirname "$0")/.."
 source scripts/env.sh
 
-# Restart the emulator if it has grown too big (its GPU renderer can leak memory over time).
-rss_kb=$(ps -o rss= -C qemu-system-x86_64-headless | head -1 || true) # empty when no emulator
-if [ "${rss_kb:-0}" -gt 4500000 ]; then
-  echo "== emulator uses $((rss_kb / 1024)) MB, restarting it"
-  adb emu kill > /dev/null 2>&1 || true
-  sleep 8
-fi
-scripts/emulator.sh
-export ANDROID_SERIAL=$(adb devices | awk '/^emulator-/ {print $1; exit}')
+# Start the emulator, restarting it first if it has grown too big: its GPU renderer leaks memory,
+# and past ~8 GB the out-of-memory killer ends it mid-flow. Checked before every flow.
+fresh_emulator() {
+  rss_kb=$(ps -o rss= -C qemu-system-x86_64-headless | head -1 || true) # empty when no emulator
+  if [ "${rss_kb:-0}" -gt 4500000 ]; then
+    echo "== emulator uses $((rss_kb / 1024)) MB, restarting it"
+    adb emu kill > /dev/null 2>&1 || true
+    sleep 8
+  fi
+  scripts/emulator.sh > /dev/null
+  ANDROID_SERIAL=$(adb devices | awk '/^emulator-/ {print $1; exit}')
+  export ANDROID_SERIAL
+}
+fresh_emulator
 
 # The dev build must be installed once (and again after native changes).
 if ! adb shell pm list packages | grep -q com.akshajtiwari.tarka; then
@@ -62,8 +67,10 @@ if [ ${#flows[@]} -eq 0 ]; then flows=(.maestro/*.yaml); fi
 failed=()
 for flow in "${flows[@]}"; do
   name=$(basename "$flow" .yaml)
+  fresh_emulator
   if ! maestro --device "$ANDROID_SERIAL" test --test-output-dir "$run_dir/$name" "$flow"; then
     echo "== $name failed, retrying once"
+    fresh_emulator # in case the emulator itself went away
     maestro --device "$ANDROID_SERIAL" test --test-output-dir "$run_dir/$name-retry" "$flow" || failed+=("$name")
   fi
 done

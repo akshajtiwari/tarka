@@ -4,6 +4,9 @@ appId: com.akshajtiwari.tarka
 ---
 - runFlow: common/open-app.yaml
 - tapOn: Settings
+- scrollUntilVisible: # the git section is below the theme, folder and AI sections
+    element:
+      text: Save git settings
 - tapOn: Your name
 - inputText: Phone User
 - hideKeyboard
