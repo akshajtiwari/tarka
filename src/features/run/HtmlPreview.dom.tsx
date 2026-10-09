@@ -15,7 +15,15 @@ export default function HtmlPreview({ html }: Props) {
       title="Preview"
       srcDoc={html}
       sandbox="allow-scripts allow-modals"
-      style={{ border: 'none', width: '100vw', height: '100vh', backgroundColor: '#fff' }}
+      // Pinned to the WebView's edges: 100vh is measured once and came out short on Android.
+      style={{
+        position: 'fixed',
+        inset: 0,
+        width: '100%',
+        height: '100%',
+        border: 'none',
+        backgroundColor: '#fff',
+      }}
     />
   );
 }
