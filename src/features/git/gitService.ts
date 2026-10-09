@@ -35,6 +35,22 @@ export async function getChanges(
   return { staged: stagedChanges(rows), unstaged: unstagedChanges(rows) };
 }
 
+// Switching branch or pulling would overwrite staged work without asking, so both
+// refuse while there is anything uncommitted. New files that were never staged are fine.
+export async function assertClean(fs: Fs, dir: string) {
+  const { staged, unstaged } = await getChanges(fs, dir);
+  if (staged.length > 0 || unstaged.some((c) => c.kind !== 'untracked')) {
+    throw new Error('Commit your changes first (or undo them), then try again.');
+  }
+}
+
+export async function stageAll(fs: Fs, dir: string, changes: Change[]) {
+  const deleted = changes.filter((c) => c.kind === 'deleted').map((c) => c.path);
+  const others = changes.filter((c) => c.kind !== 'deleted').map((c) => c.path);
+  if (others.length > 0) await git.add({ fs, dir, filepath: others }); // one index write for all
+  for (const path of deleted) await git.remove({ fs, dir, filepath: path });
+}
+
 // Staging a deleted file means removing it from the index.
 export function stage(fs: Fs, dir: string, change: Change) {
   if (change.kind === 'deleted') return git.remove({ fs, dir, filepath: change.path });
@@ -86,10 +102,31 @@ export async function committedText(fs: Fs, dir: string, path: string): Promise<
   }
 }
 
-// Remote work (clone, pull, push) over HTTPS. The token is sent as the password, which works
-// for GitHub and GitLab personal access tokens. No token = public repos only.
+// Remote work (clone, pull, push). The token is sent as the password, which works for GitHub,
+// GitLab and Bitbucket personal access tokens. It is only ever sent over HTTPS to those hosts,
+// so a mistyped or unknown URL never receives it. No token = public repos only.
+const TOKEN_HOSTS = ['github.com', 'gitlab.com', 'bitbucket.org'];
+
+export function canSendToken(url: string): boolean {
+  try {
+    const { protocol, hostname } = new URL(url);
+    return protocol === 'https:' && TOKEN_HOSTS.includes(hostname);
+  } catch {
+    return false;
+  }
+}
+
 function auth(token?: string | null) {
-  return token ? () => ({ username: 'x-access-token', password: token }) : undefined;
+  if (!token) return undefined;
+  return (url: string) =>
+    canSendToken(url) ? { username: 'x-access-token', password: token } : { cancel: true };
+}
+
+// shortcut: there is no screen to add a remote, so only cloned projects can push and pull; add one when needed.
+export async function assertHasRemote(fs: Fs, dir: string) {
+  if ((await git.listRemotes({ fs, dir })).length === 0) {
+    throw new Error('This project has no remote. Only cloned projects can push and pull for now.');
+  }
 }
 
 // Shallow, single-branch clone: much faster on a phone, and enough to edit and push.

@@ -28,9 +28,24 @@ export function saveFile(projectId: string, path: string): string | null {
   }
 }
 
-// Saves every open file that has changes (used by autosave and when leaving a project).
-export function saveAllDirty(projectId: string) {
+// Saves every open file that has changes. Returns the error messages of files that failed,
+// so callers can stop before doing something that would throw those edits away.
+export function saveAllDirty(projectId: string): string[] {
+  const errors: string[] = [];
   for (const file of useEditorStore.getState().files) {
-    if (isDirty(file)) saveFile(projectId, file.path);
+    const error = isDirty(file) ? saveFile(projectId, file.path) : null;
+    if (error) errors.push(error);
   }
+  return errors;
+}
+
+// Files on disk changed (pull, branch switch): reload the open tabs from disk.
+// Tabs whose file no longer exists are closed. Call saveAllDirty first.
+export function reloadOpenTabs(projectId: string) {
+  const { files, activePath, reset, setActive } = useEditorStore.getState();
+  const paths = files.map((f) => f.path);
+  reset();
+  for (const path of paths) openFileFromDisk(projectId, path);
+  const stillOpen = useEditorStore.getState().files.some((f) => f.path === activePath);
+  if (activePath && stillOpen) setActive(activePath);
 }

@@ -59,3 +59,42 @@ test('branches can be created and switched', async () => {
   expect(await gitService.currentBranch(fs, dir)).toBe('main');
   expect((await gitService.listBranches(fs, dir)).sort()).toEqual(['feature', 'main']);
 });
+
+test('switching branch is refused while changes are staged', async () => {
+  fs.writeFileSync(path.join(dir, 'a.txt'), 'x');
+  await gitService.stage(fs, dir, { path: 'a.txt', kind: 'untracked' });
+  await gitService.commit(fs, dir, 'init', me);
+  fs.writeFileSync(path.join(dir, 'a.txt'), 'changed');
+  await gitService.stage(fs, dir, { path: 'a.txt', kind: 'modified' });
+  await expect(gitService.assertClean(fs, dir)).rejects.toThrow('Commit your changes first');
+
+  await gitService.commit(fs, dir, 'save', me);
+  fs.writeFileSync(path.join(dir, 'new.txt'), 'untracked is fine');
+  await expect(gitService.assertClean(fs, dir)).resolves.toBeUndefined();
+});
+
+test('stage all stages new, changed and deleted files', async () => {
+  fs.writeFileSync(path.join(dir, 'a.txt'), 'a');
+  fs.writeFileSync(path.join(dir, 'b.txt'), 'b');
+  await gitService.stageAll(fs, dir, (await gitService.getChanges(fs, dir)).unstaged);
+  await gitService.commit(fs, dir, 'init', me);
+
+  fs.rmSync(path.join(dir, 'a.txt'));
+  fs.writeFileSync(path.join(dir, 'b.txt'), 'b2');
+  await gitService.stageAll(fs, dir, (await gitService.getChanges(fs, dir)).unstaged);
+  expect((await gitService.getChanges(fs, dir)).staged).toEqual([
+    { path: 'a.txt', kind: 'deleted' },
+    { path: 'b.txt', kind: 'modified' },
+  ]);
+});
+
+test('the token only goes to known git hosts over https', () => {
+  expect(gitService.canSendToken('https://github.com/user/repo.git')).toBe(true);
+  expect(gitService.canSendToken('http://github.com/user/repo.git')).toBe(false);
+  expect(gitService.canSendToken('https://git.someone.dev/x.git')).toBe(false);
+  expect(gitService.canSendToken('not a url')).toBe(false);
+});
+
+test('a repo without a remote says so in plain words', async () => {
+  await expect(gitService.assertHasRemote(fs, dir)).rejects.toThrow('no remote');
+});

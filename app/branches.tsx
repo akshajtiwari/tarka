@@ -6,11 +6,11 @@ import { Alert, StyleSheet, Text, View } from 'react-native';
 import { Button } from '../src/components/Button';
 import { ListRow } from '../src/components/ListRow';
 import { TextField } from '../src/components/TextField';
-import { useEditorStore } from '../src/features/editor/editorStore';
-import { saveAllDirty } from '../src/features/editor/fileActions';
+import { reloadOpenTabs, saveAllDirty } from '../src/features/editor/fileActions';
 import { nameProblem } from '../src/features/explorer/names';
 import * as gitService from '../src/features/git/gitService';
-import { gitFs, repoDir } from '../src/features/git/repo';
+import { repoDir } from '../src/features/git/repo';
+import { gitFs } from '../src/lib/gitFs';
 import { useWorkspaceStore } from '../src/features/workspace/workspaceStore';
 import { font, fontSize } from '../src/theme/fonts';
 import { space } from '../src/theme/spacing';
@@ -30,12 +30,15 @@ export default function BranchesSheet() {
     gitService.currentBranch(gitFs, dir).then((b) => setCurrent(b ?? null));
   }, [dir]);
 
-  // Files on disk change when the branch changes, so save first and reopen tabs afterwards.
-  async function change(action: () => Promise<unknown>) {
-    saveAllDirty(projectId);
+  // Switching changes files on disk: save first, refuse if there is uncommitted work
+  // (it would be overwritten), then reload the open tabs.
+  async function switchTo(branch: string) {
     try {
-      await action();
-      useEditorStore.getState().reset();
+      const saveErrors = saveAllDirty(projectId);
+      if (saveErrors.length > 0) throw new Error(saveErrors.join('\n'));
+      await gitService.assertClean(gitFs, dir);
+      await gitService.switchBranch(gitFs, dir, branch);
+      reloadOpenTabs(projectId);
       useWorkspaceStore.getState().refreshTree();
       router.back();
     } catch (e) {
@@ -43,10 +46,16 @@ export default function BranchesSheet() {
     }
   }
 
-  function create() {
+  // A new branch starts from the current commit, so no file changes and the tabs stay as they are.
+  async function create() {
     const problem = nameProblem(newName);
     if (problem) return Alert.alert('Check the name', problem);
-    change(() => gitService.createBranch(gitFs, dir, newName.trim()));
+    try {
+      await gitService.createBranch(gitFs, dir, newName.trim());
+      router.back();
+    } catch (e) {
+      Alert.alert('Could not create the branch', String(e));
+    }
   }
 
   return (
@@ -57,7 +66,7 @@ export default function BranchesSheet() {
           key={b}
           icon="git-branch"
           title={b}
-          onPress={() => b !== current && change(() => gitService.switchBranch(gitFs, dir, b))}
+          onPress={() => b !== current && switchTo(b)}
           right={b === current && <Octicons name="check" size={18} color={colors.accent} />}
         />
       ))}
