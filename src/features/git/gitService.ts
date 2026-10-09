@@ -2,6 +2,7 @@ import * as git from 'isomorphic-git';
 import http from 'isomorphic-git/http/web';
 
 import { stagedChanges, unstagedChanges, type Change, type StatusRow } from './changes';
+import { cacheFor, dropGitCache } from './gitCache';
 
 // All git work goes through these small functions. They take `fs` as a parameter so the app
 // passes its expo-file-system adapter and the tests pass Node's real `fs`.
@@ -31,7 +32,7 @@ export async function getChanges(
   fs: Fs,
   dir: string,
 ): Promise<{ staged: Change[]; unstaged: Change[] }> {
-  const rows = (await git.statusMatrix({ fs, dir })) as StatusRow[];
+  const rows = (await git.statusMatrix({ fs, dir, cache: cacheFor(dir) })) as StatusRow[];
   return { staged: stagedChanges(rows), unstaged: unstagedChanges(rows) };
 }
 
@@ -47,26 +48,27 @@ export async function assertClean(fs: Fs, dir: string) {
 export async function stageAll(fs: Fs, dir: string, changes: Change[]) {
   const deleted = changes.filter((c) => c.kind === 'deleted').map((c) => c.path);
   const others = changes.filter((c) => c.kind !== 'deleted').map((c) => c.path);
-  if (others.length > 0) await git.add({ fs, dir, filepath: others }); // one index write for all
-  for (const path of deleted) await git.remove({ fs, dir, filepath: path });
+  if (others.length > 0) await git.add({ fs, dir, filepath: others, cache: cacheFor(dir) }); // one index write for all
+  for (const path of deleted) await git.remove({ fs, dir, filepath: path, cache: cacheFor(dir) });
 }
 
 // Staging a deleted file means removing it from the index.
 export function stage(fs: Fs, dir: string, change: Change) {
-  if (change.kind === 'deleted') return git.remove({ fs, dir, filepath: change.path });
-  return git.add({ fs, dir, filepath: change.path });
+  const cache = cacheFor(dir);
+  if (change.kind === 'deleted') return git.remove({ fs, dir, filepath: change.path, cache });
+  return git.add({ fs, dir, filepath: change.path, cache });
 }
 
 export function unstage(fs: Fs, dir: string, path: string) {
-  return git.resetIndex({ fs, dir, filepath: path });
+  return git.resetIndex({ fs, dir, filepath: path, cache: cacheFor(dir) });
 }
 
 export function commit(fs: Fs, dir: string, message: string, author: Author) {
-  return git.commit({ fs, dir, message, author });
+  return git.commit({ fs, dir, message, author, cache: cacheFor(dir) });
 }
 
 export async function history(fs: Fs, dir: string, depth = 50) {
-  const commits = await git.log({ fs, dir, depth });
+  const commits = await git.log({ fs, dir, depth, cache: cacheFor(dir) });
   return commits.map((c) => ({
     oid: c.oid,
     message: c.commit.message.trim(),
@@ -78,7 +80,8 @@ export async function history(fs: Fs, dir: string, depth = 50) {
 // What one commit changed, compared with its first parent. The first commit adds every file.
 // `files` is null when the parent was never downloaded (we clone with depth 1).
 export async function commitDetail(fs: Fs, dir: string, oid: string) {
-  const { commit } = await git.readCommit({ fs, dir, oid });
+  const cache = cacheFor(dir);
+  const { commit } = await git.readCommit({ fs, dir, oid, cache });
   const parent: string | undefined = commit.parent[0];
   const info = {
     message: commit.message.trim(),
@@ -86,7 +89,7 @@ export async function commitDetail(fs: Fs, dir: string, oid: string) {
     time: commit.author.timestamp * 1000,
     parent,
   };
-  if (parent && !(await git.readCommit({ fs, dir, oid: parent }).catch(() => null))) {
+  if (parent && !(await git.readCommit({ fs, dir, oid: parent, cache }).catch(() => null))) {
     return { ...info, files: null };
   }
   const trees = parent
@@ -95,6 +98,7 @@ export async function commitDetail(fs: Fs, dir: string, oid: string) {
   const files: Change[] = await git.walk({
     fs,
     dir,
+    cache,
     trees,
     map: async (path, entries) => {
       const [before, after] = parent ? entries : [null, entries[0]];
@@ -122,14 +126,14 @@ export function createBranch(fs: Fs, dir: string, name: string) {
 }
 
 export function switchBranch(fs: Fs, dir: string, name: string) {
-  return git.checkout({ fs, dir, ref: name });
+  return changing(dir, () => git.checkout({ fs, dir, ref: name, cache: cacheFor(dir) }));
 }
 
 // A file's text in a commit (the last one by default), or "" if it is not there.
 export async function committedText(fs: Fs, dir: string, path: string, ref = 'HEAD') {
   try {
     const oid = await git.resolveRef({ fs, dir, ref });
-    const { blob } = await git.readBlob({ fs, dir, oid, filepath: path });
+    const { blob } = await git.readBlob({ fs, dir, oid, filepath: path, cache: cacheFor(dir) });
     return new TextDecoder().decode(blob);
   } catch {
     return '';
@@ -165,13 +169,48 @@ export async function assertHasRemote(fs: Fs, dir: string) {
 
 // Shallow, single-branch clone: much faster on a phone, and enough to edit and push.
 export function clone(fs: Fs, dir: string, url: string, token?: string | null) {
-  return git.clone({ fs, http, dir, url, singleBranch: true, depth: 1, onAuth: auth(token) });
+  dropGitCache(dir); // a new repo in this folder: nothing old may be reused
+  return changing(dir, () =>
+    git.clone({
+      fs,
+      http,
+      dir,
+      url,
+      singleBranch: true,
+      depth: 1,
+      onAuth: auth(token),
+      cache: cacheFor(dir),
+    }),
+  );
 }
 
 export function pull(fs: Fs, dir: string, author: Author, token?: string | null) {
-  return git.pull({ fs, http, dir, author, singleBranch: true, onAuth: auth(token) });
+  return changing(dir, () =>
+    git.pull({
+      fs,
+      http,
+      dir,
+      author,
+      singleBranch: true,
+      onAuth: auth(token),
+      cache: cacheFor(dir),
+    }),
+  );
 }
 
 export function push(fs: Fs, dir: string, token?: string | null) {
-  return git.push({ fs, http, dir, onAuth: auth(token) });
+  return changing(dir, () =>
+    git.push({ fs, http, dir, onAuth: auth(token), cache: cacheFor(dir) }),
+  );
+}
+
+// A clone, pull, push or checkout that fails halfway may leave the cache out of step with the
+// disk, so forget it and let the next call start clean.
+async function changing<T>(dir: string, step: () => Promise<T>): Promise<T> {
+  try {
+    return await step();
+  } catch (e) {
+    dropGitCache(dir);
+    throw e;
+  }
 }

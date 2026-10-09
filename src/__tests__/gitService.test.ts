@@ -2,6 +2,7 @@ import fs from 'fs';
 import os from 'os';
 import path from 'path';
 
+import { dropGitCache } from '../features/git/gitCache';
 import * as gitService from '../features/git/gitService';
 
 const me = { name: 'Test', email: 'test@example.com' };
@@ -12,7 +13,10 @@ beforeEach(async () => {
   await gitService.initRepo(fs, dir);
 });
 
-afterEach(() => fs.rmSync(dir, { recursive: true, force: true }));
+afterEach(() => {
+  dropGitCache();
+  fs.rmSync(dir, { recursive: true, force: true });
+});
 
 test('a new file shows up, can be staged and committed', async () => {
   fs.writeFileSync(path.join(dir, 'main.js'), 'console.log(1)\n');

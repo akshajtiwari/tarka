@@ -7,6 +7,8 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useEditorStore } from '../../../src/features/editor/editorStore';
 import { openFileFromDisk, saveAllDirty } from '../../../src/features/editor/fileActions';
 import { FileTree } from '../../../src/features/explorer/FileTree';
+import { dropGitCache } from '../../../src/features/git/gitCache';
+import { repoDir } from '../../../src/features/git/repo';
 import { useProjectStore } from '../../../src/features/projects/projectStore';
 import { Dock, useRail } from '../../../src/features/workspace/Dock';
 import { useWorkspaceStore } from '../../../src/features/workspace/workspaceStore';
@@ -29,6 +31,7 @@ export default function WorkspaceLayout() {
     setExplorerOpen(false);
     useEditorStore.getState().enterProject(id);
     return () => {
+      dropGitCache(repoDir(id)); // it holds the repo's pack files in memory
       const saveErrors = saveAllDirty(id);
       // If a save failed, keep the edits in memory: reopening this project shows them again.
       if (saveErrors.length > 0)
