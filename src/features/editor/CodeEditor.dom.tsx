@@ -99,6 +99,8 @@ export default function CodeEditor(props: Props) {
   const lookKey = JSON.stringify(look);
   useEffect(() => {
     view.current?.dispatch({ effects: lookCompartment.reconfigure(lookExtensions(look)) });
+    // A focused editor keeps the keyboard open and keeps typing even when locked, so let go.
+    if (look.readOnly) view.current?.contentDOM.blur();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [lookKey]);
 
