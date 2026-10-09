@@ -56,6 +56,11 @@ Expo **DOM components** make that simple: a file that starts with `'use dom'` is
   - The editor uses `command?.id`, `path` and `version`; the runner uses `job?.id`.
   - Wrap DOM components in `memo` on the native side.
 - Key-row taps must not steal focus from the WebView, so the keyboard stays open. This is verified by an E2E test.
+- **The WebView owns its keyboard.** `KeyboardController.dismiss()` and `Keyboard.dismiss()` only close it for React
+  Native inputs. To close it from the native side, send the `hideKeyboard` command: it focuses and blurs a throwaway
+  `<input inputmode="none">`, which is the one thing that makes Chrome drop the keyboard.
+  The read lock needs this because Android brings the keyboard back by itself when a sheet closes.
+- Ctrl+S is a CodeMirror keymap that calls the `onSave(path, text)` prop with the latest text.
 
 ## Git
 
@@ -74,6 +79,9 @@ Safety rules:
 - The token is sent only over HTTPS to github.com, gitlab.com and bitbucket.org (`canSendToken`).
 - Every project path goes through `safeParts`, which refuses `..`.
 - `.git` is hidden from the explorer.
+
+Commit details (`commitDetail`) walk the commit's tree against its first parent's tree.
+Clones are shallow (`depth: 1`), so the newest commit of a fresh clone has no parent on the phone; the screen says so.
 
 ## Running code
 

@@ -105,12 +105,18 @@ keyboard up:
 - Content is left-aligned. Lists are full width, with no cards inside cards.
 - The explorer is a left drawer: 84% of the width, at most 360.
 - Sheets (tabs, file actions, branch) slide up from the bottom, with their actions in thumb reach.
-- At 768dp and wider (later), the dock becomes a left rail and the explorer can stay open.
+- At 768dp and wider the dock becomes a left rail (80 wide) that stays while typing. Each tab then pads its own bottom
+  for the system nav bar. The explorer is still a drawer there (a pinned explorer is a later idea).
+- **First launch:** a tips card on the home screen lists the phone-only tricks (edge swipe, trackpad, pinch, read lock,
+  AI key) until "Got it".
+- **Empty lists** get one quiet muted line (`Hint`) saying what shows up there; whole empty screens use `EmptyState`.
 
 ## Editor behavior
 
 - Soft wrap is on by default. The gutter is slim, with no fold gutter on phones.
-- **Read lock** (⋯ menu): taps don't place the caret, so scrolling never opens the keyboard.
+- **Read lock** (⋯ menu): taps don't place the caret, so scrolling never opens the keyboard. The find and go-to-line
+  boxes still get the keyboard.
+- **Swipe the header** left or right to move between open files (a light haptic tick). Ctrl+S saves on a hardware keyboard.
 - Autosave runs after 1.5 seconds without typing, on tab switch, and when the app goes to the background.
   A dirty file shows a brass dot and a save icon in the header.
 - Pinch to zoom the code font (10–24), and the size is remembered.

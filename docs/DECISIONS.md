@@ -39,6 +39,12 @@ Short records of why things are the way they are. Newest at the bottom. Each dep
 | sucrase | strips TypeScript types so .ts files can run in the on-device runner (small and fast) |
 | ~~@anthropic-ai/sdk, openai~~ | removed: see "Agent decisions" |
 
+## Phase 7 decisions
+- **Read lock closes the keyboard from inside the WebView** (focus + blur a throwaway `inputmode="none"` input).
+  Native dismiss calls only know React Native text inputs. Found by inspecting the WebView over Chrome DevTools.
+- **The tablet rail uses React Navigation's `tabBarPosition: 'left'`** with the same `Dock` component, so no second tab bar.
+- **Tips live in the settings store** (`tipsDone`), so clearing app data shows them again. No separate onboarding screens.
+
 ## Agent decisions
 - **The agent loop is ours (`src/features/agent/loop.ts`), not the SDK's tool runner.** We need an approval gate before writes, loop detection and a step budget, and the same loop must also drive OpenAI-compatible servers.
 - **No AI SDKs: both providers use plain `fetch`** (`src/features/agent/providers/http.ts`).

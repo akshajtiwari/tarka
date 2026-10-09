@@ -34,6 +34,16 @@ Each flow:
 
 Results go to `.artifacts/maestro/` and screenshots to `.artifacts/screens/`. Both folders are gitignored.
 
+**Looking inside a WebView** (the editor, the runner): dev builds allow Chrome DevTools.
+`adb shell cat /proc/net/unix | grep webview_devtools_remote` gives the socket, then
+`adb forward tcp:9222 localabstract:<socket>` and `curl localhost:9222/json` lists the pages.
+Evaluate JavaScript in a page over its `webSocketDebuggerUrl` (`Runtime.evaluate`) to read the editor's real state,
+or send keys with `Input.dispatchKeyEvent` (that is how Ctrl+S was checked: the file is on disk before autosave runs).
+`adb shell dumpsys input_method | grep mInputShown` tells whether the keyboard is really up.
+
+**Tablet layout:** `adb shell wm size 1600x2560 && adb shell wm density 320` (800 dp wide), then
+`adb shell wm size reset && adb shell wm density reset` afterwards.
+
 ## 3. Look at the screenshots
 
 After a UI change, open the PNGs in `.artifacts/screens/` and check them against `docs/UI.md`:
