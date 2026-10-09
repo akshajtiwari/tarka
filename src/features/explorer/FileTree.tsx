@@ -39,9 +39,16 @@ export const FileTree = memo(function FileTree({
   const shown = useWorkspaceStore((s) => s.explorerShown);
   const gitKinds = useGitColors(projectId, shown);
 
-  // treeVersion changes after a file action, so the folder is read again.
+  // treeVersion changes after a file action, so the folder is read again. A folder deleted
+  // in a file manager meanwhile shows an empty tree rather than crashing the app.
   const rows = useMemo(
-    () => buildRows((path) => listEntries(projectId, path), expanded),
+    () => {
+      try {
+        return buildRows((path) => listEntries(projectId, path), expanded);
+      } catch {
+        return [];
+      }
+    },
     [projectId, expanded, treeVersion], // eslint-disable-line react-hooks/exhaustive-deps
   );
 

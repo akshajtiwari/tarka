@@ -1,10 +1,11 @@
 import { Redirect, router } from 'expo-router';
-import { FlatList, StyleSheet, Text, View } from 'react-native';
+import { Alert, FlatList, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { Button } from '../src/components/Button';
 import { EmptyState } from '../src/components/EmptyState';
 import { IconButton } from '../src/components/IconButton';
+import { folderPath, projectDir } from '../src/features/projects/projectFolder';
 import { ProjectRow } from '../src/features/projects/ProjectRow';
 import { sortByRecent, useProjectStore } from '../src/features/projects/projectStore';
 import { useSettings } from '../src/features/settings/settingsStore';
@@ -17,10 +18,23 @@ export default function HomeScreen() {
   const colors = useTheme();
   const projects = useProjectStore((s) => s.projects);
   const markOpened = useProjectStore((s) => s.markOpened);
+  const removeProject = useProjectStore((s) => s.removeProject);
   const ready = useSettingsReady();
   const onboarded = useSettings((s) => s.onboarded);
 
   function openProject(id: string) {
+    // The folder can be deleted or moved in a file manager (Documents/TARKA is visible there).
+    const dir = projectDir(id);
+    if (!dir.exists) {
+      return Alert.alert(
+        'Project folder is missing',
+        `${folderPath(dir)} was moved or deleted, or TARKA can no longer use your files.`,
+        [
+          { text: 'Cancel', style: 'cancel' },
+          { text: 'Remove from list', style: 'destructive', onPress: () => removeProject(id) },
+        ],
+      );
+    }
     markOpened(id);
     router.push({ pathname: '/project/[id]/code', params: { id } });
   }
