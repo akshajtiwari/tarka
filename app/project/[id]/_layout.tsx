@@ -11,6 +11,8 @@ import { dropGitCache } from '../../../src/features/git/gitCache';
 import { useGitStatusStore } from '../../../src/features/git/gitStatusStore';
 import { repoDir } from '../../../src/features/git/repo';
 import { useProjectStore } from '../../../src/features/projects/projectStore';
+import { TerminalBridge } from '../../../src/features/terminal/TerminalBridge';
+import { useTerminalStore } from '../../../src/features/terminal/terminalStore';
 import { Dock, useRail } from '../../../src/features/workspace/Dock';
 import { useWorkspaceStore } from '../../../src/features/workspace/workspaceStore';
 import { useTheme } from '../../../src/theme/useTheme';
@@ -34,6 +36,7 @@ export default function WorkspaceLayout() {
     setExplorerOpen(false);
     useEditorStore.getState().enterProject(id);
     useGitStatusStore.getState().enterProject(id);
+    useTerminalStore.getState().enterProject(id);
     return () => {
       dropGitCache(repoDir(id)); // it holds the repo's pack files in memory
       const saveErrors = saveAllDirty(id);
@@ -120,6 +123,7 @@ export default function WorkspaceLayout() {
         <Tabs.Screen name="run" />
         <Tabs.Screen name="agent" />
       </Tabs>
+      <TerminalBridge />
     </Drawer>
   );
 }

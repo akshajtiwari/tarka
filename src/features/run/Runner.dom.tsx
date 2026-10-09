@@ -1,91 +1,138 @@
 'use dom';
 
-// A hidden WebView that runs code. Each run gets a fresh Web Worker, which is killed when
-// the run ends, times out or is stopped. Nothing is drawn on screen.
+// A hidden WebView that runs code for the terminal. Python keeps one Web Worker for the whole
+// session (Pyodide loads once; pip installs stay); each JavaScript run gets a fresh worker.
+// Stop kills the workers, so an endless loop never freezes the app. Nothing is drawn on screen.
 
 import type { DOMProps } from 'expo/dom';
 import { useEffect, useRef } from 'react';
-import { transform } from 'sucrase';
 
-import { PYODIDE_URL, type RunJob, type RunResult } from './runJob';
+import type { BridgeEvent, OutputLine, TerminalCommand } from '../terminal/bridgeTypes';
+import { esmUrl, packagesRequired, toCommonJs } from '../terminal/jsModules';
 import { WORKER_SOURCE } from './workerSource';
 
+// Python (Pyodide) is downloaded once from the CDN, then the browser cache keeps it.
+const PYODIDE_URL = 'https://cdn.jsdelivr.net/pyodide/v314.0.7/full/';
+const MAX_LINES = 5000; // an endless print loop would otherwise flood and freeze the screen
+
 type Props = {
-  job: RunJob | null;
-  stopId: number; // goes up when the user taps Stop
-  onOutput: (stream: string, text: string) => Promise<void>;
-  onDone: (result: RunResult, ms: number) => Promise<void>;
+  command: TerminalCommand | null; // the latest command; a new id means a new one
+  onEvent: (event: BridgeEvent) => Promise<void>;
   dom?: DOMProps;
 };
 
-const TIME_LIMIT = { js: 10_000, ts: 10_000, py: 180_000, html: 0 }; // Python includes the first download
-const MAX_LINES = 5000; // an endless print loop would otherwise flood and freeze the console
-
-export default function Runner({ job, stopId, onOutput, onDone }: Props) {
-  const stop = useRef<() => void>(() => {});
+export default function Runner({ command, onEvent }: Props) {
+  const python = useRef<Worker | null>(null);
+  const js = useRef<Worker | null>(null);
+  const running = useRef<'python' | 'js' | null>(null);
+  const pending = useRef<OutputLine[]>([]);
+  const printed = useRef(0);
+  const timer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  const emitRef = useRef(onEvent);
+  useEffect(() => {
+    emitRef.current = onEvent;
+  });
 
   useEffect(() => {
-    if (!job) return;
-    const started = Date.now();
-    const url = URL.createObjectURL(new Blob([WORKER_SOURCE], { type: 'text/javascript' }));
-    const worker = new Worker(url, { type: 'module' });
-    let finished = false;
-    let lines = 0;
+    const emit = (event: BridgeEvent) => emitRef.current(event);
 
-    const finish = (result: RunResult) => {
-      if (finished) return;
-      finished = true;
-      clearTimeout(timer);
-      onDone(result, Date.now() - started);
-      if (result === 'ok')
-        setTimeout(() => worker.terminate(), 1500); // let late async logs arrive
-      else worker.terminate();
+    // Output goes out in batches every 50 ms: one bridge call per line would be slow.
+    const flush = () => {
+      clearTimeout(timer.current);
+      timer.current = undefined;
+      if (pending.current.length === 0) return;
+      emit({ type: 'output', lines: pending.current });
+      pending.current = [];
     };
-    const timer = setTimeout(() => finish('timeout'), TIME_LIMIT[job.kind]);
-    stop.current = () => finish('stopped');
-
-    worker.onmessage = ({ data }) => {
-      if (data.type !== 'out') {
-        finish(data.ok ? 'ok' : 'error');
-        return;
+    const finish = (ok: boolean, more = false) => {
+      flush();
+      running.current = null;
+      emit({ type: 'done', ok, more });
+    };
+    const stopAll = () => {
+      js.current?.terminate();
+      python.current?.terminate();
+      js.current = python.current = null;
+    };
+    const out = (stream: OutputLine['stream'], text: string) => {
+      printed.current += 1;
+      if (printed.current > MAX_LINES) return;
+      pending.current.push({ stream, text: text.slice(0, 10_000) });
+      if (printed.current === MAX_LINES) {
+        pending.current.push({ stream: 'info', text: `Stopped: more than ${MAX_LINES} lines.` });
+        stopAll();
+        return finish(false);
       }
-      lines += 1;
-      if (lines < MAX_LINES) onOutput(data.stream, data.text);
-      else if (lines === MAX_LINES) {
-        onOutput('info', `Stopped: more than ${MAX_LINES} lines of output.`);
-        finish('error');
-      }
+      timer.current ??= setTimeout(flush, 50);
     };
-    worker.onerror = (event) => {
-      onOutput('stderr', event.message);
-      finish('error');
+    const start = (kind: 'python' | 'js') => {
+      const url = URL.createObjectURL(new Blob([WORKER_SOURCE], { type: 'text/javascript' }));
+      const worker = new Worker(url, { type: 'module' });
+      worker.onmessage = ({ data }) => {
+        if (data.type === 'out') out(data.stream, String(data.text));
+        else if (data.type === 'session') emit({ type: 'session', jspi: data.jspi });
+        else if (data.type === 'ask') {
+          flush();
+          emit({ type: 'ask', prompt: String(data.prompt) });
+        } else if (data.type === 'done') {
+          if (kind === 'js') {
+            worker.terminate();
+            js.current = null;
+          }
+          finish(data.ok, data.more);
+        }
+      };
+      worker.onerror = (event) => {
+        out('stderr', event.message);
+        finish(false);
+      };
+      return worker;
     };
 
-    let code = job.code;
-    if (job.kind === 'ts') {
+    if (!command) return;
+    const c = command;
+    if (c.type === 'stop') {
+      stopAll();
+      if (running.current) finish(false);
+    } else if (c.type === 'input') {
+      (running.current === 'js' ? js.current : python.current)?.postMessage(c);
+    } else if (c.type === 'run-js') {
+      printed.current = 0;
+      js.current?.terminate();
       try {
-        code = transform(code, { transforms: ['typescript'] }).code; // strip the types
+        const files: Record<string, string> = {};
+        for (const [path, code] of Object.entries(c.files)) {
+          files[path] = toCommonJs(code, path.endsWith('.ts'));
+        }
+        const specs = Object.values(files).flatMap(packagesRequired);
+        const modules = Object.fromEntries(specs.map((s) => [s, esmUrl(s, c.deps)]));
+        js.current = start('js');
+        running.current = 'js';
+        js.current.postMessage({ type: 'run-js', file: c.file, files, modules });
       } catch (error) {
-        onOutput('stderr', String(error));
-        finish('error');
+        out('stderr', String(error)); // a syntax error the TypeScript/import step found
+        finish(false);
       }
+    } else {
+      printed.current = 0;
+      python.current ??= start('python');
+      running.current = 'python';
+      python.current.postMessage({ ...c, pyodideUrl: PYODIDE_URL });
     }
-    if (!finished)
-      worker.postMessage({ kind: job.kind, code, stdin: job.stdin, pyodideUrl: PYODIDE_URL });
-
-    return () => {
-      clearTimeout(timer);
-      worker.terminate();
-      URL.revokeObjectURL(url);
-    };
-    // Props arrive as fresh copies on every re-render (they cross the bridge as JSON),
-    // so only a new job id may start a new run, never a new object with the same id.
+    emit({ type: 'handled', id: c.id });
+    // Props arrive as fresh copies on every re-render (they cross the bridge as JSON), so only
+    // a new command id may act, never a new object with the same id.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [job?.id]);
+  }, [command?.id]);
 
-  useEffect(() => {
-    if (stopId > 0) stop.current();
-  }, [stopId]);
+  // Leaving the project ends the session.
+  useEffect(
+    () => () => {
+      js.current?.terminate();
+      python.current?.terminate();
+    },
+    [],
+  );
 
   return null;
 }

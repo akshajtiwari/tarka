@@ -1,4 +1,5 @@
-# Run code on the phone: JavaScript output, Python (Pyodide), stopping an endless loop, HTML preview.
+# The terminal (Run tab): commands, the editor's Run file button, input(), Python and its
+# prompt, pip install, Stop on an endless loop, and the web page preview.
 appId: com.akshajtiwari.tarka
 ---
 - runFlow: common/open-app.yaml
@@ -10,22 +11,69 @@ appId: com.akshajtiwari.tarka
 - hideKeyboard
 - tapOn: Create project
 - tapOn: Run
-- tapOn: Run main.js
+- tapOn: Terminal input
+- inputText: run main.js
+- pressKey: Enter
 - extendedWaitUntil:
     visible: hello, world
-    timeout: 15000
-- assertVisible: Finished in .*
-- takeScreenshot: run-js
+    timeout: 20000
+- takeScreenshot: terminal-js
+# The editor's Run file button, with input(): the program asks, the answer is typed in the terminal.
+- tapOn: # tapping the output closes the keyboard (hideKeyboard would press back if it's closed)
+    point: 50%,40%
+- tapOn: Code
+- tapOn:
+    text: Show files
+    index: 0
+- tapOn: New file or folder
+- tapOn: New file
+- inputText: ask.js
+- hideKeyboard
+- tapOn: Done
+- tapOn: File ask.js
+- tapOn:
+    point: 50%,30%
+- inputText: const n = await input("Name? ")
+- pressKey: Enter
+- inputText: console.log("hi " + n)
+- hideKeyboard
+- tapOn: Run file
+- extendedWaitUntil:
+    visible: Name\?.*
+    timeout: 20000
+- tapOn: Terminal input
+- inputText: Ada
+- pressKey: Enter
+- extendedWaitUntil:
+    visible: hi Ada
+    timeout: 10000
+- takeScreenshot: terminal-input
 - tapOn: Go to projects
-# Python project, run with Pyodide (downloaded on first use, then cached).
+# Python: run a file, the Python prompt, and pip.
 - runFlow: common/new-python-project.yaml
-- tapOn: Run
-- tapOn: Run main.py
+- tapOn: Run file
 - extendedWaitUntil:
     visible: hello, world
+    timeout: 180000
+- tapOn: Terminal input
+- inputText: python
+- pressKey: Enter
+- inputText: 2 ** 10
+- pressKey: Enter
+- extendedWaitUntil:
+    visible: '1024'
+    timeout: 20000
+- tapOn: Exit Python
+- tapOn: Terminal input
+- inputText: pip install six
+- pressKey: Enter
+- extendedWaitUntil:
+    visible: Saved in requirements.txt
     timeout: 120000
-- takeScreenshot: run-python
+- takeScreenshot: terminal-python
 # An endless loop is stopped.
+- tapOn:
+    point: 50%,40%
 - tapOn: Code
 - tapOn:
     text: Show files
@@ -40,17 +88,16 @@ appId: com.akshajtiwari.tarka
     point: 50%,30%
 - inputText: "while True: pass"
 - hideKeyboard
-- tapOn: Run
-- tapOn: Run loop.py
+- tapOn: Run file
 - extendedWaitUntil:
     visible: Stop
-    timeout: 5000
-- swipe: # wait a few seconds so the loop is really running, not just loading
+    timeout: 10000
+- swipe: # let the loop really run for a few seconds
     direction: DOWN
-    duration: 8000
+    duration: 4000
 - tapOn: Stop
 - extendedWaitUntil:
-    visible: Stopped by you.*
+    visible: Stopped.*
     timeout: 10000
 - tapOn: Go to projects
 # Web page preview.
@@ -60,9 +107,14 @@ appId: com.akshajtiwari.tarka
 - tapOn: Web page
 - hideKeyboard
 - tapOn: Create project
-- tapOn: Run
-- tapOn: Preview index.html
+- tapOn:
+    text: Show files
+    index: 0
+- tapOn: File index.html
+- tapOn: Run file
 - extendedWaitUntil:
-    visible: Hello from TARKA
-    timeout: 15000
+    visible: Close preview
+    timeout: 10000
 - takeScreenshot: run-html
+- tapOn: Close preview
+- assertVisible: Showing index.html
