@@ -2,6 +2,13 @@ import { render, screen } from '@testing-library/react-native';
 
 import HomeScreen from '../../app/index';
 import { useProjectStore } from '../features/projects/projectStore';
+import { useSettings } from '../features/settings/settingsStore';
+
+// The home screen shows once settings are loaded and the first-launch setup is done.
+beforeEach(async () => {
+  await useSettings.persist.rehydrate();
+  useSettings.setState({ onboarded: true });
+});
 
 test('invites you to create a project when there are none', async () => {
   useProjectStore.setState({ projects: [] });
