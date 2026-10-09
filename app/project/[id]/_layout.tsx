@@ -39,6 +39,10 @@ export default function WorkspaceLayout() {
     useTerminalStore.getState().enterProject(id);
     return () => {
       dropGitCache(repoDir(id)); // it holds the repo's pack files in memory
+      // The runner WebView leaves with this screen, so its programs are gone: the terminal
+      // starts fresh next time, even in the same project. The explorer starts closed.
+      useTerminalStore.setState({ projectId: null, bridgeOn: false });
+      useWorkspaceStore.setState({ explorerOpen: false, explorerShown: false });
       const saveErrors = saveAllDirty(id);
       // If a save failed, keep the edits in memory: reopening this project shows them again.
       if (saveErrors.length > 0)

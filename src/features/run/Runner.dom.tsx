@@ -8,7 +8,7 @@ import type { DOMProps } from 'expo/dom';
 import { useEffect, useRef } from 'react';
 
 import type { BridgeEvent, OutputLine, TerminalCommand } from '../terminal/bridgeTypes';
-import { esmUrl, packagesRequired, toCommonJs } from '../terminal/jsModules';
+import { esmUrl, packagesRequired, toCommonJsFiles } from '../terminal/jsModules';
 import { WORKER_SOURCE } from './workerSource';
 
 // Python (Pyodide) is downloaded once from the CDN, then the browser cache keeps it.
@@ -35,6 +35,7 @@ export default function Runner({ command, onEvent }: Props) {
   const python = useRef<Worker | null>(null);
   const js = useRef<Worker | null>(null);
   const running = useRef<'python' | 'js' | null>(null);
+  const runningId = useRef(0); // the command that runs now, so its "done" can be told apart
   const pending = useRef<OutputLine[]>([]);
   const printed = useRef(0);
   const timer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
@@ -57,7 +58,7 @@ export default function Runner({ command, onEvent }: Props) {
     const finish = (ok: boolean, more = false) => {
       flush();
       running.current = null;
-      emit({ type: 'done', ok, more });
+      emit({ type: 'done', id: runningId.current, ok, more });
     };
     const stopAll = () => {
       js.current?.terminate();
@@ -106,13 +107,11 @@ export default function Runner({ command, onEvent }: Props) {
     } else if (command.type === 'input') {
       (running.current === 'js' ? js.current : python.current)?.postMessage(command);
     } else if (command.type === 'run-js') {
+      runningId.current = command.id;
       printed.current = 0;
       js.current?.terminate();
       try {
-        const files: Record<string, string> = {};
-        for (const [path, code] of Object.entries(command.files)) {
-          files[path] = toCommonJs(code, path.endsWith('.ts'));
-        }
+        const files = toCommonJsFiles(command.files);
         const specs = Object.values(files).flatMap(packagesRequired);
         const modules = Object.fromEntries(specs.map((s) => [s, esmUrl(s, command.deps)]));
         js.current = start('js');
@@ -123,6 +122,7 @@ export default function Runner({ command, onEvent }: Props) {
         finish(false);
       }
     } else {
+      runningId.current = command.id;
       printed.current = 0;
       python.current ??= start('python');
       running.current = 'python';

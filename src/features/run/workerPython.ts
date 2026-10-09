@@ -71,7 +71,10 @@ async function startPython(data) {
   if (jspi) await py.runPythonAsync(LIVE_INPUT);
   else py.setStdin({ stdin: () => (typed.length ? typed.shift() : null) });
   postMessage({ type: 'session', jspi });
-  if (data.requirements.length) await pip('install', data.requirements);
+  // A package that can't install (no Pyodide build) is reported once; the run goes on.
+  if (data.requirements.length) {
+    await pip('install', data.requirements).catch((e) => send('stderr', 'requirements.txt: ' + e.message));
+  }
 }
 
 async function pip(action, packages) {

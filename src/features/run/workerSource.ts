@@ -2,6 +2,7 @@
 // killed at any time, so an endless loop never freezes the app. It lives in strings because it
 // runs inside the WebView, outside the app's own JavaScript. `importModule` is a seam for tests.
 
+import { NODE_ONLY } from '../terminal/jsModules';
 import { WORKER_PYTHON } from './workerPython';
 
 // Network guard, console capture, and input() answers.
@@ -56,7 +57,7 @@ const giveInput = (text) => {
 // JavaScript and TypeScript (already turned into CommonJS by the runner): a tiny module loader.
 const WORKER_JS = `
 const AsyncFunction = (async () => {}).constructor;
-const NODE_ONLY = ['fs', 'path', 'os', 'child_process', 'http', 'https', 'net', 'crypto', 'process'];
+const NODE_ONLY = ${JSON.stringify(NODE_ONLY)};
 
 function resolveLocal(from, spec, files) {
   const parts = from.split('/').slice(0, -1);
@@ -70,10 +71,15 @@ function resolveLocal(from, spec, files) {
 }
 
 async function runJs(data) {
+  // All packages load at once. One that fails only matters if the code really requires it.
   const packages = {};
-  for (const [spec, url] of Object.entries(data.modules)) packages[spec] = await importModule(url);
+  const failed = {};
+  await Promise.all(Object.entries(data.modules).map(async ([spec, url]) => {
+    try { packages[spec] = await importModule(url); } catch (error) { failed[spec] = error; }
+  }));
   const cache = {};
   const makeRequire = (from) => (spec) => {
+    if (spec in failed) throw new Error('Could not load "' + spec + '" from esm.sh: ' + failed[spec].message);
     if (spec in packages) return { __esModule: true, ...packages[spec] };
     if (spec.startsWith('node:') || NODE_ONLY.includes(spec))
       throw new Error('"' + spec + '" only exists in Node.js. Try: termux node ' + data.file);
@@ -94,6 +100,7 @@ async function runJs(data) {
 const WORKER_MAIN = `
 onmessage = async ({ data }) => {
   if (data.type === 'input') return giveInput(data.text);
+  typed.length = 0; // lines typed for an earlier program are not answers for this one
   try {
     const result = data.type === 'run-js' ? await runJs(data) : await python(data);
     postMessage({ type: 'done', ok: true, more: result === true });

@@ -23,23 +23,36 @@ test('the prompt follows what the program is doing', () => {
   expect(t().mode).toBe('busy');
   t().onEvent({ type: 'ask', prompt: 'Name? ' });
   expect(t()).toMatchObject({ mode: 'ask', prompt: 'Name? ' });
-  t().onEvent({ type: 'done', ok: true });
+  t().onEvent({ type: 'done', id: t().runId, ok: true });
   expect(t()).toMatchObject({ mode: 'shell', prompt: '$' });
 
   t().enterRepl();
   t().send({ type: 'repl', line: 'def f():', requirements: [] });
-  t().onEvent({ type: 'done', ok: true, more: true });
+  t().onEvent({ type: 'done', id: t().runId, ok: true, more: true });
   expect(t()).toMatchObject({ mode: 'repl', prompt: '...' });
 });
 
 test('follow-up work (saving requirements.txt) runs only when the command worked', () => {
   const save = jest.fn();
   t().send({ type: 'pip', action: 'install', packages: ['x'], requirements: [] }, save);
-  t().onEvent({ type: 'done', ok: false });
+  t().onEvent({ type: 'done', id: t().runId, ok: false });
   expect(save).not.toHaveBeenCalled();
   t().send({ type: 'pip', action: 'install', packages: ['x'], requirements: [] }, save);
-  t().onEvent({ type: 'done', ok: true });
+  t().onEvent({ type: 'done', id: t().runId, ok: true });
   expect(save).toHaveBeenCalledTimes(1);
+});
+
+test("Run file while a program runs: the stopped run's done doesn't make the new run look idle", () => {
+  t().send({ type: 'run-python', file: 'a.py', files: {}, requirements: [] });
+  const old = t().runId;
+  t().onEvent({ type: 'handled', id: old });
+  t().send({ type: 'stop' });
+  t().send({ type: 'run-python', file: 'a.py', files: {}, requirements: [] });
+
+  t().onEvent({ type: 'done', id: old, ok: false }); // the runner ends the stopped run first
+  expect(t().mode).toBe('busy');
+  t().onEvent({ type: 'done', id: t().runId, ok: true });
+  expect(t().mode).toBe('shell');
 });
 
 test('the screen keeps only the newest 5000 lines', () => {

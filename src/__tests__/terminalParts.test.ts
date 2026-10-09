@@ -1,4 +1,10 @@
-import { esmUrl, packageOf, packagesRequired, toCommonJs } from '../features/terminal/jsModules';
+import {
+  esmUrl,
+  packageOf,
+  packagesRequired,
+  toCommonJs,
+  toCommonJsFiles,
+} from '../features/terminal/jsModules';
 import { addDependencies, dependenciesOf } from '../features/terminal/packageJson';
 import { parseCommand, tokenize } from '../features/terminal/parseCommand';
 import { addRequirements, packageName, parseRequirements } from '../features/terminal/requirements';
@@ -59,4 +65,13 @@ test('imports become requires, packages load from esm.sh at the saved version', 
   expect(packageOf('@scope/pkg/sub')).toBe('@scope/pkg');
   expect(esmUrl('lodash/fp', { lodash: '^4.17.21' })).toBe('https://esm.sh/lodash@4.17.21/fp');
   expect(esmUrl('dayjs', {})).toBe('https://esm.sh/dayjs');
+});
+
+test("Node's own modules are not fetched, and a broken file only fails when it is used", () => {
+  expect(packagesRequired('require("fs"); require("node:path"); require("dayjs")')).toEqual([
+    'dayjs',
+  ]);
+  const files = toCommonJsFiles({ 'ex1.js': 'console.log(1)', 'ex3.js': 'const = ;' });
+  expect(files['ex1.js']).toContain('console.log(1)');
+  expect(files['ex3.js']).toMatch(/^throw new SyntaxError\("ex3\.js: /);
 });

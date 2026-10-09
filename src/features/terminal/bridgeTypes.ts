@@ -19,5 +19,5 @@ export type BridgeEvent =
   | { type: 'handled'; id: number }
   | { type: 'output'; lines: OutputLine[] }
   | { type: 'ask'; prompt: string } // the program waits for input()
-  | { type: 'done'; ok: boolean; more?: boolean } // more = the REPL waits for the rest of a block
+  | { type: 'done'; id: number; ok: boolean; more?: boolean } // id: the command that ended; more = the REPL waits for the rest of a block
   | { type: 'session'; jspi: boolean }; // Python is ready; jspi = input() can pause for typing

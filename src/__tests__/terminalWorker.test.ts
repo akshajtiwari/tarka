@@ -10,7 +10,7 @@ const realConsole = global.console;
 beforeEach(() => (global.console = fakeConsole as unknown as Console));
 afterEach(() => (global.console = realConsole));
 
-function startWorker(opts: { jspi: boolean }) {
+function startWorker(opts: { jspi: boolean; offline?: boolean; pipFails?: boolean }) {
   const posted: { type: string; [k: string]: unknown }[] = [];
   const pythonRun: string[] = [];
   const globals = new Map<string, unknown>();
@@ -23,14 +23,17 @@ function startWorker(opts: { jspi: boolean }) {
     loadPackage: async () => {},
     loadPackagesFromImports: async () => {},
     runPythonAsync: async (code: string) => {
+      if (opts.pipFails && code.includes('micropip.install'))
+        throw new Error('no wheel for tensorflow');
       pythonRun.push(code);
       return code.includes('_tarka_repl') ? true : undefined;
     },
   };
-  const importModule = async (url: string) =>
-    url.endsWith('pyodide.mjs')
-      ? { loadPyodide: async () => fakePyodide }
-      : { default: (x: number) => x * 2, triple: (x: number) => x * 3 };
+  const importModule = async (url: string) => {
+    if (url.endsWith('pyodide.mjs')) return { loadPyodide: async () => fakePyodide };
+    if (opts.offline) throw new Error('offline');
+    return { default: (x: number) => x * 2, triple: (x: number) => x * 3 };
+  };
   const scope: { onmessage?: (e: { data: unknown }) => Promise<void> } = {};
   const wasm = opts.jspi ? { Suspending: function () {} } : {};
   const names = [
@@ -139,4 +142,54 @@ test('Node-only modules get a clear hint', async () => {
       text: expect.stringContaining('termux node a.js'),
     }),
   );
+});
+
+test('lines typed for an earlier program are not given to the next one', async () => {
+  const w = startWorker({ jspi: false });
+  await w.send({ type: 'input', text: 'stale' }); // typed while nothing was asking
+  const running = w.send({
+    type: 'run-js',
+    file: 'a.js',
+    files: { 'a.js': 'console.log(await input("Age? "))' },
+    modules: {},
+  });
+  await settle();
+  await settle();
+  expect(w.posted).toContainEqual({ type: 'ask', prompt: 'Age? ' });
+  await w.send({ type: 'input', text: '7' });
+  await running;
+  expect(w.posted).toContainEqual({ type: 'out', stream: 'stdout', text: '7' });
+});
+
+test('a package that fails to load only matters when the code requires it', async () => {
+  const w = startWorker({ jspi: false, offline: true });
+  await w.send({
+    type: 'run-js',
+    file: 'a.js',
+    files: { 'a.js': 'console.log("ran"); require("gone")' },
+    modules: { gone: 'https://esm.sh/gone' },
+  });
+  expect(w.posted).toContainEqual({ type: 'out', stream: 'stdout', text: 'ran' });
+  expect(w.posted).toContainEqual(
+    expect.objectContaining({ stream: 'stderr', text: expect.stringContaining('"gone"') }),
+  );
+});
+
+test('a requirement that cannot install is reported, and the program still runs', async () => {
+  const w = startWorker({ jspi: true, pipFails: true });
+  await w.send({
+    type: 'run-python',
+    file: 'main.py',
+    files: { 'main.py': 'print(1)' },
+    requirements: ['tensorflow'],
+    pyodideUrl: 'https://cdn/',
+  });
+  expect(w.posted).toContainEqual(
+    expect.objectContaining({
+      stream: 'stderr',
+      text: 'requirements.txt: no wheel for tensorflow',
+    }),
+  );
+  expect(w.pythonRun.some((code) => code.includes('_tarka_run'))).toBe(true);
+  expect(w.posted.at(-1)).toEqual({ type: 'done', ok: true, more: false });
 });

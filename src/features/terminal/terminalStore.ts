@@ -20,6 +20,7 @@ type TerminalState = {
   command: TerminalCommand | null; // the one the runner is taking now
   queue: TerminalCommand[];
   nextId: number;
+  runId: number; // the newest run, REPL line or pip command; a "done" from an older one is ignored
   bridgeOn: boolean; // the runner WebView is mounted once something needs it
   afterSuccess: (() => void) | null; // e.g. save requirements.txt once pip install worked
   enterProject: (projectId: string) => void;
@@ -47,6 +48,7 @@ export const useTerminalStore = create<TerminalState>()((set, get) => ({
   command: null,
   queue: [],
   nextId: 1,
+  runId: 0,
   bridgeOn: false,
   afterSuccess: null,
   enterProject: (projectId) => {
@@ -71,7 +73,9 @@ export const useTerminalStore = create<TerminalState>()((set, get) => ({
         nextId: s.nextId + 1,
         bridgeOn: true,
         ...(s.command ? { queue: [...s.queue, next] } : { command: next }),
-        ...(busy ? { mode: 'busy' as Mode, afterSuccess: afterSuccess ?? null } : {}),
+        ...(busy
+          ? { mode: 'busy' as Mode, runId: next.id, afterSuccess: afterSuccess ?? null }
+          : {}),
       };
     }),
   setMode: (mode) => set(mode === 'shell' ? { mode, activity: null } : { mode }),
@@ -95,6 +99,9 @@ export const useTerminalStore = create<TerminalState>()((set, get) => ({
         );
       }
     } else if (event.type === 'done') {
+      // Run file while a program runs: the stopped program's "done" arrives after the new run
+      // started, and must not make the terminal look idle.
+      if (event.id !== s.runId) return;
       const after = s.afterSuccess;
       set(s.inRepl ? { mode: 'repl', prompt: event.more ? '...' : '>>>', activity: null } : shell);
       set({ afterSuccess: null });

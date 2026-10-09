@@ -9,11 +9,42 @@ export function toCommonJs(code: string, isTs: boolean): string {
   return transform(code, { transforms, preserveDynamicImport: true }).code;
 }
 
-// The packages a module asks for: require("lodash") -> "lodash" (local "./x" files are skipped).
+// Every file as CommonJS. A file that doesn't compile becomes one that throws its error when
+// it is required, so a half-written file elsewhere in the project doesn't stop this run.
+export function toCommonJsFiles(files: Record<string, string>): Record<string, string> {
+  const result: Record<string, string> = {};
+  for (const [path, code] of Object.entries(files)) {
+    try {
+      result[path] = toCommonJs(code, path.endsWith('.ts'));
+    } catch (error) {
+      const message = `${path}: ${error instanceof Error ? error.message : String(error)}`;
+      result[path] = `throw new SyntaxError(${JSON.stringify(message)});`;
+    }
+  }
+  return result;
+}
+
+// Node.js's own modules: esm.sh can't serve them, so the worker suggests Termux instead.
+export const NODE_ONLY = [
+  'fs',
+  'path',
+  'os',
+  'child_process',
+  'http',
+  'https',
+  'net',
+  'crypto',
+  'process',
+];
+
+// The packages a module asks for: require("lodash") -> "lodash". Local "./x" files and Node's
+// own modules are skipped.
 export function packagesRequired(commonJs: string): string[] {
   const found = new Set<string>();
   for (const match of commonJs.matchAll(/require\(\s*['"]([^'"]+)['"]\s*\)/g)) {
-    if (!match[1].startsWith('.') && !match[1].startsWith('/')) found.add(match[1]);
+    const spec = match[1];
+    const local = spec.startsWith('.') || spec.startsWith('/');
+    if (!local && !spec.startsWith('node:') && !NODE_ONLY.includes(spec)) found.add(spec);
   }
   return [...found];
 }
