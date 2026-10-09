@@ -43,7 +43,7 @@ Expo **DOM components** make that simple: a file that starts with `'use dom'` is
    ├─ <CodeEditor text lang fontSize …/>  ───► props: the starting text, language, theme, settings
    │        onChange(text)            ◄─────── called (debounced) when the user types
    │        onSuggestions(list)       ◄─────── current completions, shown as native chips
-   │        ref.run('insert', '{')    ───────► commands from the key row / chips / menu
+   │        command={id, name, …}     ───────► the latest key-row / chip / menu action
    ├─ <KeyRow/> (sits above the keyboard)
    └─ <SuggestionStrip/>
 ```
@@ -51,24 +51,41 @@ Expo **DOM components** make that simple: a file that starts with `'use dom'` is
 - The **native side is the source of truth** for which files are open and whether they are saved.
   The web side owns the live document while you type.
 - Functions passed as props are async, because the bridge is async. Never expect an instant return value from the web side.
+- **Props arrive in the WebView as fresh JSON copies every time the parent re-renders.**
+  - Never write `useEffect(…, [someObject])` in a DOM component. Key effects on an id or a string.
+  - The editor uses `command?.id`, `path` and `version`; the runner uses `job?.id`.
+  - Wrap DOM components in `memo` on the native side.
 - Key-row taps must not steal focus from the WebView, so the keyboard stays open. This is verified by an E2E test.
 
 ## Git
 
 `isomorphic-git` is a pure-JavaScript git implementation.
 It needs a Node-like `fs` object, so `src/lib/gitFs.ts` adapts `expo-file-system` to that shape.
-All git calls go through `src/features/git/gitService.ts`. It takes `fs` as a parameter,
-so the unit tests pass Node's real `fs` and run real git operations in a temp folder.
+It must provide all 10 methods isomorphic-git binds, including `readlink` and `symlink`.
+
+All git calls go through `src/features/git/gitService.ts`, which takes `fs` as a parameter:
+
+- The unit tests pass Node's real `fs` and run real git operations in a temp folder.
+- `scripts/git-server.cjs` wraps `git http-backend`, so clone, pull and push are tested end to end in jest and on the emulator.
+
+Safety rules:
+
+- Pull and branch switch refuse while anything is uncommitted (`assertClean`).
+- The token is sent only over HTTPS to github.com, gitlab.com and bitbucket.org (`canSendToken`).
+- Every project path goes through `safeParts`, which refuses `..`.
+- `.git` is hidden from the explorer.
 
 ## Running code
 
-`RunnerSandbox.dom.tsx` is a second, hidden DOM component. It runs user code inside a Web Worker or a sandboxed iframe,
-so a crash or an infinite loop can be killed with a timeout. It also captures `console.log` and errors and sends them back.
+`src/features/run/Runner.dom.tsx` is a hidden DOM component. Each run gets a fresh **module** Web Worker
+(source in `workerSource.ts`), which is killed on Stop, on error and on timeout (10 s for JS, 60 s for Python).
+`console.*` output comes back as messages.
 
-- JS runs directly.
-- TS is first stripped to JS with `sucrase`.
-- HTML shows in a visible preview.
-- Python uses Pyodide, loaded once from the CDN and cached.
+- **JS:** runs directly. **TS:** stripped to JS with `sucrase` first.
+- **Python:** Pyodide 314, loaded with `import()` of `pyodide.mjs` from jsDelivr.
+  - Android's WebView refuses `importScripts()` from other sites inside a worker.
+  - Pyodide 314 refuses classic workers, hence the module worker.
+- **HTML:** `HtmlPreview.dom.tsx` shows the page in a sandboxed iframe. Local CSS/JS are copied in by `inlineAssets`.
 
 ## Agent
 
@@ -76,9 +93,18 @@ so a crash or an infinite loop can be killed with a timeout. It also captures `c
 
 1. Send the conversation and tool list to the provider.
 2. If the reply asks for tools, run them.
-3. Stop on a final answer, the step budget, a repeated call, or a user stop.
+3. Stop on a final answer, a refusal, a cut-off reply, the 25-step budget, the same call 3 times, or a user stop.
+
+The pieces around it:
+
+- **History:** `types.ts` keeps it provider-neutral.
+  - `providers/anthropic*.ts` handle Claude: the SDK, streaming through `expo/fetch`, `claude-opus-5-5`, adaptive thinking, effort high, `fallbacks: 'default'`.
+  - `providers/openai*.ts` handle any OpenAI-compatible server.
+  - Assistant turns keep the provider's raw content, so thinking blocks go back unchanged.
+- **Tools:** `runTool.ts` runs them. `write_file` and `delete_file` wait on `approvalStore.ask()`; the UI shows an `ApprovalCard` with a diff and resolves the promise.
+- **Stopping:** `repairHistory` answers open tool calls after a stop, so the next message is valid.
+- **Tests:** UI tests talk to `scripts/fake-ai.cjs`, a fake OpenAI-compatible server with a fixed script.
 
 - Tools that change files never run directly. They create an **approval card** with a diff, and the loop waits for Approve or Reject.
 - Providers live in `providers/anthropic.ts` and `providers/openai.ts`, behind the same small interface.
 
-*(Sections get filled in as each phase lands.)*
