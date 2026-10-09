@@ -1,72 +1,96 @@
 # Running and compiling code on a phone
 
-Research notes (October 2026) on how TARKA can run code. v1 runs code **on the device only**.
-This page lists what works today, what could come next, and the trade-offs.
-Re-check versions and licenses before building any of the "next" options.
+How TARKA runs code, and the researched options for compiled languages (October 2026).
+Sizes and licences were checked on 2026-10-09; re-check them before building anything here.
 
-## The constraint
+## Status in v0.2
 
-A phone app can't just run `gcc` or `javac`:
+| Language | How | Where |
+|---|---|---|
+| JavaScript, TypeScript | Web Worker in a hidden WebView; TS stripped by sucrase. `npm install` adds packages that load from esm.sh. | in-app terminal |
+| Python | Pyodide (CPython in WASM), one session per project. `pip install` uses micropip. Live `input()` works through JSPI. | in-app terminal; Python is installed during setup |
+| HTML/CSS | sandboxed iframe preview | `run page.html` |
+| Anything Termux can run (gcc, clang, java, go, rust, node…) | **Termux bridge**: `termux <command>` copies the project to `~/tarka/<project>` in Termux and runs the command through the `RUN_COMMAND` intent. Output comes back when the command finishes, up to about 100 KB, and input can't be typed live. | needs the Termux app (F-Droid), see Settings → Termux |
 
-- **iOS** forbids executing downloaded native code. Anything that runs code has to be an interpreter or WebAssembly.
-- **Android 10+** only lets an app execute binaries that ship inside its own APK, in the native library folder (the W^X rule).
-  Downloaded binaries can't be executed directly.
-- Phones throttle CPU and kill background work. Long builds belong on a real computer.
+## The constraints (why not just ship gcc)
 
-That leaves three families: **WebAssembly/JS inside a WebView** (works on both platforms),
-**Android-native tricks**, and **remote execution**.
+- **Android 10+ W^X:** an app can only execute binaries shipped in its own APK, as `lib*.so` in `jniLibs`, run from
+  `nativeLibraryDir`. Files in the app's data folders can't be executed, and Google Play requires target SDK 36.
+- **No cross-origin isolation in Android WebView** (one renderer per app), so **no SharedArrayBuffer** and no WASM threads.
+  Anything that needs COOP/COEP is out: `@wasmer/sdk`, Runno's worker host, WebContainers.
+- **JSPI (Chrome 137+)** lets WASM pause for input. TARKA already uses it for Python's `input()`. The same trick
+  gives compiled WASI programs live stdin.
+- **iOS** forbids running downloaded native code, so WebAssembly is the only portable route.
 
-## 1. Inside the WebView (works on Android and iOS, offline after the first download)
+## Options by language
 
-The WebView ships a fast JavaScript engine and WebAssembly. TARKA's runner is a hidden DOM component
-that runs code in a Web Worker, so a stuck loop can be killed.
+### C and C++
 
-| Language | Technology | Size / speed | Status for TARKA |
+| Option | Size | Licence | Verdict |
 |---|---|---|---|
-| JavaScript | the WebView's own engine | instant | **v1** |
-| TypeScript | `sucrase` strips the types → JS | ~200 KB, instant | **v1** |
-| HTML/CSS | sandboxed iframe preview | instant | **v1** |
-| Python | **Pyodide** (CPython compiled to WASM) | ~10 MB first load, then cached; near-native for pure Python | **v1** |
-| Lua | `wasmoon` (Lua 5.4 in WASM) | ~300 KB | easy next |
-| SQL | `sql.js` (SQLite in WASM) | ~1 MB | easy next |
-| Ruby | `ruby.wasm` | ~20 MB | possible |
-| PHP | `php-wasm` (from WordPress Playground) | ~15 MB | possible |
-| C / C++ | **clang + lld compiled to WASM**, e.g. `@yowasp/clang` (~25 MB gzipped, ~100 MB of toolchain on the first run) or Wasmer's clang package. The output is a WASI program run with a small WASI shim such as `@bjorn3/browser_wasi_shim`. | heavy download, compiles in seconds | **spike needed**: can a phone WebView hold the toolchain in memory? |
-| C (light) | `picoc` interpreter in WASM, or `JSCPP` (a C++ subset interpreter in JS) | small | good for learning and small programs, not real projects |
-| Java | **CheerpJ**: a JVM in WASM that can run the real `javac` | large; check the license (free for personal and open-source use?) | possible |
-| Go | `yaegi` (a Go interpreter) compiled to WASM | ~10 MB | possible |
-| Rust | none practical today (rustc is too big for a WebView) | — | remote only |
+| **`@yowasp/clang`**: Clang/LLD 22 compiled to WASM, with the wasi-libc and libc++ sysroot | ~23 MB download (75 MB wasm unpacked) | ISC / Apache-2.0 | **Best full C/C++ route.** Needs no SharedArrayBuffer and runs in our worker. No C++ exceptions (no libunwind). The GitHub repo was archived 2026-03 (source moved to Codeberg), so pin the version and self-host the files. Check memory on a mid-range phone. |
+| **xcc `wcc`**: a tiny C-to-WASM compiler | **166 KB** | MIT, active | **Instant C** (C only, small libc, no optimizer). Great first step and a fallback while clang downloads. |
+| **Native TinyCC** in `jniLibs` (owner's idea) | +1–3 MB APK | LGPL-2.1 | Fast, native, real stdin through a Kotlin module. Output must run via `tcc -run` (compiles into memory) or `linker64 a.out`. Depends on SELinux and linker behaviour Google could tighten. C only. |
+| `@live-codes/clang-wasm` | ~29 MB gz | MIT | an alternative packaging of clang-in-WASM |
+| JSCPP, picoc | small | MIT | stale since 2021, subsets only: teaching toys |
 
-**What v1 learned on a real Android WebView (2026-10):**
-- `importScripts()` from another site fails inside a worker, but `fetch` and `import()` work.
-- Pyodide 314 needs a *module* worker: `new Worker(url, { type: 'module' })` plus `await import('…/pyodide.mjs')`.
-- DOM-component props arrive as fresh JSON copies on every re-render. Key effects on ids, not objects, or a run restarts on every output line.
+Compiled `.wasm` programs run with **`@bjorn3/browser_wasi_shim`** (MIT/Apache).
+- Live stdin: override `fd_read` with `WebAssembly.Suspending`, and run `_start` through `WebAssembly.promising` (JSPI).
+- Older WebViews: give stdin up front instead.
 
-**Recommendation after v1:** add Lua and SQL (tiny, offline, easy), then run a C/C++ spike with `@yowasp/clang`.
-Measure memory use on a mid-range phone before promising C++.
+### Java (and Kotlin)
 
-## 2. Android-only native options
-
-| Option | How it works | Pros | Cons |
+| Option | Size | Licence | Verdict |
 |---|---|---|---|
-| **Termux bridge** | The user installs Termux (F-Droid or GitHub build, **not** the Play Store build). Turn on `allow-external-apps=true` in `~/.termux/termux.properties`, and TARKA declares `com.termux.permission.RUN_COMMAND`. TARKA sends the `com.termux.RUN_COMMAND` intent (with `RUN_COMMAND_PATH`, arguments and `RUN_COMMAND_BACKGROUND=true`). | real gcc, clang, python, node, go, rust, openjdk from `pkg install` | needs a native module to send intents and receive results (a PendingIntent callback; Termux:Tasker caps results at 100 KB); extra setup for the user |
-| **Bundled binaries** | Ship small toolchains (e.g. `tcc`) as `lib*.so` files in `jniLibs`, then run them with `ProcessBuilder` from `nativeLibraryDir`. | no extra app needed | bigger APK, a native module, every architecture must be built |
-| **PRoot + Ubuntu** (NimoteCode's "Local Linux") | Ship PRoot, download an Ubuntu rootfs, `apt install` toolchains. Talk to it over a local SSH server. | a full Linux userland, no root | large and complex; PRoot is not a VM (ptrace and /proc quirks); Android kills background processes |
+| **teavm-javac**: the real OpenJDK javac (JDK 25u) plus TeaVM in one WasmGC module | ~4 MB gz | Apache-2.0 (OpenJDK parts GPLv2 + Classpath Exception) | **Best fit**: offline, small, active. Programs run on TeaVM's partial copy of the Java standard library; stdin needs a shim. |
+| CheerpJ 4.3 (JVM in WASM, runs javac from tools.jar) | large | the free tier needs their CDN; offline needs a paid licence | not suitable |
+| **Native ECJ + D8 + `InMemoryDexClassLoader`** (as CodeAssist does) | +25–60 MB APK | EPL-2.0 / BSD-3 | the "full Java" route if TeaVM's gaps hurt. Run user code in a separate process. Copy no GPL code from CodeAssist. |
+| Janino (owner's idea) | 1.1 MB | BSD-3 | **No**: no lambdas, `var` or method references, and archived 2026-07 |
+| BeanShell (owner's idea) | 0.5 MB | — | **No**: a Java-like script language, not real Java |
+| Kotlin | — | — | no on-device compiler today: use Termux |
 
-**Recommendation:** a Termux bridge is the cheapest way to get "real" compilers on Android.
-Build it as a later phase with a small Expo native module.
+### Others
 
-## 3. Remote execution (any language, but needs a network)
+| Language | Package | Size | Licence | Notes |
+|---|---|---|---|---|
+| Lua 5.4 | wasmoon 1.16 | 0.3 MB | MIT | easiest win |
+| SQL | sql.js 1.14 / @sqlite.org/sqlite-wasm | 0.7 / ~3 MB | MIT / Apache-2.0 | easy win |
+| Go | yaegi-wasm (interpreter) | 8.4 MB gz | ISC / Apache-2.0 | real Go compilers in the browser are unmaintained |
+| Ruby 3.4 | @ruby/3.4-wasm-wasi | ~9 MB gz | MIT | |
+| C# | @live-codes/blazor-wasm (Roslyn) | ~52 MB | MIT | |
+| Zig 0.14 | @seth0x41/zig-wasm | ~6 MB | MIT | |
+| Rust | Miri compiled to WASM (@live-codes/rust-wasm) | ~55 MB | MIT | an interpreter, slow, std only: teaching mode. Real Rust needs Termux. |
+| Swift | @live-codes/swift-wasm | ~70 MB gz | MIT | |
+| PHP | @php-wasm/web | tens of MB | **GPL-2.0+** | don't copy it into TARKA |
 
-| Option | Notes |
-|---|---|
-| **Piston** (`engineer-man/piston`) | Open source, MIT, many languages. Self-host it with one `docker run` (the laptop already has Docker). The public `emkc.org` API is rate-limited to 5 requests per second and no longer hands out unlimited keys. |
-| **Judge0 CE** | Open source, many languages; self-host or use RapidAPI. |
-| **SSH to your own machine** | The most powerful: real projects, real toolchains. Needs a native SSH library and a terminal (xterm.js). This is NimoteCode's main model and is on our roadmap. |
+[LiveCodes](https://github.com/live-codes/livecodes) (MIT) wraps most of these and is a good reference.
 
-## Summary
+### Remote execution (opt-in only: code leaves the phone)
 
-- **v1 (now):** JS, TS, HTML and Python, fully on the phone, on Android and iOS.
-- **Next:** Lua and SQL in WASM, then a C/C++ clang-in-WASM spike.
-- **Android power users:** the Termux bridge.
-- **Big projects:** SSH workspaces, with Piston as a self-hosted option.
+- **Piston:** the public API needs a token since 2026-02 (non-commercial education only). Self-hosting with Docker is MIT.
+- **Judge0:** GPL-3.0 to self-host; hosted plans are paid.
+- **Godbolt:** donation-funded, so never point app traffic at it.
+- Any remote option must use an endpoint the user types in, and be disclosed in the privacy policy.
+
+### Android's own "Linux Terminal" (developer options)
+
+It has no API for other apps. Its VM forwards ports ≥1024 to the phone's localhost, so a user could start an SSH
+server there by hand. This is documentation-only for now.
+
+## Recommended roadmap
+
+1. **C, instantly, offline:** xcc `wcc` in the worker, plus `browser_wasi_shim` with JSPI stdin. Tiny download, about a day of work.
+2. **Lua and SQL:** under 1 MB each.
+3. **Java:** teavm-javac (about 4 MB gz) with a stdin shim.
+4. **C++ (and full C):** `@yowasp/clang` as a downloadable "language pack" (about 23 MB, cached), measured on a mid-range phone first.
+5. **More packs:** Go (Yaegi), Ruby, C#, Zig; then Rust and Swift as labelled teaching modes.
+6. **Native options**, only if needed: TinyCC in `jniLibs` (`tcc -run`), or ECJ + D8 for full Java.
+7. **Termux** stays the "real Linux" answer for everything else (already built).
+
+## Sources
+
+- C/C++: [@yowasp/clang](https://www.npmjs.com/package/@yowasp/clang), [YoWASP](https://yowasp.org/), [xcc](https://github.com/tyfkda/xcc), [browser_wasi_shim](https://github.com/bjorn3/browser_wasi_shim), [V8 JSPI](https://v8.dev/blog/jspi)
+- Native binaries: [Termux tcc build](https://github.com/termux/termux-packages/blob/master/packages/tcc/build.sh), [termux-exec](https://github.com/fornwall/termux-exec), [Play target SDK](https://developer.android.com/google/play/requirements/target-sdk)
+- Java: [teavm-javac](https://github.com/konsoletyper/teavm-javac), [CheerpJ licensing](https://cheerpj.com/docs/licensing), [Janino](https://janino-compiler.github.io/janino/), [CodeAssist](https://github.com/tyron12233/CodeAssist)
+- Remote: [Piston](https://github.com/engineer-man/piston), [Judge0](https://github.com/judge0/judge0), [Godbolt API](https://github.com/compiler-explorer/compiler-explorer/blob/main/docs/API.md)
+- Android WebView isolation: [Hermit known issues](https://hermit.chimbori.com/help/known-issues)
