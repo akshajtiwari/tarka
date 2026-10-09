@@ -1,14 +1,13 @@
 import * as git from 'isomorphic-git';
-import http from 'isomorphic-git/http/web';
 
 import { stagedChanges, unstagedChanges, type Change, type StatusRow } from './changes';
-import { cacheFor, dropGitCache } from './gitCache';
+import { cacheFor, dropCacheIfFails } from './gitCache';
 
 // All git work goes through these small functions. They take `fs` as a parameter so the app
 // passes its expo-file-system adapter and the tests pass Node's real `fs`.
-// `dir` is the repo folder, e.g. "/projects/demo".
+// `dir` is the repo folder, e.g. "/projects/demo". Clone, pull and push are in gitRemote.ts.
 
-type Fs = Parameters<typeof git.init>[0]['fs'];
+export type Fs = Parameters<typeof git.init>[0]['fs'];
 export type Author = { name: string; email: string };
 
 export async function isRepo(fs: Fs, dir: string): Promise<boolean> {
@@ -126,7 +125,7 @@ export function createBranch(fs: Fs, dir: string, name: string) {
 }
 
 export function switchBranch(fs: Fs, dir: string, name: string) {
-  return changing(dir, () => git.checkout({ fs, dir, ref: name, cache: cacheFor(dir) }));
+  return dropCacheIfFails(dir, () => git.checkout({ fs, dir, ref: name, cache: cacheFor(dir) }));
 }
 
 // A file's text in a commit (the last one by default), or "" if it is not there.
@@ -137,87 +136,5 @@ export async function committedText(fs: Fs, dir: string, path: string, ref = 'HE
     return new TextDecoder().decode(blob);
   } catch {
     return '';
-  }
-}
-
-// Remote work (clone, pull, push). The token is sent as the password, which works for GitHub,
-// GitLab and Bitbucket personal access tokens. It is only ever sent over HTTPS to those hosts,
-// so a mistyped or unknown URL never receives it. No token = public repos only.
-const TOKEN_HOSTS = ['github.com', 'gitlab.com', 'bitbucket.org'];
-
-export function canSendToken(url: string): boolean {
-  try {
-    const { protocol, hostname } = new URL(url);
-    return protocol === 'https:' && TOKEN_HOSTS.includes(hostname);
-  } catch {
-    return false;
-  }
-}
-
-function auth(token?: string | null) {
-  if (!token) return undefined;
-  return (url: string) =>
-    canSendToken(url) ? { username: 'x-access-token', password: token } : { cancel: true };
-}
-
-// shortcut: there is no screen to add a remote, so only cloned projects can push and pull; add one when needed.
-export async function assertHasRemote(fs: Fs, dir: string) {
-  if ((await git.listRemotes({ fs, dir })).length === 0) {
-    throw new Error('This project has no remote. Only cloned projects can push and pull for now.');
-  }
-}
-
-// Shallow, single-branch clone: much faster on a phone, and enough to edit and push.
-export function clone(
-  fs: Fs,
-  dir: string,
-  url: string,
-  token?: string | null,
-  onProgress?: git.ProgressCallback,
-) {
-  dropGitCache(dir); // a new repo in this folder: nothing old may be reused
-  return changing(dir, () =>
-    git.clone({
-      fs,
-      http,
-      dir,
-      url,
-      singleBranch: true,
-      depth: 1,
-      onAuth: auth(token),
-      onProgress,
-      cache: cacheFor(dir),
-    }),
-  );
-}
-
-export function pull(fs: Fs, dir: string, author: Author, token?: string | null) {
-  return changing(dir, () =>
-    git.pull({
-      fs,
-      http,
-      dir,
-      author,
-      singleBranch: true,
-      onAuth: auth(token),
-      cache: cacheFor(dir),
-    }),
-  );
-}
-
-export function push(fs: Fs, dir: string, token?: string | null) {
-  return changing(dir, () =>
-    git.push({ fs, http, dir, onAuth: auth(token), cache: cacheFor(dir) }),
-  );
-}
-
-// A clone, pull, push or checkout that fails halfway may leave the cache out of step with the
-// disk, so forget it and let the next call start clean.
-async function changing<T>(dir: string, step: () => Promise<T>): Promise<T> {
-  try {
-    return await step();
-  } catch (e) {
-    dropGitCache(dir);
-    throw e;
   }
 }

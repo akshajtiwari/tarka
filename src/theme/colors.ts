@@ -44,7 +44,6 @@ const terminal = {
   muted: '#8B949E',
   error: '#FF7B72',
   prompt: '#79C0FF',
-  success: '#3FB950',
 };
 
 export const dark: Colors = {

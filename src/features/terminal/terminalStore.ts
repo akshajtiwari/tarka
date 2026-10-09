@@ -1,16 +1,11 @@
 import { create } from 'zustand';
 
-import type { BridgeEvent, OutputLine, TerminalCommand } from './bridgeTypes';
+import type { BridgeEvent, NewCommand, OutputLine, TerminalCommand } from './bridgeTypes';
 
 // The terminal's screen and state. Commands go to the hidden runner WebView one at a time:
 // the next one is handed over when the runner says it took the last ("handled").
 
 export type Mode = 'shell' | 'busy' | 'repl' | 'ask';
-type NewCommand = TerminalCommand extends infer C
-  ? C extends unknown
-    ? Omit<C, 'id'>
-    : never
-  : never;
 
 const MAX_LINES = 5000; // the screen keeps the newest lines
 
@@ -21,7 +16,6 @@ type TerminalState = {
   activity: string | null; // what runs right now, shown while busy ("Running main.py…")
   prompt: string; // shown before the input box
   inRepl: boolean;
-  jspi: boolean | null; // can input() pause for typing? (null until Python started)
   preview: string | null; // a web page being shown
   command: TerminalCommand | null; // the one the runner is taking now
   queue: TerminalCommand[];
@@ -49,7 +43,6 @@ export const useTerminalStore = create<TerminalState>()((set, get) => ({
   projectId: null,
   lines: [],
   ...shell,
-  jspi: null,
   preview: null,
   command: null,
   queue: [],
@@ -62,7 +55,6 @@ export const useTerminalStore = create<TerminalState>()((set, get) => ({
       projectId,
       lines: [],
       ...shell,
-      jspi: null,
       preview: null,
       command: null,
       queue: [],
@@ -96,7 +88,6 @@ export const useTerminalStore = create<TerminalState>()((set, get) => ({
     } else if (event.type === 'ask') {
       set({ mode: 'ask', prompt: event.prompt || '?' });
     } else if (event.type === 'session') {
-      set({ jspi: event.jspi });
       if (!event.jspi) {
         s.print(
           'info',

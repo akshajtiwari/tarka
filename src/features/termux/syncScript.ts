@@ -4,14 +4,14 @@
 
 export type SyncFile = { path: string; base64: string };
 
-export const MAX_SCRIPT = 200_000; // characters per script: Android limits how much one message carries
+const MAX_SCRIPT = 200_000; // characters per script: Android limits how much one message carries
 
-// 'it''s' -> 'it'\''s': safe inside a bash command.
+// it's -> 'it'\''s': safe inside a bash command.
 export function shellQuote(text: string): string {
   return `'${text.replace(/'/g, "'\\''")}'`;
 }
 
-export const projectRoot = (projectId: string) => `"$HOME/tarka/${projectId}"`;
+const projectRoot = (projectId: string) => `"$HOME/tarka/${projectId}"`;
 
 function fileBlock(root: string, file: SyncFile): string {
   const folder = file.path.includes('/') ? file.path.slice(0, file.path.lastIndexOf('/')) : '';

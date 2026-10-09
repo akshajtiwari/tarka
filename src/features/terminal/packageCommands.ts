@@ -1,15 +1,14 @@
-import { fileAt } from '../../lib/projectFs';
+import { fileAt, readForSearch } from '../../lib/projectFs';
 import { useWorkspaceStore } from '../workspace/workspaceStore';
 import { addDependencies, dependenciesOf } from './packageJson';
-import { readText } from './projectFiles';
 import { addRequirements, parseRequirements } from './requirements';
 import { useTerminalStore } from './terminalStore';
 
 export const requirementsOf = (projectId: string) =>
-  parseRequirements(readText(projectId, 'requirements.txt') ?? '');
+  parseRequirements(readForSearch(projectId, 'requirements.txt') ?? '');
 
 export const dependenciesFor = (projectId: string) =>
-  dependenciesOf(readText(projectId, 'package.json'));
+  dependenciesOf(readForSearch(projectId, 'package.json'));
 
 function writeProjectFile(projectId: string, path: string, text: string) {
   const file = fileAt(projectId, path);
@@ -27,7 +26,7 @@ export function pip(projectId: string, action: 'install' | 'list', packages: str
   );
   terminal.send({ type: 'pip', action, packages, requirements: requirementsOf(projectId) }, () => {
     if (action !== 'install') return;
-    const text = readText(projectId, 'requirements.txt') ?? '';
+    const text = readForSearch(projectId, 'requirements.txt') ?? '';
     writeProjectFile(projectId, 'requirements.txt', addRequirements(text, packages));
     useTerminalStore.getState().print('info', 'Saved in requirements.txt');
   });
@@ -52,7 +51,7 @@ export async function npm(projectId: string, action: 'install' | 'list', package
       added[name] = `^${(await response.json()).version}`;
       terminal.print('info', `Added ${name}@${added[name].slice(1)}`);
     }
-    const text = readText(projectId, 'package.json');
+    const text = readForSearch(projectId, 'package.json');
     writeProjectFile(projectId, 'package.json', addDependencies(text, added));
     terminal.print('info', 'Saved in package.json. Packages load from esm.sh when you run.');
   } catch (e) {

@@ -16,9 +16,6 @@ const RUNNER = 'f=$(mktemp); cat > "$f"; bash "$f" </dev/null; s=$?; rm -f "$f";
 // the command there, and show what it printed. `termux sync` copies everything again.
 export async function runInTermux(projectId: string, line: string) {
   const t = useTerminalStore.getState();
-  const explain = (problem: TermuxProblem, detail?: string) =>
-    explainTermux(problem, detail).forEach((text) => t.print('stderr', text));
-
   if (!TarkaAndroid) return explain('unsupported');
   if (!TarkaAndroid.isTermuxInstalled()) return explain('not-installed');
   if (!TarkaAndroid.hasTermuxPermission()) {
@@ -69,25 +66,27 @@ function collect(projectId: string) {
   return { files, stamps, skipped };
 }
 
+function explain(problem: TermuxProblem, detail?: string) {
+  const t = useTerminalStore.getState();
+  for (const text of explainTermux(problem, detail)) t.print('stderr', text);
+}
+
 function show(result: TermuxResult, command: string) {
   const t = useTerminalStore.getState();
-  const print = (stream: 'stdout' | 'stderr', text: string) =>
-    text &&
-    text
-      .replace(/\n$/, '')
-      .split('\n')
-      .forEach((line) => t.print(stream, line));
+  const print = (stream: 'stdout' | 'stderr', text: string) => {
+    if (!text) return;
+    for (const line of text.replace(/\n$/, '').split('\n')) t.print(stream, line);
+  };
   print('stdout', result.stdout);
   print('stderr', result.stderr);
   if (result.err !== -1) {
-    if (isExternalAppsOff(result.errmsg)) {
-      explainTermux('external-apps-off').forEach((text) => t.print('stderr', text));
-    } else t.print('stderr', result.errmsg || 'Termux could not run the command.');
+    if (isExternalAppsOff(result.errmsg)) explain('external-apps-off');
+    else t.print('stderr', result.errmsg || 'Termux could not run the command.');
     return;
   }
   if (result.exitCode === 127) {
     const name = command.trim().split(/\s+/)[0];
-    explainTermux('not-found', name).forEach((text) => t.print('stderr', text));
+    explain('not-found', name);
   }
   if (Number(result.stdoutOriginalLength) > result.stdout.length) {
     t.print('info', 'Termux kept only the last 100 KB of the output.');

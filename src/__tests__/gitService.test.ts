@@ -3,6 +3,7 @@ import os from 'os';
 import path from 'path';
 
 import { dropGitCache } from '../features/git/gitCache';
+import * as gitRemote from '../features/git/gitRemote';
 import * as gitService from '../features/git/gitService';
 
 const me = { name: 'Test', email: 'test@example.com' };
@@ -93,14 +94,14 @@ test('stage all stages new, changed and deleted files', async () => {
 });
 
 test('the token only goes to known git hosts over https', () => {
-  expect(gitService.canSendToken('https://github.com/user/repo.git')).toBe(true);
-  expect(gitService.canSendToken('http://github.com/user/repo.git')).toBe(false);
-  expect(gitService.canSendToken('https://git.someone.dev/x.git')).toBe(false);
-  expect(gitService.canSendToken('not a url')).toBe(false);
+  expect(gitRemote.canSendToken('https://github.com/user/repo.git')).toBe(true);
+  expect(gitRemote.canSendToken('http://github.com/user/repo.git')).toBe(false);
+  expect(gitRemote.canSendToken('https://git.someone.dev/x.git')).toBe(false);
+  expect(gitRemote.canSendToken('not a url')).toBe(false);
 });
 
 test('a repo without a remote says so in plain words', async () => {
-  await expect(gitService.assertHasRemote(fs, dir)).rejects.toThrow('no remote');
+  await expect(gitRemote.assertHasRemote(fs, dir)).rejects.toThrow('no remote');
 });
 
 test('a commit lists the files it added, changed and deleted', async () => {

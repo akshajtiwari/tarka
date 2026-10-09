@@ -2,6 +2,7 @@ import { getGitToken } from '../../lib/secure';
 import { reloadOpenTabs, saveAllDirty } from '../editor/fileActions';
 import { useSettings } from '../settings/settingsStore';
 import { useWorkspaceStore } from '../workspace/workspaceStore';
+import * as gitRemote from './gitRemote';
 import * as gitService from './gitService';
 import { gitFs } from '../../lib/gitFs';
 import { repoDir } from './repo';
@@ -10,8 +11,8 @@ import { repoDir } from './repo';
 
 export async function pushProject(projectId: string): Promise<string> {
   const dir = repoDir(projectId);
-  await gitService.assertHasRemote(gitFs, dir);
-  await gitService.push(gitFs, dir, await getGitToken());
+  await gitRemote.assertHasRemote(gitFs, dir);
+  await gitRemote.push(gitFs, dir, await getGitToken());
   return 'Your commits were pushed.';
 }
 
@@ -23,9 +24,9 @@ export async function pullProject(projectId: string): Promise<string> {
   if (!gitName || !gitEmail) throw new Error('Add your name and email in Settings first.');
   const saveErrors = saveAllDirty(projectId);
   if (saveErrors.length > 0) throw new Error(saveErrors.join('\n'));
-  await gitService.assertHasRemote(gitFs, dir);
+  await gitRemote.assertHasRemote(gitFs, dir);
   await gitService.assertClean(gitFs, dir);
-  await gitService.pull(gitFs, dir, { name: gitName, email: gitEmail }, await getGitToken());
+  await gitRemote.pull(gitFs, dir, { name: gitName, email: gitEmail }, await getGitToken());
   reloadOpenTabs(projectId);
   useWorkspaceStore.getState().refreshTree();
   return 'You have the latest changes.';

@@ -3,6 +3,7 @@ import fs from 'fs';
 import os from 'os';
 import path from 'path';
 
+import * as gitRemote from '../features/git/gitRemote';
 import * as gitService from '../features/git/gitService';
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const { startGitServer } = require('../../scripts/git-server.cjs');
@@ -33,21 +34,21 @@ test('clone, commit, push, and pull back into a second clone', async () => {
   const second = path.join(root, 'second');
   const url = `${server.url}/demo.git`;
 
-  await gitService.clone(fs, first, url);
+  await gitRemote.clone(fs, first, url);
   expect(fs.readFileSync(path.join(first, 'a.txt'), 'utf8')).toBe('hello\n');
-  await gitService.clone(fs, second, url);
+  await gitRemote.clone(fs, second, url);
 
   fs.writeFileSync(path.join(first, 'b.txt'), 'new\n');
   await gitService.stage(fs, first, { path: 'b.txt', kind: 'untracked' });
   await gitService.commit(fs, first, 'add b', me);
-  await gitService.push(fs, first);
+  await gitRemote.push(fs, first);
 
-  await gitService.pull(fs, second, me);
+  await gitRemote.pull(fs, second, me);
   expect(fs.readFileSync(path.join(second, 'b.txt'), 'utf8')).toBe('new\n');
 
   // A new clone has the newest commit but not its parent: what it changed is unknown.
   const third = path.join(root, 'third');
-  await gitService.clone(fs, third, url);
+  await gitRemote.clone(fs, third, url);
   const [newest] = await gitService.history(fs, third);
   expect(await gitService.commitDetail(fs, third, newest.oid)).toMatchObject({
     message: 'add b',

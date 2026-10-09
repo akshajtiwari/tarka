@@ -17,5 +17,3 @@ export function projectFiles(projectId: string, keep: (path: string) => boolean)
   }
   return files;
 }
-
-export const readText = (projectId: string, path: string) => readForSearch(projectId, path);

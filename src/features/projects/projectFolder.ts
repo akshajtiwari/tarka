@@ -11,7 +11,7 @@ import { useProjectStore } from './projectStore';
 const insideApp = () => new Directory(Paths.document, 'projects');
 
 // Documents/TARKA, or null when Android doesn't let TARKA write there (yet).
-export function documentsRoot(): Directory | null {
+function documentsRoot(): Directory | null {
   if (!TarkaAndroid?.hasAllFilesAccess()) return null;
   return new Directory(`file://${TarkaAndroid.documentsPath()}`, 'TARKA');
 }

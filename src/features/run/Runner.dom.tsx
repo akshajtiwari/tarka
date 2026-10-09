@@ -90,25 +90,24 @@ export default function Runner({ command, onEvent }: Props) {
     };
 
     if (!command) return;
-    const c = command;
-    if (c.type === 'stop') {
+    if (command.type === 'stop') {
       stopAll();
       if (running.current) finish(false);
-    } else if (c.type === 'input') {
-      (running.current === 'js' ? js.current : python.current)?.postMessage(c);
-    } else if (c.type === 'run-js') {
+    } else if (command.type === 'input') {
+      (running.current === 'js' ? js.current : python.current)?.postMessage(command);
+    } else if (command.type === 'run-js') {
       printed.current = 0;
       js.current?.terminate();
       try {
         const files: Record<string, string> = {};
-        for (const [path, code] of Object.entries(c.files)) {
+        for (const [path, code] of Object.entries(command.files)) {
           files[path] = toCommonJs(code, path.endsWith('.ts'));
         }
         const specs = Object.values(files).flatMap(packagesRequired);
-        const modules = Object.fromEntries(specs.map((s) => [s, esmUrl(s, c.deps)]));
+        const modules = Object.fromEntries(specs.map((s) => [s, esmUrl(s, command.deps)]));
         js.current = start('js');
         running.current = 'js';
-        js.current.postMessage({ type: 'run-js', file: c.file, files, modules });
+        js.current.postMessage({ type: 'run-js', file: command.file, files, modules });
       } catch (error) {
         out('stderr', String(error)); // a syntax error the TypeScript/import step found
         finish(false);
@@ -117,9 +116,9 @@ export default function Runner({ command, onEvent }: Props) {
       printed.current = 0;
       python.current ??= start('python');
       running.current = 'python';
-      python.current.postMessage({ ...c, pyodideUrl: PYODIDE_URL });
+      python.current.postMessage({ ...command, pyodideUrl: PYODIDE_URL });
     }
-    emit({ type: 'handled', id: c.id });
+    emit({ type: 'handled', id: command.id });
     // Props arrive as fresh copies on every re-render (they cross the bridge as JSON), so only
     // a new command id may act, never a new object with the same id.
     // eslint-disable-next-line react-hooks/exhaustive-deps

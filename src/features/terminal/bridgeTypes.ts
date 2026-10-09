@@ -3,15 +3,16 @@
 export type OutputStream = 'stdout' | 'stderr' | 'info';
 export type OutputLine = { stream: OutputStream | 'echo'; text: string }; // echo = what you typed
 
-// Native -> WebView. `id` goes up by one each time, so the same command twice runs twice.
-export type TerminalCommand = { id: number } & (
+// Native -> WebView. The terminal store adds the `id`: it goes up by one each time, so the same
+// command twice runs twice.
+export type NewCommand =
   | { type: 'run-python'; file: string; files: Record<string, string>; requirements: string[] }
   | { type: 'repl'; line: string; requirements: string[] }
   | { type: 'pip'; action: 'install' | 'list'; packages: string[]; requirements: string[] }
   | { type: 'run-js'; file: string; files: Record<string, string>; deps: Record<string, string> }
   | { type: 'input'; text: string }
-  | { type: 'stop' }
-);
+  | { type: 'stop' };
+export type TerminalCommand = { id: number } & NewCommand;
 
 // WebView -> native.
 export type BridgeEvent =

@@ -21,3 +21,14 @@ export function dropGitCache(dir?: string) {
   if (dir === undefined) caches.clear();
   else caches.delete(dir);
 }
+
+// A clone, pull, push or checkout that fails halfway may leave the cache out of step with the
+// disk, so forget it and let the next call start clean.
+export async function dropCacheIfFails<T>(dir: string, step: () => Promise<T>): Promise<T> {
+  try {
+    return await step();
+  } catch (e) {
+    dropGitCache(dir);
+    throw e;
+  }
+}

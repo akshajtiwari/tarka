@@ -22,10 +22,9 @@ export function TermuxSettings() {
 
   // Checked again when you come back from installing Termux or from Android's settings.
   useEffect(() => {
-    const sub = AppState.addEventListener(
-      'change',
-      (s) => s === 'active' && setStatus(readStatus()),
-    );
+    const sub = AppState.addEventListener('change', (state) => {
+      if (state === 'active') setStatus(readStatus());
+    });
     return () => sub.remove();
   }, []);
 
