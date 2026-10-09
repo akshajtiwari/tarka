@@ -34,3 +34,27 @@ test('runs the open file when it can, otherwise a usual entry file', () => {
 test('the worker code is valid JavaScript (it lives in a string, so the compiler cannot check it)', () => {
   expect(() => new Function(WORKER_SOURCE)).not.toThrow();
 });
+
+test('code you run can fetch from the web but not read the app files', async () => {
+  const webFetch = jest.fn(async () => 'web');
+  class FakeXHR {
+    open(_method: string, _url: string) {}
+  }
+  const self: Record<string, unknown> = { Worker: class {} };
+  const names = [
+    'self',
+    'fetch',
+    'XMLHttpRequest',
+    'Request',
+    'postMessage',
+    'console',
+    'onmessage',
+  ];
+  new Function(...names, WORKER_SOURCE)(self, webFetch, FakeXHR, class {}, () => {}, {}, null);
+
+  const guarded = self.fetch as (url: string) => Promise<unknown>;
+  await expect(guarded('file:///data/user/0/app/files/x')).rejects.toThrow('Only web addresses');
+  await expect(guarded('https://example.com/data.json')).resolves.toBe('web');
+  expect(() => new FakeXHR().open('GET', 'file:///etc/hosts')).toThrow('Only web addresses');
+  expect(self.Worker).toBeUndefined();
+});
