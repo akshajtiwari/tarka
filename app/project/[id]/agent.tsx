@@ -4,6 +4,7 @@ import { FlatList, StyleSheet, View } from 'react-native';
 import { KeyboardAvoidingView } from 'react-native-keyboard-controller';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { BusyLine } from '../../../src/components/BusyLine';
 import { Button } from '../../../src/components/Button';
 import { EmptyState } from '../../../src/components/EmptyState';
 import { Header } from '../../../src/components/Header';
@@ -11,6 +12,7 @@ import { IconButton } from '../../../src/components/IconButton';
 import { TextField } from '../../../src/components/TextField';
 import { HomeButton } from '../../../src/components/HomeButton';
 import { ApprovalCard } from '../../../src/features/agent/ApprovalCard';
+import { useApprovalStore } from '../../../src/features/agent/approvalStore';
 import { TimelineRow } from '../../../src/features/agent/TimelineRow';
 import { useAgent } from '../../../src/features/agent/useAgent';
 import { space } from '../../../src/theme/spacing';
@@ -22,6 +24,11 @@ export default function AgentScreen() {
   const agent = useAgent(id);
   const [message, setMessage] = useState('');
   const list = useRef<FlatList>(null);
+  const asking = useApprovalStore((s) => !!s.pending);
+  // Waiting for the AI's answer (not for a tool, and not for your approval).
+  const last = agent.items.at(-1);
+  const thinking =
+    agent.running && !asking && !(last?.kind === 'tool' && last.status === 'running');
 
   function send() {
     agent.send(message);
@@ -48,6 +55,7 @@ export default function AgentScreen() {
           contentContainerStyle={styles.timeline}
           onContentSizeChange={() => list.current?.scrollToEnd({ animated: true })}
           renderItem={({ item }) => <TimelineRow item={item} />}
+          ListFooterComponent={thinking ? <BusyLine label="Thinking…" /> : null}
           ListEmptyComponent={
             <EmptyState
               title="Ask the agent"
