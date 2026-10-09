@@ -1,0 +1,38 @@
+# The agent reads a file, proposes a new one (approval card with a diff), and writes it after Approve.
+# scripts/e2e.sh runs a fake AI server at http://10.0.2.2:8091/v1 with a fixed script.
+appId: com.akshajtiwari.tarka
+---
+- runFlow: common/open-app.yaml
+- tapOn: Settings
+- tapOn: OpenAI-compatible
+- tapOn: Server address
+- inputText: http://10.0.2.2:8091/v1
+- hideKeyboard
+- tapOn: Model
+- inputText: fake
+- hideKeyboard
+- tapOn: Save AI settings
+- tapOn: OK
+- back
+- runFlow: common/new-python-project.yaml
+- tapOn: Agent
+- tapOn: Message
+- inputText: add a notes file
+- hideKeyboard
+- tapOn: Send
+- extendedWaitUntil: # the agent read main.py, then asks to write notes.txt
+    visible: Change notes.txt\?
+    timeout: 30000
+- assertVisible: read_file main.py done
+- takeScreenshot: agent-approval
+- tapOn: Approve
+- extendedWaitUntil:
+    visible: 'Done: I read main.py and wrote notes.txt.'
+    timeout: 30000
+- takeScreenshot: agent-done
+# The file really exists now.
+- tapOn: Code
+- tapOn:
+    text: Show files
+    index: 0
+- assertVisible: File notes.txt

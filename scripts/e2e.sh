@@ -40,7 +40,10 @@ git -C "$remote/seed" add . && git -C "$remote/seed" -c user.name=t -c user.emai
 git clone -q --bare "$remote/seed" "$remote/demo.git" && git -C "$remote/demo.git" config http.receivepack true
 node scripts/git-server.cjs "$PWD/$remote" 8090 > .artifacts/git-server.log 2>&1 &
 server_pid=$!
-trap 'kill $server_pid 2> /dev/null || true' EXIT
+# A fake AI server with a fixed script, for the agent flow (no key, no cost, same every time).
+node scripts/fake-ai.cjs 8091 > .artifacts/fake-ai.log 2>&1 &
+ai_pid=$!
+trap 'kill $server_pid $ai_pid 2> /dev/null || true' EXIT
 
 run_dir=".artifacts/maestro/$(date +%Y%m%d-%H%M%S)"
 mkdir -p .artifacts/screens
