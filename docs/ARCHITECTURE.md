@@ -78,7 +78,7 @@ Safety rules:
 ## Running code
 
 `src/features/run/Runner.dom.tsx` is a hidden DOM component. Each run gets a fresh **module** Web Worker
-(source in `workerSource.ts`), which is killed on Stop, on error and on timeout (10 s for JS, 60 s for Python).
+(source in `workerSource.ts`), which is killed on Stop, on error and on timeout (10 s for JS, 180 s for Python, or 5000 lines of output).
 `console.*` output comes back as messages.
 
 - **JS:** runs directly. **TS:** stripped to JS with `sucrase` first.
@@ -98,13 +98,21 @@ Safety rules:
 The pieces around it:
 
 - **History:** `types.ts` keeps it provider-neutral.
-  - `providers/anthropic*.ts` handle Claude: the SDK, streaming through `expo/fetch`, `claude-opus-5-5`, adaptive thinking, effort high, `fallbacks: 'default'`.
-  - `providers/openai*.ts` handle any OpenAI-compatible server.
-  - Assistant turns keep the provider's raw content, so thinking blocks go back unchanged.
-- **Tools:** `runTool.ts` runs them. `write_file` and `delete_file` wait on `approvalStore.ask()`; the UI shows an `ApprovalCard` with a diff and resolves the promise.
-- **Stopping:** `repairHistory` answers open tool calls after a stop, so the next message is valid.
+  - `providers/anthropic*.ts` handle Claude with plain `fetch` (no SDK, not streamed): `claude-opus-5-5`,
+    adaptive thinking, effort high, `fallbacks: 'default'`. The SDK crashed the app on Hermes, see DECISIONS.md.
+  - `providers/openai*.ts` handle any OpenAI-compatible server (`chat/completions`, also plain `fetch`).
+  - Assistant turns keep Claude's raw content, so thinking blocks go back unchanged.
+    A turn from the other provider is rebuilt from its text and tool calls.
+- **Tools:** `runTool.ts` runs them. Every path from the model goes through `projectPath` (no `..`, no `.git`).
+  - `write_file` and `delete_file` wait on `approvalStore.ask()`; the UI shows an `ApprovalCard` with a diff.
+  - After Approve, a write is refused if the open tab has unsaved edits or the file changed while the card was open.
+- **Stopping:** Stop, or leaving the project, aborts the loop and rejects a waiting card.
+  Calls not run yet are answered "Stopped before this ran.", and `repairHistory` fixes anything left open.
 - **Tests:** UI tests talk to `scripts/fake-ai.cjs`, a fake OpenAI-compatible server with a fixed script.
 
-- Tools that change files never run directly. They create an **approval card** with a diff, and the loop waits for Approve or Reject.
-- Providers live in `providers/anthropic.ts` and `providers/openai.ts`, behind the same small interface.
+## Rules for DOM components that run user code
 
+- `Runner.dom.tsx` and `HtmlPreview.dom.tsx` get **no function props that touch files or keys**, and never
+  `useExpoModulesBridge`: code you run must not be able to call into the app.
+- The WebView allows `file://` reads (Expo sets it), so the worker blocks `fetch` and XHR to anything
+  but web addresses. See the `shortcut:` note in `workerSource.ts` for what is still open.
