@@ -1,11 +1,12 @@
 import Octicons from '@expo/vector-icons/Octicons';
 import { useEffect, useState } from 'react';
-import { Alert, StyleSheet, View } from 'react-native';
+import { Alert, StyleSheet, Text, View } from 'react-native';
 
 import { Button } from '../../components/Button';
 import { ListRow } from '../../components/ListRow';
 import { TextField } from '../../components/TextField';
 import { getSecret, setSecret } from '../../lib/secure';
+import { font, fontSize } from '../../theme/fonts';
 import { space } from '../../theme/spacing';
 import { useTheme } from '../../theme/useTheme';
 import { AI_PROVIDERS } from '../agent/aiProviders';
@@ -13,10 +14,13 @@ import { useSettings, type AiProvider } from './settingsStore';
 
 const providerIds = Object.keys(AI_PROVIDERS) as AiProvider[];
 
-type Props = { onSaved?: () => void }; // e.g. onboarding moves on; Settings shows a message
+type Props = {
+  onSaved?: () => void; // e.g. onboarding moves on; Settings shows a message
+  showMissing?: boolean; // say so when no key is saved yet
+};
 
 // Which AI the agent uses. You bring your own key; it is stored in secure storage.
-export function AiSettings({ onSaved }: Props) {
+export function AiSettings({ onSaved, showMissing }: Props) {
   const colors = useTheme();
   const { aiProvider, aiModels, aiBaseUrl, setAi } = useSettings();
   const [provider, setProvider] = useState<AiProvider>(aiProvider);
@@ -61,6 +65,11 @@ export function AiSettings({ onSaved }: Props) {
         />
       ))}
       <View style={styles.form}>
+        {showMissing && !key && !info.needsServer && (
+          <Text style={[styles.missing, { color: colors.warning }]}>
+            Not set up yet: add a key to use the agent.
+          </Text>
+        )}
         {info.needsServer && (
           <TextField
             label="Server address"
@@ -93,4 +102,5 @@ export function AiSettings({ onSaved }: Props) {
 
 const styles = StyleSheet.create({
   form: { paddingHorizontal: space.lg, gap: space.md, paddingTop: space.md },
+  missing: { fontFamily: font.ui, fontSize: fontSize.small },
 });
