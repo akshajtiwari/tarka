@@ -3,6 +3,7 @@ import { router } from 'expo-router';
 import { useMemo } from 'react';
 import { Alert } from 'react-native';
 
+import { runFile } from '../terminal/submitLine';
 import { useWorkspaceStore } from '../workspace/workspaceStore';
 import { useEditorStore } from './editorStore';
 import { saveFile } from './fileActions';
@@ -21,6 +22,13 @@ export function useEditorActions(projectId: string) {
         const { activePath } = useEditorStore.getState();
         const error = activePath && saveFile(projectId, activePath);
         if (error) Alert.alert('Could not save', error);
+      },
+      // Run the open file in the terminal (the Run tab), stopping whatever runs there.
+      run: () => {
+        const { activePath } = useEditorStore.getState();
+        if (!activePath) return;
+        runFile(projectId, activePath);
+        router.navigate({ pathname: '/project/[id]/run', params: { id: projectId } });
       },
       // Swiping the header: by = 1 for the next open file, -1 for the previous one.
       switchTab: (by: number) => {

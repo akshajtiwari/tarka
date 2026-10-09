@@ -16,6 +16,7 @@ import { KeyRow } from '../../../src/features/editor/KeyRow';
 import { useMemoryStore } from '../../../src/features/editor/memoryStore';
 import { SuggestionStrip } from '../../../src/features/editor/SuggestionStrip';
 import { useEditorActions } from '../../../src/features/editor/useEditorActions';
+import { runKindFor } from '../../../src/features/run/runKind';
 import { useAutosave } from '../../../src/features/editor/useAutosave';
 import { topItems } from '../../../src/lib/usageMemory';
 import { dark as darkColors } from '../../../src/theme/colors';
@@ -99,6 +100,7 @@ export default function CodeScreen() {
         onShowTabs={actions.showTabs}
         onShowMenu={actions.showMenu}
         onSave={actions.save}
+        onRun={file && runKindFor(file.path) ? actions.run : undefined}
         onSwipe={actions.switchTab}
       />
       {file ? (

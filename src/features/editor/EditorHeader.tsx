@@ -17,6 +17,7 @@ type Props = {
   onShowTabs: () => void;
   onShowMenu: () => void;
   onSave: () => void;
+  onRun?: () => void; // only for files that can run (.py, .js, .ts, .html)
   onSwipe: (by: 1 | -1) => void; // swipe left: next open file, swipe right: previous
 };
 
@@ -30,6 +31,7 @@ export const EditorHeader = memo(function EditorHeader({
   onShowTabs,
   onShowMenu,
   onSave,
+  onRun,
   onSwipe,
 }: Props) {
   const colors = useTheme();
@@ -67,6 +69,7 @@ export const EditorHeader = memo(function EditorHeader({
           {tabCount > 0 && <Octicons name="chevron-down" size={14} color={colors.muted} />}
         </Pressable>
         {dirty && <Button label="Save" onPress={onSave} />}
+        {onRun && <IconButton icon="play" label="Run file" onPress={onRun} />}
         {fileName && (
           <IconButton icon="kebab-horizontal" label="Editor menu" onPress={onShowMenu} />
         )}
