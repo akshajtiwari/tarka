@@ -98,3 +98,31 @@ test('the token only goes to known git hosts over https', () => {
 test('a repo without a remote says so in plain words', async () => {
   await expect(gitService.assertHasRemote(fs, dir)).rejects.toThrow('no remote');
 });
+
+test('a commit lists the files it added, changed and deleted', async () => {
+  fs.writeFileSync(path.join(dir, 'a.txt'), 'one\n');
+  fs.mkdirSync(path.join(dir, 'src'));
+  fs.writeFileSync(path.join(dir, 'src', 'b.txt'), 'b\n');
+  await gitService.stageAll(fs, dir, (await gitService.getChanges(fs, dir)).unstaged);
+  await gitService.commit(fs, dir, 'first', me);
+
+  fs.writeFileSync(path.join(dir, 'a.txt'), 'one more\n'); // new size: git skips same-size edits made in the same second
+  fs.rmSync(path.join(dir, 'src', 'b.txt'));
+  fs.writeFileSync(path.join(dir, 'c.txt'), 'c\n');
+  await gitService.stageAll(fs, dir, (await gitService.getChanges(fs, dir)).unstaged);
+  await gitService.commit(fs, dir, 'second', me);
+
+  const [second, first] = await gitService.history(fs, dir);
+  expect((await gitService.commitDetail(fs, dir, first.oid)).files).toEqual([
+    { path: 'a.txt', kind: 'added' },
+    { path: 'src/b.txt', kind: 'added' },
+  ]);
+  const detail = await gitService.commitDetail(fs, dir, second.oid);
+  expect(detail).toMatchObject({ message: 'second', parent: first.oid });
+  expect(detail.files).toEqual([
+    { path: 'a.txt', kind: 'modified' },
+    { path: 'c.txt', kind: 'added' },
+    { path: 'src/b.txt', kind: 'deleted' },
+  ]);
+  expect(await gitService.committedText(fs, dir, 'a.txt', first.oid)).toBe('one\n');
+});

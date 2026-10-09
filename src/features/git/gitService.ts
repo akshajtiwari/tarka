@@ -1,7 +1,13 @@
 import * as git from 'isomorphic-git';
 import http from 'isomorphic-git/http/web';
 
-import { stagedChanges, unstagedChanges, type Change, type StatusRow } from './changes';
+import {
+  stagedChanges,
+  unstagedChanges,
+  type Change,
+  type ChangeKind,
+  type StatusRow,
+} from './changes';
 
 // All git work goes through these small functions. They take `fs` as a parameter so the app
 // passes its expo-file-system adapter and the tests pass Node's real `fs`.
@@ -75,6 +81,37 @@ export async function history(fs: Fs, dir: string, depth = 50) {
   }));
 }
 
+// What one commit changed, compared with its first parent. The first commit adds every file.
+export async function commitDetail(fs: Fs, dir: string, oid: string) {
+  const { commit } = await git.readCommit({ fs, dir, oid });
+  const parent: string | undefined = commit.parent[0];
+  const trees = parent
+    ? [git.TREE({ ref: parent }), git.TREE({ ref: oid })]
+    : [git.TREE({ ref: oid })];
+  const files: Change[] = await git.walk({
+    fs,
+    dir,
+    trees,
+    map: async (path, entries) => {
+      const [before, after] = parent ? entries : [null, entries[0]];
+      if (path === '.') return undefined;
+      if ((await before?.oid()) === (await after?.oid())) return null; // same: skip it and its insides
+      if ((await before?.type()) === 'tree' || (await after?.type()) === 'tree') return undefined;
+      let kind: ChangeKind = 'modified';
+      if (!before) kind = 'added';
+      if (!after) kind = 'deleted';
+      return { path, kind };
+    },
+  });
+  return {
+    message: commit.message.trim(),
+    author: commit.author.name,
+    time: commit.author.timestamp * 1000,
+    parent,
+    files: files.sort((a, b) => a.path.localeCompare(b.path)),
+  };
+}
+
 export function currentBranch(fs: Fs, dir: string) {
   return git.currentBranch({ fs, dir });
 }
@@ -91,10 +128,10 @@ export function switchBranch(fs: Fs, dir: string, name: string) {
   return git.checkout({ fs, dir, ref: name });
 }
 
-// The file as it was in the last commit, or "" if it is new.
-export async function committedText(fs: Fs, dir: string, path: string): Promise<string> {
+// A file's text in a commit (the last one by default), or "" if it is not there.
+export async function committedText(fs: Fs, dir: string, path: string, ref = 'HEAD') {
   try {
-    const oid = await git.resolveRef({ fs, dir, ref: 'HEAD' });
+    const oid = await git.resolveRef({ fs, dir, ref });
     const { blob } = await git.readBlob({ fs, dir, oid, filepath: path });
     return new TextDecoder().decode(blob);
   } catch {
