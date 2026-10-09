@@ -44,4 +44,13 @@ test('clone, commit, push, and pull back into a second clone', async () => {
 
   await gitService.pull(fs, second, me);
   expect(fs.readFileSync(path.join(second, 'b.txt'), 'utf8')).toBe('new\n');
+
+  // A new clone has the newest commit but not its parent: what it changed is unknown.
+  const third = path.join(root, 'third');
+  await gitService.clone(fs, third, url);
+  const [newest] = await gitService.history(fs, third);
+  expect(await gitService.commitDetail(fs, third, newest.oid)).toMatchObject({
+    message: 'add b',
+    files: null,
+  });
 }, 30000);

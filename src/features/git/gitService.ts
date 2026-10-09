@@ -82,9 +82,19 @@ export async function history(fs: Fs, dir: string, depth = 50) {
 }
 
 // What one commit changed, compared with its first parent. The first commit adds every file.
+// `files` is null when the parent was never downloaded (we clone with depth 1).
 export async function commitDetail(fs: Fs, dir: string, oid: string) {
   const { commit } = await git.readCommit({ fs, dir, oid });
   const parent: string | undefined = commit.parent[0];
+  const info = {
+    message: commit.message.trim(),
+    author: commit.author.name,
+    time: commit.author.timestamp * 1000,
+    parent,
+  };
+  if (parent && !(await git.readCommit({ fs, dir, oid: parent }).catch(() => null))) {
+    return { ...info, files: null };
+  }
   const trees = parent
     ? [git.TREE({ ref: parent }), git.TREE({ ref: oid })]
     : [git.TREE({ ref: oid })];
@@ -103,13 +113,7 @@ export async function commitDetail(fs: Fs, dir: string, oid: string) {
       return { path, kind };
     },
   });
-  return {
-    message: commit.message.trim(),
-    author: commit.author.name,
-    time: commit.author.timestamp * 1000,
-    parent,
-    files: files.sort((a, b) => a.path.localeCompare(b.path)),
-  };
+  return { ...info, files: files.sort((a, b) => a.path.localeCompare(b.path)) };
 }
 
 export function currentBranch(fs: Fs, dir: string) {

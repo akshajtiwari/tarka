@@ -46,18 +46,26 @@ export default function CommitScreen() {
       {error !== '' && <EmptyState title="Could not read this commit" body={error} />}
       {detail && (
         <FlatList
-          data={detail.files}
+          data={detail.files ?? []}
           keyExtractor={(f) => f.path}
           ListHeaderComponent={
             <View style={[styles.summary, { borderColor: colors.line }]}>
               <Text style={[styles.message, { color: colors.text }]}>{detail.message}</Text>
               <Text style={[styles.meta, { color: colors.muted }]}>
-                {`${detail.author}, ${timeAgo(detail.time)}, ${count(detail.files.length)}`}
+                {`${detail.author}, ${timeAgo(detail.time)}`}
+                {detail.files && `, ${count(detail.files.length)}`}
               </Text>
             </View>
           }
           ListEmptyComponent={
-            <EmptyState title="No file changes" body="This commit did not change any files." />
+            detail.files ? (
+              <EmptyState title="No file changes" body="This commit did not change any files." />
+            ) : (
+              <EmptyState
+                title="Changes not downloaded"
+                body="Cloning only downloads the newest commit, so what it changed is not known."
+              />
+            )
           }
           renderItem={({ item }) => <ChangeRow change={item} onOpen={() => openDiff(item.path)} />}
         />
