@@ -18,7 +18,8 @@ type Props = {
   dom?: DOMProps;
 };
 
-const TIME_LIMIT = { js: 10_000, ts: 10_000, py: 60_000, html: 0 }; // Python includes download time
+const TIME_LIMIT = { js: 10_000, ts: 10_000, py: 180_000, html: 0 }; // Python includes the first download
+const MAX_LINES = 5000; // an endless print loop would otherwise flood and freeze the console
 
 export default function Runner({ job, stopId, onOutput, onDone }: Props) {
   const stop = useRef<() => void>(() => {});
@@ -29,6 +30,7 @@ export default function Runner({ job, stopId, onOutput, onDone }: Props) {
     const url = URL.createObjectURL(new Blob([WORKER_SOURCE], { type: 'text/javascript' }));
     const worker = new Worker(url, { type: 'module' });
     let finished = false;
+    let lines = 0;
 
     const finish = (result: RunResult) => {
       if (finished) return;
@@ -43,8 +45,16 @@ export default function Runner({ job, stopId, onOutput, onDone }: Props) {
     stop.current = () => finish('stopped');
 
     worker.onmessage = ({ data }) => {
-      if (data.type === 'out') onOutput(data.stream, data.text);
-      else finish(data.ok ? 'ok' : 'error');
+      if (data.type !== 'out') {
+        finish(data.ok ? 'ok' : 'error');
+        return;
+      }
+      lines += 1;
+      if (lines < MAX_LINES) onOutput(data.stream, data.text);
+      else if (lines === MAX_LINES) {
+        onOutput('info', `Stopped: more than ${MAX_LINES} lines of output.`);
+        finish('error');
+      }
     };
     worker.onerror = (event) => {
       onOutput('stderr', event.message);

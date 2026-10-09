@@ -16,8 +16,10 @@ export function useRunner() {
     setJob({ id: Date.now(), kind, code, stdin });
   }
 
+  // Both values come out of the WebView, so check them.
   const onOutput = useCallback(async (stream: string, text: string) => {
-    setLines((old) => [...old, { stream: stream as OutputLine['stream'], text }]);
+    const kind = stream === 'stderr' || stream === 'info' ? stream : 'stdout';
+    setLines((old) => [...old, { stream: kind, text: String(text) }]);
   }, []);
 
   const onDone = useCallback(async (result: RunResult, ms: number) => {
@@ -38,7 +40,10 @@ export function useRunner() {
     running,
     stopId,
     start,
-    stop: () => setStopId((n) => n + 1),
+    stop: () => {
+      setStopId((n) => n + 1);
+      setRunning(false); // even if the runner never answers (its WebView was reloaded)
+    },
     onOutput,
     onDone,
   };
