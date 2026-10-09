@@ -4,6 +4,7 @@ import { saveAllDirty } from '../editor/fileActions';
 import { inlineAssets } from '../run/inlineAssets';
 import { pickRunTarget } from '../run/pickRunTarget';
 import { runKindFor } from '../run/runKind';
+import { runInTermux } from '../termux/runInTermux';
 import { useHistoryStore } from './historyStore';
 import { dependenciesFor, npm, pip, requirementsOf } from './packageCommands';
 import { HELP, parseCommand, type Command } from './parseCommand';
@@ -71,7 +72,7 @@ async function runCommand(projectId: string, cmd: Command) {
     case 'npm':
       return npm(projectId, cmd.action, cmd.packages);
     case 'termux':
-      return t.print('stderr', 'Termux is not set up in this build yet.');
+      return runInTermux(projectId, cmd.line);
     case 'python':
       if (!cmd.file) {
         t.print('info', 'Python prompt. Type exit() to leave.');
