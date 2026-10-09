@@ -27,7 +27,8 @@
       "expo-router",
       "expo-font",
       "expo-asset",
-      "expo-secure-store"
+      "expo-secure-store",
+      "./modules/tarka-android/app.plugin.js"
     ],
     "scheme": "tarka"
   }
