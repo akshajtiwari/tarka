@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react';
 import { FlatList, StyleSheet, Text, View } from 'react-native';
 
+import { Hint } from '../../components/Hint';
 import { IconButton } from '../../components/IconButton';
 import { listEntries } from '../../lib/projectFs';
 import { useWorkspaceStore } from '../workspace/workspaceStore';
@@ -70,6 +71,7 @@ export function FileTree({
       <FlatList
         data={rows}
         keyExtractor={(row) => row.path}
+        ListEmptyComponent={<Hint text="No files yet. Tap + to make one." />}
         renderItem={({ item }) => (
           <FileRow
             row={item}

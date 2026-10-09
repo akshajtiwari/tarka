@@ -1,5 +1,6 @@
 import { FlatList, StyleSheet, Text } from 'react-native';
 
+import { Hint } from '../../components/Hint';
 import { font, fontSize } from '../../theme/fonts';
 import { space } from '../../theme/spacing';
 import { useTheme } from '../../theme/useTheme';
@@ -15,6 +16,7 @@ export function OutputConsole({ lines }: { lines: OutputLine[] }) {
       data={lines}
       keyExtractor={(_, i) => String(i)}
       contentContainerStyle={styles.content}
+      ListEmptyComponent={<Hint text="What your program prints shows up here." />}
       renderItem={({ item }) => (
         <Text selectable style={[styles.line, { color: color[item.stream] }]}>
           {item.text}

@@ -6,6 +6,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Button } from '../../../src/components/Button';
 import { EmptyState } from '../../../src/components/EmptyState';
 import { Header } from '../../../src/components/Header';
+import { Hint } from '../../../src/components/Hint';
 import { IconButton } from '../../../src/components/IconButton';
 import { ListRow } from '../../../src/components/ListRow';
 import type { Change } from '../../../src/features/git/changes';
@@ -116,6 +117,9 @@ export default function GitScreen() {
             onToggle={() => run(() => gitService.stage(gitFs, dir, c))}
           />
         ))}
+        {git.staged.length + git.unstaged.length === 0 && (
+          <Hint text="Nothing changed since the last commit. Edits you make show up here." />
+        )}
         {git.unstaged.length > 1 && (
           <ListRow
             icon="plus"

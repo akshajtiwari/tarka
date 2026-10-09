@@ -2,6 +2,7 @@ import { router, useLocalSearchParams } from 'expo-router';
 import { useMemo, useState } from 'react';
 import { Alert, FlatList, StyleSheet, View } from 'react-native';
 
+import { Hint } from '../src/components/Hint';
 import { ListRow } from '../src/components/ListRow';
 import { TextField } from '../src/components/TextField';
 import { openFileFromDisk } from '../src/features/editor/fileActions';
@@ -37,6 +38,11 @@ export default function QuickOpenSheet() {
         data={results}
         keyExtractor={(p) => p}
         keyboardShouldPersistTaps="handled"
+        ListEmptyComponent={
+          <Hint
+            text={paths.length === 0 ? 'This project has no files yet.' : 'No file names match.'}
+          />
+        }
         renderItem={({ item }) => (
           <ListRow
             icon="file"
