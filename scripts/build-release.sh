@@ -15,7 +15,9 @@ apksigner=$ANDROID_HOME/build-tools/36.0.0/apksigner
 # Gradle needs the memory the emulator would use.
 adb emu kill > /dev/null 2>&1 || true
 npx expo prebuild --platform android --no-install
-(cd android && ./gradlew app:assembleRelease -x lint -x test --build-cache -PreactNativeArchitectures=arm64-v8a,x86_64)
+# lintVital runs only for release builds and downloads lint itself; `npm run check` already lints our code.
+(cd android && ./gradlew app:assembleRelease -x lint -x test -x lintVitalRelease -x lintVitalAnalyzeRelease \
+  -x lintVitalReportRelease --build-cache -PreactNativeArchitectures=arm64-v8a,x86_64)
 (cd android && ./gradlew --stop > /dev/null)
 pkill -f "[K]otlinCompileDaemon" || true
 
