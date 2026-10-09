@@ -27,6 +27,7 @@ export function AiSettings({ onSaved, showMissing }: Props) {
   const [model, setModel] = useState(aiModels[aiProvider] ?? '');
   const [baseUrl, setBaseUrl] = useState(aiBaseUrl);
   const [key, setKey] = useState('');
+  const [keyLoaded, setKeyLoaded] = useState(false); // saving before then would erase the saved key
   const info = AI_PROVIDERS[provider];
 
   // Switching provider shows that provider's model and key. The key field is cleared on the tap
@@ -34,13 +35,18 @@ export function AiSettings({ onSaved, showMissing }: Props) {
   function choose(next: AiProvider) {
     if (next === provider) return;
     setKey('');
+    setKeyLoaded(false);
     setModel(useSettings.getState().aiModels[next] ?? '');
     setProvider(next);
   }
 
   useEffect(() => {
     let live = true;
-    getSecret(info.secret).then((saved) => live && setKey(saved ?? ''));
+    getSecret(info.secret).then((saved) => {
+      if (!live) return;
+      setKey(saved ?? '');
+      setKeyLoaded(true);
+    });
     return () => {
       live = false;
     };
@@ -65,7 +71,7 @@ export function AiSettings({ onSaved, showMissing }: Props) {
         />
       ))}
       <View style={styles.form}>
-        {showMissing && !key && !info.needsServer && (
+        {showMissing && keyLoaded && !key && !info.needsServer && (
           <Text style={[styles.missing, { color: colors.warning }]}>
             Not set up yet: add a key to use the agent.
           </Text>
@@ -94,7 +100,7 @@ export function AiSettings({ onSaved, showMissing }: Props) {
           mono
           secret
         />
-        <Button label="Save AI settings" variant="primary" onPress={save} />
+        <Button label="Save AI settings" variant="primary" onPress={save} disabled={!keyLoaded} />
       </View>
     </View>
   );
