@@ -8,6 +8,7 @@ import type { EditorCommand } from '../editorCommand';
 // The WebView owns the keyboard, and Chrome only hides it when an editable element loses focus.
 // So borrow one for a moment (inputmode "none" keeps it from showing the keyboard itself).
 export function hideKeyboard() {
+  if (document.activeElement?.closest('.cm-panels')) return; // typing in find or go to line
   const input = document.createElement('input');
   input.setAttribute('inputmode', 'none');
   input.style.cssText = 'position:fixed;top:0;left:0;opacity:0;pointer-events:none';

@@ -19,3 +19,12 @@ appId: com.akshajtiwari.tarka
 - tapOn: .*print.*
 - assertNotVisible: Tab # read lock: tapping the code does not open the keyboard
 - takeScreenshot: read-lock
+# Find still works while locked: its box keeps the keyboard (the key row shows with it).
+- tapOn: Editor menu
+- tapOn: Find and replace
+- extendedWaitUntil:
+    visible: Find|next
+    timeout: 5000
+- inputText: greet
+- assertVisible: Tab
+- takeScreenshot: read-lock-find
