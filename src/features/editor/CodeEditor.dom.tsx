@@ -8,7 +8,7 @@ import { EditorView, keymap } from '@codemirror/view';
 import type { DOMProps } from 'expo/dom';
 import { useEffect, useRef } from 'react';
 
-import { runCommand } from './cm/commands';
+import { hideKeyboard, runCommand } from './cm/commands';
 import { pinchZoom } from './cm/pinchZoom';
 import { buildExtensions, lookCompartment, lookExtensions, type LookSettings } from './cm/setup';
 import { acceptSuggestion } from './cm/suggestions';
@@ -112,8 +112,7 @@ export default function CodeEditor(props: Props) {
   const lookKey = JSON.stringify(look);
   useEffect(() => {
     view.current?.dispatch({ effects: lookCompartment.reconfigure(lookExtensions(look)) });
-    // A focused editor keeps the keyboard open and keeps typing even when locked, so let go.
-    if (look.readOnly) view.current?.contentDOM.blur();
+    if (look.readOnly) hideKeyboard(); // a locked editor has no use for the keyboard
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [lookKey]);
 

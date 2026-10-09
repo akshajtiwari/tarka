@@ -2,11 +2,7 @@ import * as Haptics from 'expo-haptics';
 import { router, useIsFocused, useLocalSearchParams } from 'expo-router';
 import { memo, useCallback, useEffect, useMemo, useState } from 'react';
 import { Alert } from 'react-native';
-import {
-  KeyboardAvoidingView,
-  KeyboardController,
-  useKeyboardState,
-} from 'react-native-keyboard-controller';
+import { KeyboardAvoidingView, useKeyboardState } from 'react-native-keyboard-controller';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { Button } from '../../../src/components/Button';
@@ -49,13 +45,13 @@ export default function CodeScreen() {
     () => ({ colors, dark, fontSize, wrap, readOnly: readOnly || locked }),
     [colors, dark, fontSize, wrap, readOnly, locked],
   );
-  // Read lock means no keyboard here. Android's WebView can still bring it up (after the find
-  // panel was used), so close it whenever it shows. Only while this tab is on screen: other tabs
-  // and sheets have their own text fields.
+  // Read lock means no keyboard here, but Android brings it back by itself when a sheet closes
+  // over an editor that had it open. Only while this tab is on screen: other tabs and sheets
+  // have their own text fields.
   const focused = useIsFocused();
   useEffect(() => {
-    if (focused && look.readOnly && keyboardOpen) KeyboardController.dismiss();
-  }, [focused, look.readOnly, keyboardOpen]);
+    if (focused && look.readOnly && keyboardOpen) send({ name: 'hideKeyboard' });
+  }, [focused, look.readOnly, keyboardOpen, send]);
   const memoryWords = useMemo(() => topItems(memory, 200), [memory]);
   // The text the editor starts with; only changes when another file is opened.
   const startText = useMemo(() => file?.text ?? '', [file?.path, reloads]); // eslint-disable-line react-hooks/exhaustive-deps

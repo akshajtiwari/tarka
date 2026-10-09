@@ -5,6 +5,18 @@ import type { EditorView } from '@codemirror/view';
 
 import type { EditorCommand } from '../editorCommand';
 
+// The WebView owns the keyboard, and Chrome only hides it when an editable element loses focus.
+// So borrow one for a moment (inputmode "none" keeps it from showing the keyboard itself).
+export function hideKeyboard() {
+  const input = document.createElement('input');
+  input.setAttribute('inputmode', 'none');
+  input.style.cssText = 'position:fixed;top:0;left:0;opacity:0;pointer-events:none';
+  document.body.appendChild(input);
+  input.focus({ preventScroll: true });
+  input.blur();
+  input.remove();
+}
+
 // Runs a key-row or menu action inside CodeMirror.
 export function runCommand(v: EditorView, command: EditorCommand) {
   switch (command.name) {
@@ -44,6 +56,9 @@ export function runCommand(v: EditorView, command: EditorCommand) {
       v.dispatch({ selection: { anchor: line.from }, scrollIntoView: true });
       return; // just show the line, don't open the keyboard
     }
+    case 'hideKeyboard':
+      hideKeyboard();
+      return;
   }
   v.focus();
 }

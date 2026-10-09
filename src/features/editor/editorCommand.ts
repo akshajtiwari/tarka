@@ -10,7 +10,8 @@ export type EditorAction =
   | { name: 'accept'; index: number } // tap on a suggestion chip
   | { name: 'find' }
   | { name: 'gotoLine' } // asks for a line number
-  | { name: 'jumpTo'; line: number }; // e.g. from a search result
+  | { name: 'jumpTo'; line: number } // e.g. from a search result
+  | { name: 'hideKeyboard' }; // read lock is on but Android brought the keyboard back
 
 // `id` goes up by one every time, so pressing the same key twice is two commands.
 export type EditorCommand = EditorAction & { id: number };
