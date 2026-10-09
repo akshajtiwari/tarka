@@ -9,6 +9,7 @@ import { EmptyState } from '../../../src/components/EmptyState';
 import { Header } from '../../../src/components/Header';
 import { IconButton } from '../../../src/components/IconButton';
 import { TextField } from '../../../src/components/TextField';
+import { HomeButton } from '../../../src/components/HomeButton';
 import { ApprovalCard } from '../../../src/features/agent/ApprovalCard';
 import { TimelineRow } from '../../../src/features/agent/TimelineRow';
 import { useAgent } from '../../../src/features/agent/useAgent';
@@ -31,6 +32,7 @@ export default function AgentScreen() {
     <SafeAreaView edges={['top']} style={{ flex: 1, backgroundColor: colors.bg }}>
       <Header
         title="Agent"
+        left={<HomeButton />}
         right={
           <>
             <IconButton icon="gear" label="AI settings" onPress={() => router.push('/settings')} />

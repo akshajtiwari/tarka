@@ -3,6 +3,7 @@ import { FlatList, StyleSheet, Text, View } from 'react-native';
 
 import { Hint } from '../../components/Hint';
 import { IconButton } from '../../components/IconButton';
+import { HomeButton } from '../../components/HomeButton';
 import { listEntries } from '../../lib/projectFs';
 import { useWorkspaceStore } from '../workspace/workspaceStore';
 import { font, fontSize } from '../../theme/fonts';
@@ -65,6 +66,7 @@ export const FileTree = memo(function FileTree({
   return (
     <View style={[styles.tree, { backgroundColor: colors.surface }]}>
       <View style={styles.top}>
+        <HomeButton />
         <Text numberOfLines={1} style={[styles.title, { color: colors.text }]}>
           {projectName}
         </Text>
@@ -103,6 +105,6 @@ export const FileTree = memo(function FileTree({
 
 const styles = StyleSheet.create({
   tree: { flex: 1 },
-  top: { flexDirection: 'row', alignItems: 'center', paddingRight: space.xs },
-  title: { flex: 1, padding: space.lg, fontFamily: font.uiBold, fontSize: fontSize.title },
+  top: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: space.xs },
+  title: { flex: 1, paddingVertical: space.lg, fontFamily: font.uiBold, fontSize: fontSize.title },
 });

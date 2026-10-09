@@ -28,6 +28,8 @@ export default function EditorMenuSheet() {
 
   return (
     <View style={{ backgroundColor: colors.surface, paddingBottom: space.lg }}>
+      <ListRow icon="home" title="Go to projects" onPress={() => router.dismissTo('/')} />
+      <ListRow icon="gear" title="Settings" onPress={() => router.replace('/settings')} />
       <ListRow
         icon="search"
         title="Find and replace"

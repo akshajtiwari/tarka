@@ -1,0 +1,32 @@
+# Getting back to the projects list from inside a project: the Projects button in every tab
+# header, in the explorer and in the editor menu, plus Android back from any tab.
+appId: com.akshajtiwari.tarka
+---
+- runFlow: common/open-app.yaml
+- runFlow: common/new-python-project.yaml
+- tapOn: Git
+- tapOn: Go to projects
+- assertVisible: New project
+- tapOn: demo.*
+- tapOn: Agent
+- tapOn: Go to projects
+- assertVisible: New project
+- tapOn: demo.*
+- tapOn:
+    text: Show files
+    index: 0
+- tapOn: Go to projects
+- assertVisible: New project
+- tapOn: demo.*
+- tapOn:
+    text: Show files
+    index: 0
+- tapOn: File main.py # the menu shows once a file is open
+- tapOn: Editor menu
+- takeScreenshot: editor-menu-nav
+- tapOn: Go to projects
+- assertVisible: New project
+- tapOn: demo.*
+- tapOn: Git
+- back # Android back leaves the project from any tab
+- assertVisible: New project

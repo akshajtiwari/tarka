@@ -7,6 +7,7 @@ import { Button } from '../../../src/components/Button';
 import { EmptyState } from '../../../src/components/EmptyState';
 import { Header } from '../../../src/components/Header';
 import { TextField } from '../../../src/components/TextField';
+import { HomeButton } from '../../../src/components/HomeButton';
 import { useEditorStore } from '../../../src/features/editor/editorStore';
 import { useWorkspaceStore } from '../../../src/features/workspace/workspaceStore';
 import { saveAllDirty } from '../../../src/features/editor/fileActions';
@@ -64,7 +65,7 @@ export default function RunScreen() {
 
   return (
     <SafeAreaView edges={['top']} style={{ flex: 1, backgroundColor: colors.bg }}>
-      <Header title="Run" />
+      <Header title="Run" left={<HomeButton />} />
       {!target && (
         <EmptyState
           title="Nothing to run here"

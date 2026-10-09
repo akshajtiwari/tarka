@@ -16,8 +16,7 @@ appId: com.akshajtiwari.tarka
     timeout: 15000
 - assertVisible: Finished in .*
 - takeScreenshot: run-js
-- back # Run tab -> Code tab (tabs go back to the first tab)
-- back # Code tab -> projects
+- tapOn: Go to projects
 # Python project, run with Pyodide (downloaded on first use, then cached).
 - runFlow: common/new-python-project.yaml
 - tapOn: Run
@@ -53,8 +52,7 @@ appId: com.akshajtiwari.tarka
 - extendedWaitUntil:
     visible: Stopped by you.*
     timeout: 10000
-- back
-- back
+- tapOn: Go to projects
 # Web page preview.
 - tapOn: New project
 - tapOn: Name

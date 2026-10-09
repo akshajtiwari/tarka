@@ -105,6 +105,7 @@ export default function WorkspaceLayout() {
     >
       <Tabs
         tabBar={(props) => <Dock {...props} />}
+        backBehavior="none" // Android back leaves the project from any tab, like the home button
         screenOptions={{
           headerShown: false,
           tabBarPosition: rail ? 'left' : 'bottom',

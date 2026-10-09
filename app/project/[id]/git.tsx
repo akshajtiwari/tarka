@@ -10,6 +10,7 @@ import { Header } from '../../../src/components/Header';
 import { Hint } from '../../../src/components/Hint';
 import { IconButton } from '../../../src/components/IconButton';
 import { ListRow } from '../../../src/components/ListRow';
+import { HomeButton } from '../../../src/components/HomeButton';
 import type { Change } from '../../../src/features/git/changes';
 import { ChangeRow } from '../../../src/features/git/ChangeRow';
 import { CommitBox } from '../../../src/features/git/CommitBox';
@@ -58,7 +59,7 @@ export default function GitScreen() {
   if (!git.loading && !git.isRepo) {
     return (
       <SafeAreaView edges={['top']} style={{ flex: 1, backgroundColor: colors.bg }}>
-        <Header title="Git" />
+        <Header title="Git" left={<HomeButton />} />
         <EmptyState
           title="Not a git repository yet"
           body="Start one to track changes, read diffs and commit."
@@ -77,6 +78,7 @@ export default function GitScreen() {
     <SafeAreaView edges={['top']} style={{ flex: 1, backgroundColor: colors.bg }}>
       <Header
         title="Git"
+        left={<HomeButton />}
         right={
           <>
             {(busy || git.loading) && <ActivityIndicator color={colors.accent} />}
