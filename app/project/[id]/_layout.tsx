@@ -8,11 +8,12 @@ import { useEditorStore } from '../../../src/features/editor/editorStore';
 import { openFileFromDisk, saveAllDirty } from '../../../src/features/editor/fileActions';
 import { FileTree } from '../../../src/features/explorer/FileTree';
 import { useProjectStore } from '../../../src/features/projects/projectStore';
-import { Dock } from '../../../src/features/workspace/Dock';
+import { Dock, useRail } from '../../../src/features/workspace/Dock';
 import { useWorkspaceStore } from '../../../src/features/workspace/workspaceStore';
 import { useTheme } from '../../../src/theme/useTheme';
 
-// The workspace: explorer drawer on the left, Code/Git/Run/Agent tabs with the dock at the bottom.
+// The workspace: explorer drawer on the left, Code/Git/Run/Agent tabs with the dock at the bottom
+// (a rail on the left on tablets).
 export default function WorkspaceLayout() {
   const colors = useTheme();
   const insets = useSafeAreaInsets();
@@ -20,6 +21,7 @@ export default function WorkspaceLayout() {
   const project = useProjectStore((s) => s.projects.find((p) => p.id === id));
   const { explorerOpen, setExplorerOpen } = useWorkspaceStore();
   const activePath = useEditorStore((s) => s.activePath);
+  const rail = useRail();
 
   // Each project starts with a closed explorer. When leaving, save any changes first
   // (the autosave timer would be cancelled), then close the tabs.
@@ -80,7 +82,10 @@ export default function WorkspaceLayout() {
         </View>
       )}
     >
-      <Tabs tabBar={(props) => <Dock {...props} />} screenOptions={{ headerShown: false }}>
+      <Tabs
+        tabBar={(props) => <Dock {...props} />}
+        screenOptions={{ headerShown: false, tabBarPosition: rail ? 'left' : 'bottom' }}
+      >
         <Tabs.Screen name="code" />
         <Tabs.Screen name="git" />
         <Tabs.Screen name="run" />

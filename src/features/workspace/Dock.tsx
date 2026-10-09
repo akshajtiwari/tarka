@@ -1,10 +1,10 @@
 import Octicons from '@expo/vector-icons/Octicons';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 import { useKeyboardState } from 'react-native-keyboard-controller';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { font, fontSize } from '../../theme/fonts';
-import { size } from '../../theme/spacing';
+import { size, space } from '../../theme/spacing';
 import { useTheme } from '../../theme/useTheme';
 
 const items: Record<
@@ -17,6 +17,9 @@ const items: Record<
   agent: { label: 'Agent', icon: 'sparkle-fill' },
 };
 
+// Tablets and unfolded phones get a rail on the left instead of a dock at the bottom.
+export const useRail = () => useWindowDimensions().width >= 768;
+
 // Only the parts of the tab navigator's props that the dock uses.
 type Props = {
   state: { index: number; routes: { key: string; name: string; params?: object }[] };
@@ -27,17 +30,16 @@ export function Dock({ state, navigation }: Props) {
   const colors = useTheme();
   const insets = useSafeAreaInsets();
   const keyboardOpen = useKeyboardState((s) => s.isVisible);
+  const rail = useRail();
 
-  // While typing, the key row takes this space.
-  if (keyboardOpen) return null;
+  // While typing, the key row takes the dock's space. The rail takes no height, so it stays.
+  if (keyboardOpen && !rail) return null;
 
+  const placement = rail
+    ? [styles.rail, { paddingTop: insets.top + space.sm }]
+    : [styles.dock, { paddingBottom: insets.bottom }];
   return (
-    <View
-      style={[
-        styles.dock,
-        { backgroundColor: colors.surface, borderColor: colors.line, paddingBottom: insets.bottom },
-      ]}
-    >
+    <View style={[placement, { backgroundColor: colors.surface, borderColor: colors.line }]}>
       {state.routes.map((route, i) => {
         const item = items[route.name];
         if (!item) return null;
@@ -51,7 +53,7 @@ export function Dock({ state, navigation }: Props) {
             accessibilityState={{ selected: active }}
             // Pass the current params on, or the other tabs would not know which project is open.
             onPress={() => navigation.navigate(route.name, state.routes[state.index].params)}
-            style={styles.item}
+            style={rail ? styles.railItem : styles.item}
           >
             <Octicons name={item.icon} size={20} color={iconColor} />
             <Text style={[styles.label, { color: active ? colors.text : colors.muted }]}>
@@ -66,6 +68,13 @@ export function Dock({ state, navigation }: Props) {
 
 const styles = StyleSheet.create({
   dock: { flexDirection: 'row', borderTopWidth: StyleSheet.hairlineWidth },
+  rail: { width: 80, gap: space.xs, borderRightWidth: StyleSheet.hairlineWidth },
   item: { flex: 1, height: size.dock, alignItems: 'center', justifyContent: 'center', gap: 2 },
+  railItem: {
+    height: size.dock + space.md,
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 2,
+  },
   label: { fontFamily: font.ui, fontSize: fontSize.caption },
 });
