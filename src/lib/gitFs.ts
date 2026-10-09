@@ -9,12 +9,13 @@ const globals = globalThis as { Buffer?: typeof Buffer };
 globals.Buffer ??= Buffer;
 
 // isomorphic-git needs a Node-style `fs.promises` object. This maps it onto expo-file-system.
-// Git paths are absolute inside the app's documents folder, e.g. "/projects/demo/.git/HEAD".
+// Git paths are plain absolute paths, e.g. "/storage/emulated/0/Documents/TARKA/demo/.git/HEAD".
 
 type Encoding = string | { encoding?: string } | undefined;
 
+// Each part is escaped, so names with spaces, "#" or "%" survive the trip through a URI.
 function uriFor(path: string): string {
-  return Paths.join(Paths.document.uri, path);
+  return `file://${path.split('/').map(encodeURIComponent).join('/')}`;
 }
 
 // isomorphic-git checks `err.code` to tell "missing" apart from real failures.

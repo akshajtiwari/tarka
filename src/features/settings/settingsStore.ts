@@ -4,6 +4,8 @@ import { createJSONStorage, persist } from 'zustand/middleware';
 
 export type ThemeChoice = 'system' | 'dark' | 'light';
 export type AiProvider = 'anthropic' | 'openai';
+// Where new projects go: Documents/TARKA (visible to file managers and Termux) or inside the app.
+export type ProjectsLocation = 'documents' | 'app';
 
 // App-wide settings saved between launches. Secrets (git token) live in secure storage instead.
 type Settings = {
@@ -13,6 +15,8 @@ type Settings = {
   aiProvider: AiProvider;
   aiModel: string; // empty = the provider's default
   aiBaseUrl: string; // only for OpenAI-compatible servers (Ollama, OpenRouter, ...)
+  projectsLocation: ProjectsLocation;
+  setProjectsLocation: (location: ProjectsLocation) => void;
   tipsDone: boolean; // the first-launch tips card was dismissed
   finishTips: () => void;
   setAi: (provider: AiProvider, model: string, baseUrl: string) => void;
@@ -29,6 +33,8 @@ export const useSettings = create<Settings>()(
       aiProvider: 'anthropic',
       aiModel: '',
       aiBaseUrl: '',
+      projectsLocation: 'app',
+      setProjectsLocation: (projectsLocation) => set({ projectsLocation }),
       tipsDone: false,
       finishTips: () => set({ tipsDone: true }),
       setAi: (aiProvider, aiModel, aiBaseUrl) =>

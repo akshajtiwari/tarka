@@ -6,6 +6,7 @@ import { createJSONStorage, persist } from 'zustand/middleware';
 export type Project = {
   id: string;
   name: string;
+  root?: string; // the project's folder (file URI); missing = inside the app (older projects)
   createdAt: number;
   openedAt: number;
 };

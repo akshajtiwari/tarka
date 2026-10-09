@@ -1,4 +1,4 @@
-import { createProjectFolder, existingProjectFolders } from './projectFolder';
+import { createProjectFolder, existingProjectFolders, newProjectDir } from './projectFolder';
 import { makeProjectId } from './projectId';
 import { useProjectStore } from './projectStore';
 import { templates } from './templates';
@@ -11,9 +11,10 @@ export function createProject(name: string, templateId: string): string {
   const taken = [...projects.map((p) => p.id), ...existingProjectFolders()];
   const id = makeProjectId(name, taken);
 
-  createProjectFolder(id, template.files);
+  const dir = newProjectDir(id);
+  createProjectFolder(dir, template.files);
 
   const now = Date.now();
-  addProject({ id, name: name.trim() || id, createdAt: now, openedAt: now });
+  addProject({ id, name: name.trim() || id, createdAt: now, openedAt: now, root: dir.uri });
   return id;
 }

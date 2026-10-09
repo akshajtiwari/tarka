@@ -4,6 +4,7 @@ import { useGitStatusStore } from '../features/git/gitStatusStore';
 const mockReads: { resolve: (v: unknown) => void }[] = [];
 let mockModified = ['a.js'];
 jest.mock('expo-file-system', () => ({}));
+jest.mock('../features/git/repo', () => ({ repoDir: (id: string) => `/projects/${id}` }));
 jest.mock('../features/git/gitService', () => ({
   isRepo: async () => true,
   currentBranch: async () => 'main',

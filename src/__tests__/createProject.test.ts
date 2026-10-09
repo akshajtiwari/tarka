@@ -5,6 +5,7 @@ import { useProjectStore } from '../features/projects/projectStore';
 jest.mock('../features/projects/projectFolder', () => ({
   createProjectFolder: jest.fn(),
   existingProjectFolders: jest.fn(() => []),
+  newProjectDir: (id: string) => ({ uri: `file:///docs/TARKA/${id}/` }),
 }));
 
 beforeEach(() => useProjectStore.setState({ projects: [] }));
@@ -14,12 +15,14 @@ test('writes the template files and lists the new project', () => {
 
   expect(id).toBe('hello-py');
   expect(createProjectFolder).toHaveBeenCalledWith(
-    'hello-py',
+    { uri: 'file:///docs/TARKA/hello-py/' },
     expect.objectContaining({ 'main.py': expect.any(String) }),
   );
+  // The folder is saved with the project, so it is found again wherever it lives.
   expect(useProjectStore.getState().projects[0]).toMatchObject({
     id: 'hello-py',
     name: 'Hello Py',
+    root: 'file:///docs/TARKA/hello-py/',
   });
 });
 

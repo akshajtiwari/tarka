@@ -3,8 +3,7 @@ import type { ProgressCallback } from 'isomorphic-git';
 
 import * as gitService from '../git/gitService';
 import { gitFs } from '../../lib/gitFs';
-import { repoDir } from '../git/repo';
-import { deleteProjectFolder, existingProjectFolders } from './projectFolder';
+import { existingProjectFolders, folderPath, newProjectDir } from './projectFolder';
 import { makeProjectId } from './projectId';
 import { useProjectStore } from './projectStore';
 
@@ -22,13 +21,14 @@ export async function cloneProject(
 ): Promise<string> {
   const { projects, addProject } = useProjectStore.getState();
   const id = makeProjectId(name, [...projects.map((p) => p.id), ...existingProjectFolders()]);
+  const dir = newProjectDir(id);
   try {
-    await gitService.clone(gitFs, repoDir(id), url.trim(), await getGitToken(), onProgress);
+    await gitService.clone(gitFs, folderPath(dir), url.trim(), await getGitToken(), onProgress);
   } catch (e) {
-    deleteProjectFolder(id); // don't leave half a clone behind
+    if (dir.exists) dir.delete(); // don't leave half a clone behind
     throw e;
   }
   const now = Date.now();
-  addProject({ id, name: name.trim() || id, createdAt: now, openedAt: now });
+  addProject({ id, name: name.trim() || id, createdAt: now, openedAt: now, root: dir.uri });
   return id;
 }
