@@ -1,5 +1,5 @@
 import { useLocalSearchParams } from 'expo-router';
-import { useMemo, useState } from 'react';
+import { memo, useMemo, useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -14,7 +14,7 @@ import HtmlPreview from '../../../src/features/run/HtmlPreview.dom';
 import { inlineAssets } from '../../../src/features/run/inlineAssets';
 import { OutputConsole } from '../../../src/features/run/OutputConsole';
 import { pickRunTarget } from '../../../src/features/run/pickRunTarget';
-import Runner from '../../../src/features/run/Runner.dom';
+import RunnerView from '../../../src/features/run/Runner.dom';
 import { runKindFor } from '../../../src/features/run/runKind';
 import { useRunner } from '../../../src/features/run/useRunner';
 import { listEntries, readForSearch } from '../../../src/lib/projectFs';
@@ -22,6 +22,8 @@ import { font, fontSize } from '../../../src/theme/fonts';
 import { space } from '../../../src/theme/spacing';
 import { useTheme } from '../../../src/theme/useTheme';
 
+// Only re-render the hidden runner WebView when its props change, not on every output line.
+const Runner = memo(RunnerView);
 const hidden = { style: { height: 0 } };
 const fill = { style: { flex: 1 } };
 

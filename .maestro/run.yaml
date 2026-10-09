@@ -1,0 +1,70 @@
+# Run code on the phone: JavaScript output, Python (Pyodide), stopping an endless loop, HTML preview.
+appId: com.akshajtiwari.tarka
+---
+- runFlow: common/open-app.yaml
+# JavaScript project (main.js prints "hello, world").
+- tapOn: New project
+- tapOn: Name
+- inputText: js
+- tapOn: JavaScript
+- hideKeyboard
+- tapOn: Create project
+- tapOn: Run
+- tapOn: Run main.js
+- extendedWaitUntil:
+    visible: hello, world
+    timeout: 15000
+- assertVisible: Finished in .*
+- takeScreenshot: run-js
+- back # Run tab -> Code tab (tabs go back to the first tab)
+- back # Code tab -> projects
+# Python project, run with Pyodide (downloaded on first use, then cached).
+- runFlow: common/new-python-project.yaml
+- tapOn: Run
+- tapOn: Run main.py
+- extendedWaitUntil:
+    visible: hello, world
+    timeout: 120000
+- takeScreenshot: run-python
+# An endless loop is stopped.
+- tapOn: Code
+- tapOn:
+    text: Show files
+    index: 0
+- tapOn: New file or folder
+- tapOn: New file
+- inputText: loop.py
+- hideKeyboard
+- tapOn: Done
+- tapOn: File loop.py
+- tapOn:
+    point: 50%,30%
+- inputText: "while True: pass"
+- hideKeyboard
+- tapOn: Run
+- tapOn: Run loop.py
+- extendedWaitUntil:
+    visible: Stop
+    timeout: 5000
+- swipe: # wait a few seconds so the loop is really running, not just loading
+    direction: DOWN
+    duration: 8000
+- tapOn: Stop
+- extendedWaitUntil:
+    visible: Stopped by you.*
+    timeout: 10000
+- back
+- back
+# Web page preview.
+- tapOn: New project
+- tapOn: Name
+- inputText: web
+- tapOn: Web page
+- hideKeyboard
+- tapOn: Create project
+- tapOn: Run
+- tapOn: Preview index.html
+- extendedWaitUntil:
+    visible: Hello from TARKA
+    timeout: 15000
+- takeScreenshot: run-html

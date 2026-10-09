@@ -1,6 +1,7 @@
 import { inlineAssets } from '../features/run/inlineAssets';
 import { pickRunTarget } from '../features/run/pickRunTarget';
 import { runKindFor } from '../features/run/runKind';
+import { WORKER_SOURCE } from '../features/run/workerSource';
 
 test('picks how to run a file from its extension', () => {
   expect(runKindFor('main.py')).toBe('py');
@@ -28,4 +29,8 @@ test('runs the open file when it can, otherwise a usual entry file', () => {
   expect(pickRunTarget('README.md', ['README.md', 'main.py'])).toBe('main.py');
   expect(pickRunTarget(null, ['notes.md', 'tool.py'])).toBe('tool.py');
   expect(pickRunTarget(null, ['notes.md'])).toBeNull();
+});
+
+test('the worker code is valid JavaScript (it lives in a string, so the compiler cannot check it)', () => {
+  expect(() => new Function(WORKER_SOURCE)).not.toThrow();
 });

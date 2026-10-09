@@ -1,5 +1,6 @@
-// The code that runs inside a Web Worker. A worker can be killed at any time,
-// so an endless loop never freezes the app. console output is sent back as messages.
+// The code that runs inside a Web Worker ("module" type, which Pyodide needs).
+// A worker can be killed at any time, so an endless loop never freezes the app.
+// console output is sent back as messages.
 export const WORKER_SOURCE = `
 const send = (stream, text) => postMessage({ type: 'out', stream, text });
 const show = (value) => {
@@ -11,7 +12,7 @@ console.warn = console.error = (...args) => send('stderr', args.map(show).join('
 
 async function runPython({ code, stdin, pyodideUrl }) {
   send('info', 'Loading Python (the first run downloads about 10 MB)...');
-  importScripts(pyodideUrl + 'pyodide.js');
+  const { loadPyodide } = await import(pyodideUrl + 'pyodide.mjs'); // needs a "module" worker
   const py = await loadPyodide({ indexURL: pyodideUrl });
   py.setStdout({ batched: (text) => send('stdout', text) });
   py.setStderr({ batched: (text) => send('stderr', text) });

@@ -27,7 +27,7 @@ export default function Runner({ job, stopId, onOutput, onDone }: Props) {
     if (!job) return;
     const started = Date.now();
     const url = URL.createObjectURL(new Blob([WORKER_SOURCE], { type: 'text/javascript' }));
-    const worker = new Worker(url);
+    const worker = new Worker(url, { type: 'module' });
     let finished = false;
 
     const finish = (result: RunResult) => {
@@ -68,9 +68,10 @@ export default function Runner({ job, stopId, onOutput, onDone }: Props) {
       worker.terminate();
       URL.revokeObjectURL(url);
     };
-    // A new job (new id) starts a new run; the callbacks are stable.
+    // Props arrive as fresh copies on every re-render (they cross the bridge as JSON),
+    // so only a new job id may start a new run, never a new object with the same id.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [job]);
+  }, [job?.id]);
 
   useEffect(() => {
     if (stopId > 0) stop.current();
