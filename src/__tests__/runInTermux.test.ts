@@ -38,16 +38,17 @@ beforeEach(() => {
 
 test('runs the command and shows its output and exit code', async () => {
   await runInTermux('demo', 'gcc main.c && ./a.out');
-  const [args, script, background] = mockTermux.runInTermux.mock.calls[0];
+  const [args, copy, background] = mockTermux.runInTermux.mock.calls[0];
   expect(args[0]).toBe('-c');
   expect(background).toBe(true);
-  expect(script).toContain('main.c');
-  expect(script).toContain('gcc main.c && ./a.out');
+  expect(copy).toContain('main.c'); // first the copy, then the command on its own
+  expect(mockTermux.runInTermux.mock.calls[1][1]).toContain('gcc main.c && ./a.out');
   expect(printed()).toEqual(expect.arrayContaining(['hello from C', '[exit 0]']));
   expect(useTerminalStore.getState().mode).toBe('shell');
 
   await runInTermux('demo', 'ls'); // nothing changed: no files are sent again
-  expect(mockTermux.runInTermux.mock.calls[1][1]).not.toContain('base64 -d');
+  expect(mockTermux.runInTermux.mock.calls.at(-1)![1]).not.toContain('base64 -d');
+  expect(mockTermux.runInTermux).toHaveBeenCalledTimes(3); // copy + command, then only the command
 });
 
 test('explains what to do when Termux is missing or not allowed', async () => {
@@ -73,4 +74,21 @@ test('tells you to allow external apps when Termux blocks TARKA', async () => {
   });
   await runInTermux('demo', 'ls');
   expect(printed().join(' ')).toContain('allow-external-apps=true');
+});
+
+test('a copy that failed is sent again next time', async () => {
+  mockTermux.runInTermux.mockResolvedValueOnce({
+    stdout: '',
+    stderr: 'No space left on device',
+    exitCode: 1,
+    err: -1,
+    errmsg: '',
+    stdoutOriginalLength: '0',
+  });
+  await runInTermux('demo', 'ls'); // the copy fails, so the command doesn't run
+  expect(mockTermux.runInTermux).toHaveBeenCalledTimes(1);
+  expect(printed()).toContain('No space left on device');
+
+  await runInTermux('demo', 'ls');
+  expect(mockTermux.runInTermux.mock.calls[1][1]).toContain('base64 -d'); // copied again
 });

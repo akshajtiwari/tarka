@@ -49,6 +49,8 @@ export function buildScripts(
     }
     current += block;
   }
-  scripts.push(`${current}set +e\ncd ${root}\n${command}\n`);
+  if (current !== start) scripts.push(current);
+  // The command goes on its own, so a failed copy is never mistaken for the command's exit code.
+  scripts.push(`mkdir -p ${root}\ncd ${root}\n${command}\n`);
   return scripts;
 }

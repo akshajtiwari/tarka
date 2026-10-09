@@ -33,14 +33,19 @@ export async function runInTermux(projectId: string, line: string) {
       t.print('info', `Copying ${files.length} file(s) to ~/tarka/${projectId}…`);
     const command = syncOnly ? `echo "Copied to ~/tarka/${projectId}"` : line;
     const scripts = buildScripts(projectId, files, command);
+    // Copy scripts first, the command last. Files count as copied only when every copy worked.
     let result: TermuxResult | null = null;
+    let copied = true;
     for (const script of scripts) {
       result = await withTimeout(TarkaAndroid.runInTermux(['-c', RUNNER], script, true));
       const lastOne = script === scripts.at(-1);
-      if (result.err !== -1 || (!lastOne && result.exitCode !== 0)) break;
+      if (result.err !== -1 || (!lastOne && result.exitCode !== 0)) {
+        copied = false;
+        break;
+      }
     }
     if (result) show(result, command);
-    if (result?.err === -1) rememberSent(projectId, stamps);
+    if (copied) rememberSent(projectId, stamps);
   } catch (e) {
     const message = e instanceof Error ? e.message : String(e);
     if (message === 'timeout') explain('timeout');
