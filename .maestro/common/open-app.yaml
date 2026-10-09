@@ -20,6 +20,13 @@ appId: com.akshajtiwari.tarka
       - scrollUntilVisible:
           element: Tools button
       - tapOn: Tools button
+      # On some boots the toggle asks for "Display over other apps" first: close that page.
+      - waitForAnimationToEnd
+      - runFlow:
+          when:
+            visible: Display over other apps
+          commands:
+            - back
       - back
 - extendedWaitUntil:
     visible: Projects
