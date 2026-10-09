@@ -17,7 +17,7 @@ Check items off as they land (each must pass the definition of done in AGENTS.md
 - [x] Create a project from a template (JS, Python, Web); rename and delete
 - [x] Workspace screen with the bottom dock (Code, Git, Run, Agent)
 - [x] Explorer drawer with a file tree (read-only)
-- [~] Settings screen skeleton (theme switch still to do: follows the phone for now)
+- [x] Settings screen (theme switch, git identity and token)
 
 ## Phase 2: editor core
 - [x] Spike: CM6 DOM component + native key row. The keyboard stays open when tapping keys.
@@ -32,20 +32,20 @@ Check items off as they land (each must pass the definition of done in AGENTS.md
 - [~] Large-file guard (over 2 MB opens read-only)
 
 ## Phase 3: explorer and search
-- [ ] New, rename, delete and duplicate files and folders (long-press sheet)
-- [ ] Git status colors on rows
+- [x] New, rename, delete and duplicate files and folders (long-press sheet)
+- [x] Git status colors on rows
 - [x] Fuzzy quick-open
 - [x] Project-wide text search
 
 ## Phase 4: Git
-- [ ] Git identity in settings; init a repo
-- [ ] Status list; stage and unstage
-- [ ] Diff view
-- [ ] Commit
-- [ ] History + commit detail
-- [ ] Branches: list, create, switch
-- [ ] Clone, pull, push with a token
-- [ ] Conflicted-files list
+- [x] Git identity in settings; init a repo
+- [x] Status list; stage and unstage
+- [x] Diff view
+- [x] Commit
+- [x] History (commit detail screen still to do)
+- [x] Branches: list, create, switch
+- [x] Clone, pull, push with a token
+- [~] Conflicts: a pull that conflicts stops and names the files (isomorphic-git aborts the merge); no in-app merge editor yet
 
 ## Phase 5: run on the device
 - [ ] Sandbox DOM component with timeouts
