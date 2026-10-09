@@ -85,3 +85,27 @@ test('Stop ends the run before the next model call', async () => {
   );
   expect(last).toEqual({ type: 'stopped', reason: 'Stopped by you.' });
 });
+
+test('Stop in the middle of several tool calls still answers every call', async () => {
+  const controller = new AbortController();
+  const history: Turn[] = [{ role: 'user', text: 'go' }];
+  await runAgent({
+    provider: scripted([{ text: '', toolCalls: [call('a', { path: 'a' }), call('b', { path: 'b' })], stop: 'tools' }]),
+    history,
+    tools: [],
+    signal: controller.signal,
+    runTool: async (c) => {
+      controller.abort(); // the user taps Stop while the first tool runs
+      return { id: c.id, output: 'ok', isError: false };
+    },
+    onEvent: () => {},
+  });
+  const toolTurn = history.find((t) => t.role === 'tool');
+  expect(toolTurn).toEqual({
+    role: 'tool',
+    results: [
+      { id: 'a', output: 'ok', isError: false },
+      { id: 'b', output: 'Stopped before this ran.', isError: true },
+    ],
+  });
+});

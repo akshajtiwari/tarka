@@ -47,6 +47,11 @@ export async function runAgent({ provider, history, tools, runTool, onEvent, sig
 
     const results: ToolResult[] = [];
     for (const call of reply.toolCalls) {
+      // After Stop, every remaining call still needs an answer, or the conversation breaks.
+      if (signal.aborted) {
+        results.push({ id: call.id, output: 'Stopped before this ran.', isError: true });
+        continue;
+      }
       const key = call.name + JSON.stringify(call.input);
       seen.set(key, (seen.get(key) ?? 0) + 1);
       if (seen.get(key)! >= 3) {
@@ -59,7 +64,6 @@ export async function runAgent({ provider, history, tools, runTool, onEvent, sig
       const result = await runTool(call);
       onEvent({ type: 'tool-end', call, result });
       results.push(result);
-      if (signal.aborted) break;
     }
     history.push({ role: 'tool', results });
   }
