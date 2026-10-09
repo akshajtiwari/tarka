@@ -26,9 +26,5 @@ Last refreshed: 2026-10-09, after phase 7.
 - `src/features/agent/providers/openai.ts:10`: OpenAI-compatible replies are not streamed.
   - **Limit:** the whole reply arrives at once.
   - **Upgrade:** stream it if slow replies feel stuck.
-- `src/features/run/workerSource.ts:14`: the runner blocks `fetch` and XHR to `file://`, but not `import()`.
-  - **Limit:** code you run could still load a `file://` JavaScript module (Expo's DOM WebView allows file access).
-  - **Upgrade:** run code in a WebView without file access (e.g. react-native-webview with
-    `allowFileAccessFromFileURLs={false}`, loaded from an inline page).
 
 7 markers, all with an upgrade trigger.

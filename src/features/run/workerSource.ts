@@ -14,8 +14,8 @@ const show = (value) => {
 console.log = console.info = (...args) => send('stdout', args.map(show).join(' '));
 console.warn = console.error = (...args) => send('stderr', args.map(show).join(' '));
 
-// The WebView can read the app's own files (file://). Code you run gets the web only.
-// shortcut: import() can still load file:// modules; a runner WebView without file access fixes that.
+// The WebView can read the app's own files (file://). Code you run gets the web only: this guard
+// gives a clear error for fetch and XHR, and the runner page's security policy also blocks import().
 const webOnly = (url) => {
   const { protocol } = new URL(url, 'https://relative.invalid/');
   if (!['http:', 'https:', 'data:', 'blob:'].includes(protocol))

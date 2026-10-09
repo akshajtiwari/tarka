@@ -15,6 +15,16 @@ import { WORKER_SOURCE } from './workerSource';
 const PYODIDE_URL = 'https://cdn.jsdelivr.net/pyodide/v314.0.7/full/';
 const MAX_LINES = 5000; // an endless print loop would otherwise flood and freeze the screen
 
+// Code you run gets the web only. This WebView may read device files (file://, content://), and
+// the worker's fetch guard can't catch import(), so the page refuses every other kind of address.
+// Workers made from blob: URLs inherit this policy. Set once, before the first worker starts.
+const policy = document.createElement('meta');
+policy.httpEquiv = 'Content-Security-Policy';
+policy.content =
+  "script-src http: https: blob: data: 'unsafe-inline' 'unsafe-eval' 'wasm-unsafe-eval'; " +
+  'connect-src http: https: ws: wss: blob: data:';
+document.head.append(policy);
+
 type Props = {
   command: TerminalCommand | null; // the latest command; a new id means a new one
   onEvent: (event: BridgeEvent) => Promise<void>;
