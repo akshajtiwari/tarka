@@ -25,7 +25,7 @@ type GitStatusState = {
   error: string | null;
   enterProject: (projectId: string) => void;
   markStale: () => void;
-  refresh: (projectId: string) => Promise<void>;
+  refresh: () => Promise<void>; // reads the open project's status
 };
 
 async function readSnapshot(projectId: string): Promise<GitSnapshot> {
@@ -57,24 +57,30 @@ export const useGitStatusStore = create<GitStatusState>()((set, get) => ({
     if (get().projectId !== projectId) set({ projectId, snap: null, stale: true, error: null });
   },
   markStale: () => set({ stale: true }),
-  refresh: (projectId) => {
+  refresh: () => {
     if (running) {
-      again = true;
+      if (get().stale) again = true; // something changed during this read: read once more
       return running;
     }
     running = (async () => {
       do {
         again = false;
+        const projectId = get().projectId; // the open project, which may change between reads
+        if (!projectId) return;
         set({ stale: false }); // a change from now on marks it stale again
         try {
           const snap = await readSnapshot(projectId);
-          if (get().projectId !== projectId) return; // the user left this project meanwhile
+          if (get().projectId !== projectId) {
+            again = true; // another project was opened meanwhile: read that one
+            continue;
+          }
           // Unchanged parts keep their old objects, so rows that use them don't redraw.
           const old = get().snap;
           if (old && same(old.kinds, snap.kinds)) snap.kinds = old.kinds;
           set({ snap: old && same(old, snap) ? old : snap, error: null });
         } catch (e) {
-          set({ error: e instanceof Error ? e.message : String(e) });
+          if (get().projectId === projectId)
+            set({ error: e instanceof Error ? e.message : String(e) });
         }
       } while (again);
     })().finally(() => {
@@ -92,7 +98,7 @@ export function useGitSnapshot(projectId: string, active: boolean) {
 
   useEffect(() => {
     if (!active || !stale) return;
-    const timer = setTimeout(() => useGitStatusStore.getState().refresh(projectId), 300);
+    const timer = setTimeout(() => useGitStatusStore.getState().refresh(), 300);
     return () => clearTimeout(timer);
   }, [projectId, active, stale]);
 
