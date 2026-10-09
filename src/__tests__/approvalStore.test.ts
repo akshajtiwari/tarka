@@ -9,3 +9,15 @@ test('the agent waits until the user answers', async () => {
   await expect(waiting).resolves.toBe(true);
   expect(useApprovalStore.getState().pending).toBeNull();
 });
+
+test('a new request rejects an older one nobody answered', async () => {
+  const first = useApprovalStore
+    .getState()
+    .ask({ kind: 'write', path: 'a.js', before: '', after: 'x' });
+  const second = useApprovalStore
+    .getState()
+    .ask({ kind: 'delete', path: 'b.js', before: 'y', after: '' });
+  await expect(first).resolves.toBe(false);
+  useApprovalStore.getState().respond(true);
+  await expect(second).resolves.toBe(true);
+});

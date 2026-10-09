@@ -19,7 +19,11 @@ export const useApprovalStore = create<ApprovalState>()((set, get) => ({
   pending: null,
   answer: null,
   // The agent loop waits on this promise until the user taps a button.
-  ask: (approval) => new Promise<boolean>((resolve) => set({ pending: approval, answer: resolve })),
+  ask: (approval) =>
+    new Promise<boolean>((resolve) => {
+      get().answer?.(false); // an older request nobody answered counts as rejected
+      set({ pending: approval, answer: resolve });
+    }),
   respond: (approved) => {
     get().answer?.(approved);
     set({ pending: null, answer: null });
