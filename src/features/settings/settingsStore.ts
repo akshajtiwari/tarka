@@ -13,6 +13,8 @@ type Settings = {
   aiProvider: AiProvider;
   aiModel: string; // empty = the provider's default
   aiBaseUrl: string; // only for OpenAI-compatible servers (Ollama, OpenRouter, ...)
+  tipsDone: boolean; // the first-launch tips card was dismissed
+  finishTips: () => void;
   setAi: (provider: AiProvider, model: string, baseUrl: string) => void;
   setTheme: (theme: ThemeChoice) => void;
   setGitIdentity: (name: string, email: string) => void;
@@ -27,6 +29,8 @@ export const useSettings = create<Settings>()(
       aiProvider: 'anthropic',
       aiModel: '',
       aiBaseUrl: '',
+      tipsDone: false,
+      finishTips: () => set({ tipsDone: true }),
       setAi: (aiProvider, aiModel, aiBaseUrl) =>
         set({ aiProvider, aiModel: aiModel.trim(), aiBaseUrl: aiBaseUrl.trim() }),
       setTheme: (theme) => set({ theme }),

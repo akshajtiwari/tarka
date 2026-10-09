@@ -1,6 +1,9 @@
-# The app opens on the empty projects list.
+# The app opens on the empty projects list, with tips until you dismiss them.
 appId: com.akshajtiwari.tarka
 ---
 - runFlow: common/open-app.yaml
 - assertVisible: No projects yet
 - takeScreenshot: home-empty
+- assertVisible: Coding on a phone
+- tapOn: Got it
+- assertNotVisible: Coding on a phone
