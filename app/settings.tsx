@@ -58,8 +58,9 @@ export default function SettingsScreen() {
           <Button
             label="Run setup again"
             onPress={() => {
+              // Back to home first: home then opens setup, and no project stays open underneath.
               useSettings.getState().setOnboarded(false);
-              router.replace('/welcome');
+              router.dismissTo('/');
             }}
           />
         </View>

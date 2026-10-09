@@ -18,7 +18,11 @@ export function openFileFromDisk(projectId: string, path: string): string | null
 
 // Writes the editor's text to disk. Returns an error message if the write failed.
 export function saveFile(projectId: string, path: string): string | null {
-  const file = useEditorStore.getState().files.find((f) => f.path === path);
+  const editor = useEditorStore.getState();
+  // The open tabs belong to one project: never write them into another one's folder
+  // (a screen of a project you left could still be mounted for a moment).
+  if (editor.projectId !== projectId) return null;
+  const file = editor.files.find((f) => f.path === path);
   if (!file) return null;
   try {
     fileAt(projectId, path).write(file.text);
