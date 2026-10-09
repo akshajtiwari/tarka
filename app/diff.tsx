@@ -10,7 +10,7 @@ import { DiffView } from '../src/features/git/DiffView';
 import { committedText } from '../src/features/git/gitService';
 import { repoDir } from '../src/features/git/repo';
 import { gitFs } from '../src/lib/gitFs';
-import { fileAt, readForSearch } from '../src/lib/projectFs';
+import { BINARY, fileAt, readForSearch } from '../src/lib/projectFs';
 import { useTheme } from '../src/theme/useTheme';
 
 // What changed in one file since the last commit, or in a past commit.
@@ -28,10 +28,10 @@ export default function DiffScreen() {
   useEffect(() => {
     const dir = repoDir(projectId);
     if (to) {
-      const before = from ? committedText(gitFs, dir, path, from) : '';
-      Promise.all([before, committedText(gitFs, dir, path, to)]).then(([a, b]) =>
-        setRows(diffRows(a, b)),
-      );
+      const texts = BINARY.test(path) // an image or other non-text file: no text diff
+        ? ['', '']
+        : [from ? committedText(gitFs, dir, path, from) : '', committedText(gitFs, dir, path, to)];
+      Promise.all(texts).then(([a, b]) => setRows(diffRows(a, b)));
       return;
     }
     committedText(gitFs, dir, path).then((before) => {

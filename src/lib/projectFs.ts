@@ -38,7 +38,7 @@ export function fileAt(projectId: string, relPath: string): File {
 }
 
 // Files we never try to read as text.
-const BINARY = /\.(png|jpe?g|gif|webp|ico|pdf|zip|gz|jar|so|wasm|mp3|mp4|ttf|otf|woff2?)$/i;
+export const BINARY = /\.(png|jpe?g|gif|webp|ico|pdf|zip|gz|jar|so|wasm|mp3|mp4|ttf|otf|woff2?)$/i;
 
 // Text of a file for searching, or null if it is binary, too big (over 1 MB) or unreadable.
 export function readForSearch(projectId: string, relPath: string): string | null {
