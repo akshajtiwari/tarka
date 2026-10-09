@@ -1,5 +1,6 @@
 import { router, useLocalSearchParams } from 'expo-router';
-import { Alert, ScrollView, StyleSheet, Text } from 'react-native';
+import { useState } from 'react';
+import { ActivityIndicator, Alert, ScrollView, StyleSheet, Text } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { Button } from '../../../src/components/Button';
@@ -12,7 +13,8 @@ import { ChangeRow } from '../../../src/features/git/ChangeRow';
 import { CommitBox } from '../../../src/features/git/CommitBox';
 import * as gitService from '../../../src/features/git/gitService';
 import { pullProject, pushProject } from '../../../src/features/git/remoteActions';
-import { gitFs, repoDir } from '../../../src/features/git/repo';
+import { repoDir } from '../../../src/features/git/repo';
+import { gitFs } from '../../../src/lib/gitFs';
 import { useGitStatus } from '../../../src/features/git/useGitStatus';
 import { font, fontSize } from '../../../src/theme/fonts';
 import { space } from '../../../src/theme/spacing';
@@ -24,23 +26,24 @@ export default function GitScreen() {
   const git = useGitStatus(id);
   const dir = repoDir(id);
 
-  // Run a git action, then show the new state. Errors are shown, never swallowed.
-  async function run(action: () => Promise<unknown>) {
-    try {
-      await action();
-    } catch (e) {
-      Alert.alert('Git error', String(e));
-    }
-    await git.refresh();
-  }
+  const [busy, setBusy] = useState(false);
 
-  async function remote(action: () => Promise<string>) {
+  // Run one git action at a time, then show the new state. Errors are shown, never swallowed.
+  // A text result (from push/pull) is shown to the user. Returns true when it worked.
+  async function run(action: () => Promise<string | void>): Promise<boolean> {
+    if (busy) return false;
+    setBusy(true);
+    let ok = true;
     try {
-      Alert.alert('Done', await action());
+      const message = await action();
+      if (message) Alert.alert('Done', message);
     } catch (e) {
+      ok = false;
       Alert.alert('Git error', String(e));
     }
+    setBusy(false);
     await git.refresh();
+    return ok;
   }
 
   const openDiff = (change: Change) =>
@@ -74,21 +77,14 @@ export default function GitScreen() {
         title="Git"
         right={
           <>
+            {busy && <ActivityIndicator color={colors.accent} />}
             <IconButton
               icon="history"
               label="History"
               onPress={() => router.push({ pathname: '/history', params: { projectId: id } })}
             />
-            <IconButton
-              icon="arrow-down"
-              label="Pull"
-              onPress={() => remote(() => pullProject(id))}
-            />
-            <IconButton
-              icon="arrow-up"
-              label="Push"
-              onPress={() => remote(() => pushProject(id))}
-            />
+            <IconButton icon="arrow-down" label="Pull" onPress={() => run(() => pullProject(id))} />
+            <IconButton icon="arrow-up" label="Push" onPress={() => run(() => pushProject(id))} />
             <IconButton icon="sync" label="Refresh" onPress={git.refresh} />
           </>
         }
@@ -124,16 +120,16 @@ export default function GitScreen() {
           <ListRow
             icon="plus"
             title="Stage all changes"
-            onPress={() =>
-              run(async () => {
-                for (const c of git.unstaged) await gitService.stage(gitFs, dir, c);
-              })
-            }
+            onPress={() => run(() => gitService.stageAll(gitFs, dir, git.unstaged))}
           />
         )}
         <CommitBox
           stagedCount={git.staged.length}
-          onCommit={(message, author) => run(() => gitService.commit(gitFs, dir, message, author))}
+          onCommit={(message, author) =>
+            run(async () => {
+              await gitService.commit(gitFs, dir, message, author); // (returns the commit id; not shown)
+            })
+          }
         />
       </ScrollView>
     </SafeAreaView>

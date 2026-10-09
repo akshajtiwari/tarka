@@ -1,7 +1,7 @@
 // A tiny git server: real `git http-backend` behind a local HTTP server.
 // Used by the unit tests (require it) and by the UI tests (run it):
 //   node scripts/git-server.cjs <folder-with-bare-repos> [port]
-// Repos are then at http://<host>:<port>/<name>.git (the emulator reaches the laptop at 10.0.2.2).
+// Repos are then at http://127.0.0.1:<port>/<name>.git (the emulator reaches it as 10.0.2.2).
 const { spawn } = require('child_process');
 const http = require('http');
 
@@ -45,7 +45,8 @@ function startGitServer(root, port = 0) {
   });
 
   return new Promise((resolve) => {
-    server.listen(port, '0.0.0.0', () => {
+    server.listen(port, '127.0.0.1', () => {
+      // loopback only: nobody else on the Wi-Fi can push
       resolve({ url: `http://127.0.0.1:${server.address().port}`, close: () => server.close() });
     });
   });
@@ -55,5 +56,7 @@ module.exports = { startGitServer };
 
 if (require.main === module) {
   const [root, port = '8090'] = process.argv.slice(2);
-  startGitServer(root, Number(port)).then(({ url }) => console.log(`git server on ${url}, repos in ${root}`));
+  startGitServer(root, Number(port)).then(({ url }) =>
+    console.log(`git server on ${url}, repos in ${root}`),
+  );
 }

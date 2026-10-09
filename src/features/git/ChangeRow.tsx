@@ -5,6 +5,7 @@ import { font, fontSize } from '../../theme/fonts';
 import { size, space } from '../../theme/spacing';
 import { useTheme } from '../../theme/useTheme';
 import type { Change } from './changes';
+import { changeColor, changeLetters } from './changeStyle';
 
 type Props = {
   change: Change;
@@ -13,17 +14,10 @@ type Props = {
   onToggle: () => void; // stage or unstage
 };
 
-const letters = { added: 'A', modified: 'M', deleted: 'D', untracked: 'U' };
-
 // One changed file: a colored letter (never color alone), the path, and a +/− button.
 export function ChangeRow({ change, staged, onOpen, onToggle }: Props) {
   const colors = useTheme();
-  const kindColor = {
-    added: colors.success,
-    untracked: colors.success,
-    modified: colors.warning,
-    deleted: colors.error,
-  }[change.kind];
+  const kindColor = changeColor(change.kind, colors);
 
   return (
     <Pressable
@@ -32,7 +26,7 @@ export function ChangeRow({ change, staged, onOpen, onToggle }: Props) {
       onPress={onOpen}
       style={({ pressed }) => [styles.row, pressed && { backgroundColor: colors.raised }]}
     >
-      <Text style={[styles.letter, { color: kindColor }]}>{letters[change.kind]}</Text>
+      <Text style={[styles.letter, { color: kindColor }]}>{changeLetters[change.kind]}</Text>
       <Text numberOfLines={1} style={[styles.path, { color: colors.text }]}>
         {change.path}
       </Text>

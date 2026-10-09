@@ -8,8 +8,9 @@ import { IconButton } from '../src/components/IconButton';
 import { diffRows, type DiffRow } from '../src/features/git/diffRows';
 import { DiffView } from '../src/features/git/DiffView';
 import { committedText } from '../src/features/git/gitService';
-import { gitFs, repoDir } from '../src/features/git/repo';
-import { readForSearch } from '../src/lib/projectFs';
+import { repoDir } from '../src/features/git/repo';
+import { gitFs } from '../src/lib/gitFs';
+import { fileAt, readForSearch } from '../src/lib/projectFs';
 import { useTheme } from '../src/theme/useTheme';
 
 // What changed in one file since the last commit.
@@ -20,8 +21,10 @@ export default function DiffScreen() {
 
   useEffect(() => {
     committedText(gitFs, repoDir(projectId), path).then((before) => {
-      const now = readForSearch(projectId, path) ?? ''; // deleted or binary files read as empty
-      setRows(diffRows(before, now));
+      const now = readForSearch(projectId, path);
+      // null = binary, very large, or deleted. Only a deleted file should look like all-removed.
+      if (now === null && fileAt(projectId, path).exists) return setRows([]);
+      setRows(diffRows(before, now ?? ''));
     });
   }, [projectId, path]);
 

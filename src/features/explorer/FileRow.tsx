@@ -5,6 +5,7 @@ import { font, fontSize } from '../../theme/fonts';
 import { size, space } from '../../theme/spacing';
 import { useTheme } from '../../theme/useTheme';
 import type { ChangeKind } from '../git/changes';
+import { changeColor, changeLetters } from '../git/changeStyle';
 import type { TreeRow } from './treeRows';
 
 type Props = {
@@ -16,18 +17,9 @@ type Props = {
   onLongPress: () => void;
 };
 
-const gitLetters = { added: 'A', untracked: 'U', modified: 'M', deleted: 'D' };
-
 export function FileRow({ row, expanded, active, gitKind, onPress, onLongPress }: Props) {
   const colors = useTheme();
-  const gitColor =
-    gitKind &&
-    {
-      added: colors.success,
-      untracked: colors.success,
-      modified: colors.warning,
-      deleted: colors.error,
-    }[gitKind];
+  const gitColor = gitKind && changeColor(gitKind, colors);
   const folderIcon = expanded ? 'file-directory-open-fill' : 'file-directory-fill';
   const icon = row.isDir ? folderIcon : 'file';
 
@@ -49,7 +41,7 @@ export function FileRow({ row, expanded, active, gitKind, onPress, onLongPress }
         {row.name}
       </Text>
       {gitKind && (
-        <Text style={[styles.gitLetter, { color: gitColor }]}>{gitLetters[gitKind]}</Text>
+        <Text style={[styles.gitLetter, { color: gitColor }]}>{changeLetters[gitKind]}</Text>
       )}
     </Pressable>
   );

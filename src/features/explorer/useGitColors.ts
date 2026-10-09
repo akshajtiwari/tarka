@@ -2,7 +2,8 @@ import { useEffect, useState } from 'react';
 
 import type { ChangeKind } from '../git/changes';
 import * as gitService from '../git/gitService';
-import { gitFs, repoDir } from '../git/repo';
+import { gitFs } from '../../lib/gitFs';
+import { repoDir } from '../git/repo';
 import { useWorkspaceStore } from '../workspace/workspaceStore';
 
 // Git state of each changed file ("src/a.js" -> "modified"), for coloring explorer rows.

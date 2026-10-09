@@ -1,6 +1,7 @@
 import { getGitToken } from '../../lib/secure';
 import * as gitService from '../git/gitService';
-import { gitFs, repoDir } from '../git/repo';
+import { gitFs } from '../../lib/gitFs';
+import { repoDir } from '../git/repo';
 import { deleteProjectFolder, existingProjectFolders } from './projectFolder';
 import { makeProjectId } from './projectId';
 import { useProjectStore } from './projectStore';

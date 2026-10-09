@@ -8,7 +8,8 @@ import { Header } from '../src/components/Header';
 import { IconButton } from '../src/components/IconButton';
 import { ListRow } from '../src/components/ListRow';
 import { history } from '../src/features/git/gitService';
-import { gitFs, repoDir } from '../src/features/git/repo';
+import { repoDir } from '../src/features/git/repo';
+import { gitFs } from '../src/lib/gitFs';
 import { timeAgo } from '../src/lib/timeAgo';
 import { useTheme } from '../src/theme/useTheme';
 

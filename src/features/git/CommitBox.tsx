@@ -11,7 +11,7 @@ import { useSettings } from '../settings/settingsStore';
 
 type Props = {
   stagedCount: number;
-  onCommit: (message: string, author: { name: string; email: string }) => Promise<void>;
+  onCommit: (message: string, author: { name: string; email: string }) => Promise<boolean>; // true = committed
 };
 
 // Message + Commit button. A commit needs your name and email from Settings.
@@ -34,8 +34,8 @@ export function CommitBox({ stagedCount, onCommit }: Props) {
 
   async function commit() {
     setBusy(true);
-    await onCommit(message.trim(), { name: gitName, email: gitEmail });
-    setMessage('');
+    const committed = await onCommit(message.trim(), { name: gitName, email: gitEmail });
+    if (committed) setMessage(''); // keep the message if it failed, so it can be retried
     setBusy(false);
   }
 

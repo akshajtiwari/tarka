@@ -3,7 +3,8 @@ import { useCallback, useState } from 'react';
 
 import type { Change } from './changes';
 import * as gitService from './gitService';
-import { gitFs, repoDir } from './repo';
+import { gitFs } from '../../lib/gitFs';
+import { repoDir } from './repo';
 
 type GitStatus = {
   loading: boolean;
