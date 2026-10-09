@@ -3,6 +3,46 @@
 What the owner should look at after an unattended session. Newest first.
 Screenshots live in `.artifacts/screens/`. That folder is not committed; regenerate it with `npm run e2e`.
 
+## Session 3: 2026-10-09 night (v0.2)
+
+### Decisions made without you
+- **Setup asks for Python first and can't skip it** (as you asked), but git, AI and Termux have "Set up later".
+  Settings shows "Not set up yet" for skipped parts and has "Run setup again".
+- **Documents/TARKA is the suggested folder.** Without "All files access", new projects quietly go inside
+  TARKA until you allow it. Old 0.1 projects stay where they were.
+- **The terminal session ends when you leave a project** (Python and its variables are gone when you come back).
+- **`npm install` only writes package.json;** packages load from esm.sh when the code runs. Node's own modules
+  (`fs`, `path`, …) point you to `termux node`.
+- **Termux gets a copy of the project** in `~/tarka/<project>/`, updated before each `termux` command.
+  Files you delete in TARKA stay in that copy (remove them there with `termux rm <file>`).
+- **Code you run can only reach web addresses** (the runner page has a security policy), so a cloned repo's
+  script can't read files on your phone.
+- **A token typed into a clone URL is refused:** put it in Settings → Git.
+- **Compiled languages are researched, not built:** see COMPILERS.md for the plan (C first, then Lua/SQL, Java).
+
+### Things to try on your phone (install 0.2.0 from the GitHub release)
+1. Fresh setup: choose Documents/TARKA and allow file access; Python should download once (~10 MB).
+2. Clone a real repo (with progress), open ☰ and the Git tab a few times: does it still lag?
+3. Run a Python file that asks `input("Name? ")` and answer in the terminal. Try `pip install rich`, then
+   `python` and `2 ** 10`. Tap Run file again while it waits for input.
+4. Open Settings → Git with the keyboard up: every field and the Save button should stay visible.
+5. Home button from Git, Run and Agent, and "Go to projects" in the editor's ⋯ menu.
+6. Add a Gemini key (Settings → AI → Google Gemini) and ask the agent something small.
+7. With Termux from F-Droid: Settings → Termux shows the one-line setup; then `termux ls` in the terminal.
+8. Delete a project's folder in your file manager, then tap it in TARKA: it should offer to remove it.
+
+### Not verified on the emulator
+- **Termux:** see PROGRESS.md for whether the emulator run happened. The logic is tested with real bash in jest.
+- **A live Gemini or Claude reply:** no key on the laptop; the request shape is unit-tested and the agent
+  flow uses a fake server.
+- **Git speed in a release build on a real phone.**
+- **Reinstalling** (not updating) leaves the projects in Documents/TARKA, but the app forgets its list:
+  they are not imported back yet.
+
+### Screenshots worth a look (`.artifacts/screens/`)
+- `setup-*.png`: the setup steps. `terminal-*.png`: JS, input and Python in the terminal.
+- `settings-projects-folder.png`: the folder choice with its path. `release-*.png`: the release smoke test.
+
 ## Session 2: 2026-10-09
 
 ### Decisions made without you

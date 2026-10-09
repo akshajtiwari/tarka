@@ -2,6 +2,56 @@
 
 Newest session first. Each entry lists what was done, what's next, and known issues.
 
+## Session 3: 2026-10-09 (night), v0.2
+
+From the owner's phone test of v0.1.0. Everything below is device-verified on the emulator unless marked.
+
+### Done
+- **Git speed** (the big lag): isomorphic-git's cache, a one-second memo for `.git` paths, yielding every 12 ms,
+  and one shared status store that reads only while someone is looking.
+  - Emulator, dev build, an expressjs/express clone: a status read took **1.2–1.6 s of frozen UI** on every
+    explorer open and Git tab visit. Now it takes **~0.7 s, once, in the background**; the longest UI stall
+    during a read is ~230 ms, and switching tabs does no git work. Not measured in a release build yet.
+- **Terminal** (the Run tab): run files, Python REPL, live `input()` (JSPI), `pip install`, `npm install`
+  (packages from esm.sh), Stop, history, HTML preview. The editor has a **Run file** button.
+- **Termux bridge:** `termux <command>` copies the project into Termux and runs the command there.
+  Jest-tested with real bash; see "Next up" for the emulator run.
+- **Projects in Documents/TARKA** (or inside TARKA), chosen in setup; every project shows its folder.
+- **Setup flow** (required; only Python is mandatory; git, AI and Termux can be "Set up later").
+- **Gemini** API key, models saved per provider. **Home buttons** in every tab, keyboard-aware forms,
+  GitHub-style diff colors and a GitHub-dark terminal, busy lines on every slow action.
+- **Compiler research:** COMPILERS.md has the options and a recommended order.
+- **Reviews:** code-simplifier pass; security review (3 findings, all fixed: git token through a proxy in
+  `.git/config`, tokens in clone URLs, `import('file://…')` from code you run); Ponytail review (6 must-fix,
+  7 should-fix and 3 nice-to-have, all fixed with tests).
+- **Tests:** 131 unit tests, 16 Maestro flows (green), plus `perf/git-perf.yaml`, `termux/termux.yaml` and
+  `release/smoke.yaml` outside the default run.
+
+### Next up
+1. Owner: try 0.2.0 on the phone (REVIEW.md).
+2. Compilers, in the order in COMPILERS.md: C (xcc), then Lua and SQL, then Java (teavm-javac).
+3. Measure git speed in a release build on the phone; native SHA-1 only if still slow.
+4. Agent tools still missing: git diff and run. Streaming replies.
+
+### Known issues / gotchas for the next agent
+- **The emulator leaks memory** (guest GPU) and the OOM killer ends it near 8 GB. `e2e.sh` now restarts it
+  before any flow once it passes 4.5 GB, and `emulator.sh` waits for network after boot (setup downloads
+  Python right away). Don't run full jest next to the emulator: use `--maxWorkers=2`, or wait.
+- **expo-file-system 57: `copy()`/`move()` are async** (`copySync`/`moveSync` are the sync ones). An
+  un-awaited `copy()` made duplicates invisible until the next refresh. Nothing flags floating promises here.
+- **Each DOM WebView sets Android's global WebView-debugging flag** from its own prop, so the hidden runner
+  can't be inspected over DevTools unless it is given `webviewDebuggingEnabled`. To test what code you run can
+  do, run the probe as user code instead (for example `import js; js.eval(...)` in the Python prompt).
+- **In a dev build the runner page comes from Metro over http**, so `file://` is refused before the page's
+  security policy is even checked. Only a release build (pages from `file://`) shows whether the policy works;
+  `release/smoke.yaml` checks it. A temporary stricter policy confirmed that workers inherit it.
+- **Hidden DOM components need `position: absolute`, 1×1, opacity 0.** Expo gives them `flex: 1`, and 0×0 views
+  are never created on Android.
+- **The "DomWebView.injectJavaScript has been rejected" dev toast** is a harmless mount race; it is muted with
+  `LogBox.ignoreLogs` in `app/_layout.tsx`.
+- **Module build output** (`modules/*/android/build/`) is gitignored; it was committed once by mistake.
+- **A Python download that breaks halfway hangs** (Pyodide). Stop recovers; setup offers "Try again".
+
 ## Session 2: 2026-10-09 (day)
 
 ### Done (device-verified on the emulator unless marked)

@@ -132,7 +132,8 @@ The Run tab is a terminal (`src/features/terminal/`). The editor's **Run file** 
 
 1. `syncScript.ts` builds bash scripts that recreate the project under `~/tarka/<project>/` in Termux
    (base64 heredocs, so binaries and UTF-8 survive; 200k-character chunks; files over ~140 KB are skipped
-   with a note). After the first sync only changed files go (`syncState.ts`); `termux sync` sends everything.
+   with a note). After the first sync only changed files go (`syncState.ts`); `termux sync` sends everything again.
+   Files deleted in TARKA are not deleted in the copy.
 2. `runInTermux.ts` sends each script through Termux's `RUN_COMMAND` intent (native module) and prints
    stdout, stderr and `[exit n]`. It stops at the first failure and gives up after 120 s.
 3. `termuxHelp.ts` turns failures into next steps: install Termux, grant the permission, or add

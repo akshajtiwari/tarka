@@ -24,10 +24,12 @@ How to build, test and publish a TARKA APK.
    scripts/emulator.sh
    adb uninstall com.akshajtiwari.tarka
    adb install .artifacts/release/tarka-v<version>.apk
+   adb shell rm -rf /storage/emulated/0/Documents/TARKA   # old test projects
    maestro test .maestro/release/smoke.yaml
    ```
-   The smoke flow starts the app without Metro, runs JavaScript and Python, and checks that code you run
-   can't read the app's files over `file://` (release pages load from `file://`).
+   The smoke flow starts the app without Metro and walks setup (projects in Documents/TARKA, Python
+   installed). It runs JavaScript with `input()` and Python in the terminal, checks that code you run can't
+   read files over `file://` (release pages load from `file://`), and checks that the project's folder is shown.
 4. Put the dev build back for `npm run e2e`: `adb uninstall com.akshajtiwari.tarka`, then
    `adb install .artifacts/dev-build.apk` (or let `scripts/e2e.sh` rebuild it).
 5. Publish on `main`:
