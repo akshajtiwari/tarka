@@ -3,6 +3,28 @@
 What the owner should look at after an unattended session. Newest first.
 Screenshots live in `.artifacts/screens/`. That folder is not committed; regenerate it with `npm run e2e`.
 
+## Session 2: 2026-10-09
+
+### Decisions made without you
+- **Release signing key:** made a new keystore at `~/.config/tarka/tarka-release.jks` (password next to it in
+  `keystore-password.txt`). **Back up both files**: every future update must be signed with the same key.
+- **Release APK has two CPU types:** `arm64-v8a` (your phone) and `x86_64` (the emulator). Old 32-bit phones are not included.
+- **Version 0.1.0** for the first release (it's a first public build, not 1.0).
+- **Tips card** on the home screen instead of onboarding screens. It comes back if you clear the app's data.
+- **Tablets get a side rail**, but the explorer is still a drawer there (a pinned explorer can come later).
+
+### Things to try on your phone (install the APK from the GitHub release)
+1. Turn on read lock, open Find and search: the keyboard should stay for the find box, and go away when you close it.
+2. Swipe the editor header left and right with two files open.
+3. Git → History → tap a commit → tap a file. (On a freshly cloned repo, the newest commit says its changes
+   weren't downloaded: clones only fetch one commit.)
+4. Run an `index.html` with a `<link href="./style.css">`: the preview should fill the screen.
+5. With a hardware or Bluetooth keyboard: Ctrl+S saves right away.
+
+### Screenshots worth a look (`.artifacts/screens/`)
+- `home-empty.png`: the tips card. `git-commit.png`: the commit screen. `read-lock-find.png`: find while locked.
+- `run-html.png`: the preview filling the screen. `release-*.png`: the release build smoke test.
+
 ## Session 1: 2026-10-08
 
 ### Decisions made without you

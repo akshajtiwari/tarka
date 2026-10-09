@@ -23,12 +23,12 @@ Check items off as they land (each must pass the definition of done in AGENTS.md
 - [x] Spike: CM6 DOM component + native key row. The keyboard stays open when tapping keys.
 - [x] Languages + slate/chalk editor theme
 - [x] Open, edit, save, dirty state, autosave
-- [x] Tabs + tab sheet (header swipe still to do)
+- [x] Tabs + tab sheet + swipe the header to switch files
 - [x] Key row: symbols per language, arrows, undo/redo
 - [~] Trackpad caret movement on the key row
 - [~] Suggestion chips + usage memory
 - [x] Find and replace
-- [~] Pinch zoom, read lock, go to line (read lock device-tested; pinch and Ctrl+S still to check)
+- [~] Pinch zoom, read lock, go to line, Ctrl+S (read lock and Ctrl+S device-tested; pinch still to check)
 - [~] Large-file guard (over 2 MB opens read-only)
 
 ## Phase 3: explorer and search
@@ -42,7 +42,7 @@ Check items off as they land (each must pass the definition of done in AGENTS.md
 - [x] Status list; stage and unstage
 - [x] Diff view
 - [x] Commit
-- [x] History (commit detail screen still to do)
+- [x] History + commit detail screen (files changed, diff per file)
 - [x] Branches: list, create, switch
 - [x] Clone, pull, push with a token
 - [~] Conflicts: a pull that conflicts stops and names the files (isomorphic-git aborts the merge); no in-app merge editor yet
@@ -50,23 +50,27 @@ Check items off as they land (each must pass the definition of done in AGENTS.md
 ## Phase 5: run on the device
 - [x] Sandbox DOM component with timeouts (module Web Worker, killed on stop/timeout)
 - [x] JavaScript, TypeScript (sucrase)
-- [x] HTML preview (local CSS/JS inlined; preview area does not fill the full height yet)
+- [x] HTML preview (local CSS/JS inlined, fills the screen)
 - [x] Python (Pyodide 314.0.7 from jsDelivr, cached after the first run)
 - [x] Console, stdin (run-history suggestions dropped: there is no command box on the phone yet)
 - [x] COMPILERS.md research doc
 
 ## Phase 6: agent
-- [ ] Provider settings (Anthropic, OpenAI-compatible, Ollama), keys in secure storage
-- [ ] Agent loop with step budget and loop detection
-- [ ] Tools: list, read, search, write and delete (with approval), git status and diff, run
-- [ ] Timeline UI + approval cards with diff + stop
+- [x] Provider settings (Anthropic, OpenAI-compatible incl. Ollama), keys in secure storage
+- [x] Agent loop with step budget, loop detection and stop
+- [x] Tools: list, read, search, write and delete (with approval), git status
+- [ ] Tools: git diff and run (not built yet)
+- [x] Timeline UI + approval cards with diff + stop (device-tested against `scripts/fake-ai.cjs`)
+- [ ] Live test with a real Claude key (needs the owner's key)
 
 ## Phase 7: polish
-- [ ] Tablet layout (side rail)
-- [ ] Onboarding, empty states, error messages pass
-- [ ] Large-file performance
-- [ ] Restore unsaved buffers after the app is killed
-- [ ] Release APK
+- [x] Tablet layout: side rail at 768 dp and wider (checked with `adb shell wm size 1600x2560` + `wm density 320`)
+- [x] Onboarding: a tips card on the home screen until "Got it"
+- [x] Empty states: hints for an empty console, file tree, quick-open and a clean Git tab
+- [ ] Large-file performance: only the guard exists (over 2 MB opens read-only); no measurements yet
+- [~] Unsaved edits when the app is killed: autosave runs when the app goes to the background, so only
+      the last 1.5 s of typing before a crash can be lost. No restore-on-launch yet.
+- [x] Release APK (signed, tested on the emulator, attached to the GitHub release)
 
 ## Later
 - [ ] On-device compilers v2 (see COMPILERS.md)

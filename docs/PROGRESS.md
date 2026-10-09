@@ -2,6 +2,46 @@
 
 Newest session first. Each entry lists what was done, what's next, and known issues.
 
+## Session 2: 2026-10-09 (day)
+
+### Done (device-verified on the emulator unless marked)
+- **Review fixes** from the security review and the Phase 5–6 review, all fixed with tests:
+  - The agent answers every tool call after Stop, stops when you leave the project, and a new approval card rejects an old one.
+  - Agent file tools: no `..`, no `.git`, `./a.js` means `a.js`; a write never replaces unsaved edits or a file that
+    changed while the card was open; delete only works on files; long output is cut with a note.
+  - Switching AI provider mid-chat no longer sends empty assistant turns to Claude; the key field can't show the other provider's key.
+  - Runner: stops after 5000 output lines, Stop always ends the run, Python gets 3 minutes, `./style.css` works in the
+    preview, and code you run can't `fetch`/XHR `file://` (Expo's WebView allows file reads; `import()` still can, see DEBT.md).
+- **Phase 7:**
+  - Commit detail screen (History → tap a commit → its files → a file's diff). Shallow clones say the changes weren't downloaded.
+  - Ctrl+S on hardware keyboards; swipe the editor header to switch open files.
+  - Tablet side rail at 768 dp and wider; a first-launch tips card; empty-list hints; the HTML preview fills the screen.
+  - **Read lock really keeps the keyboard down now.** Android re-shows the WebView's keyboard when a sheet closes;
+    native dismiss calls can't close a WebView's keyboard, so the editor focuses and blurs a throwaway input
+    (`hideKeyboard` command). Found by reading the editor's live state over Chrome DevTools (see TESTING.md).
+- **End of phase:** `/ponytail-review` (5 findings, all fixed), code-simplifier pass, `/ponytail-debt` (7 markers).
+- **Tests:** 86 unit tests, 13 Maestro flows (all green on the first try), plus `.maestro/release/smoke.yaml` for release builds.
+- **Release v0.1.0:** signed APK (arm64-v8a + x86_64, Android 7.0+, 66 MB) built with `scripts/build-release.sh`,
+  smoke-tested on the emulator without Metro (JS, Python, `file://` blocked), and attached to the GitHub release.
+  The signing key is in `~/.config/tarka/` (see RELEASE.md), never in the repo.
+
+### Next up
+1. Owner: try the v0.1.0 APK on the phone (list in REVIEW.md) and add a Claude key for a live agent test.
+2. Agent tools still missing: git diff and run.
+3. Close the `import()` gap in the runner (DEBT.md): a runner WebView without file access.
+4. Large-file performance measurements; restore unsaved buffers on launch.
+5. Later phases in ROADMAP.md: compilers v2, Termux bridge, SSH + terminal.
+
+### Known issues / gotchas for the next agent
+- **Dev-only red toast "Call to function 'DomWebView.injectJavaScript' has been rejected".** Expo's DOM wrapper answers
+  every WebView function call and re-sends props on every render through `injectJavaScript`; when that view's tag
+  can't be resolved at that moment the promise rejects. Seen once in the run flow (passed on retry). Release builds
+  show no toast. If it starts blocking flows, find which DOM component calls back while its tab is in the background.
+- **isomorphic-git misses a same-size edit made within the same second** as staging (the "racy git" case): it trusts
+  the file's size + mtime. Tests change the file size on purpose.
+- **A freshly mounted tab can draw one frame with its header under the status bar** (native `SafeAreaView` measures
+  after layout). Cosmetic.
+
 ## Session 1, part 2: 2026-10-09 (morning)
 
 ### Done (device-verified on the emulator unless marked)
