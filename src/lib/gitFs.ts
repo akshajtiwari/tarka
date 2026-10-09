@@ -2,6 +2,7 @@ import { Buffer } from 'buffer';
 import { Directory, File, Paths } from 'expo-file-system';
 
 import { createShortMemo } from './shortMemo';
+import { maybeYield } from './yieldToUi';
 
 // isomorphic-git expects Node's global Buffer, which React Native doesn't have.
 const globals = globalThis as { Buffer?: typeof Buffer };
@@ -48,6 +49,7 @@ function memoized<T>(key: string, path: string, read: () => T): T {
 }
 
 async function stat(path: string) {
+  await maybeYield();
   return memoized(`stat ${path}`, path, () => {
     const info = Paths.info(uriFor(path));
     if (!info.exists) throw fsError('ENOENT', path);
@@ -60,6 +62,7 @@ async function stat(path: string) {
 export const gitFs = {
   promises: {
     async readFile(path: string, options?: Encoding) {
+      await maybeYield(); // let the UI breathe during long git work
       const file = new File(uriFor(path));
       // Most .git reads are misses: git looks for a loose object before checking the pack.
       if (!memoized(`exists ${path}`, path, () => file.exists)) throw fsError('ENOENT', path);
@@ -68,18 +71,21 @@ export const gitFs = {
       return Buffer.from(file.bytesSync());
     },
     async writeFile(path: string, data: string | Uint8Array) {
+      await maybeYield();
       gitMemo.clear();
       const file = new File(uriFor(path));
       if (!file.exists) file.create({ intermediates: true });
       file.write(data);
     },
     async unlink(path: string) {
+      await maybeYield();
       gitMemo.clear();
       const file = new File(uriFor(path));
       if (!file.exists) throw fsError('ENOENT', path);
       file.delete();
     },
     async readdir(path: string) {
+      await maybeYield();
       return memoized(`readdir ${path}`, path, () => {
         const info = Paths.info(uriFor(path));
         if (!info.exists) throw fsError('ENOENT', path);
@@ -88,11 +94,13 @@ export const gitFs = {
       });
     },
     async mkdir(path: string) {
+      await maybeYield();
       gitMemo.clear();
       if (Paths.info(uriFor(path)).exists) throw fsError('EEXIST', path);
       new Directory(uriFor(path)).create({ intermediates: true });
     },
     async rmdir(path: string) {
+      await maybeYield();
       gitMemo.clear();
       const dir = new Directory(uriFor(path));
       if (!dir.exists) throw fsError('ENOENT', path);
