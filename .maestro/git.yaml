@@ -32,6 +32,16 @@ appId: com.akshajtiwari.tarka
 - tapOn: History
 - assertVisible: first commit
 - takeScreenshot: git-history
+# A past commit lists its files; each one opens what that commit changed.
+- tapOn: first commit
+- assertVisible: added main.py
+- takeScreenshot: git-commit
+- tapOn: added main.py
+- extendedWaitUntil:
+    visible: .*print.*
+    timeout: 10000
+- back
+- back
 - back
 # Edit main.py, then its diff shows the new line.
 - tapOn: Code

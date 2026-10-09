@@ -13,20 +13,34 @@ import { gitFs } from '../src/lib/gitFs';
 import { fileAt, readForSearch } from '../src/lib/projectFs';
 import { useTheme } from '../src/theme/useTheme';
 
-// What changed in one file since the last commit.
+// What changed in one file since the last commit, or in a past commit.
 export default function DiffScreen() {
   const colors = useTheme();
-  const { projectId, path } = useLocalSearchParams<{ projectId: string; path: string }>();
+  // `to` = a past commit: show what that commit changed (from its parent `from`, "" for none).
+  const { projectId, path, from, to } = useLocalSearchParams<{
+    projectId: string;
+    path: string;
+    from?: string;
+    to?: string;
+  }>();
   const [rows, setRows] = useState<DiffRow[] | null>(null);
 
   useEffect(() => {
-    committedText(gitFs, repoDir(projectId), path).then((before) => {
+    const dir = repoDir(projectId);
+    if (to) {
+      const before = from ? committedText(gitFs, dir, path, from) : '';
+      Promise.all([before, committedText(gitFs, dir, path, to)]).then(([a, b]) =>
+        setRows(diffRows(a, b)),
+      );
+      return;
+    }
+    committedText(gitFs, dir, path).then((before) => {
       const now = readForSearch(projectId, path);
       // null = binary, very large, or deleted. Only a deleted file should look like all-removed.
       if (now === null && fileAt(projectId, path).exists) return setRows([]);
       setRows(diffRows(before, now ?? ''));
     });
-  }, [projectId, path]);
+  }, [projectId, path, from, to]);
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: colors.bg }}>
@@ -37,7 +51,7 @@ export default function DiffScreen() {
       {rows && rows.length === 0 && (
         <EmptyState
           title="No text changes"
-          body="The file is the same as in the last commit, or it is not a text file."
+          body="The text is the same before and after, or it is not a text file."
         />
       )}
       {rows && rows.length > 0 && <DiffView rows={rows} />}

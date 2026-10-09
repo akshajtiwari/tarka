@@ -9,9 +9,9 @@ import { changeColor, changeLetters } from './changeStyle';
 
 type Props = {
   change: Change;
-  staged: boolean;
+  staged?: boolean;
   onOpen: () => void; // show the diff
-  onToggle: () => void; // stage or unstage
+  onToggle?: () => void; // stage or unstage; no button when missing (a past commit)
 };
 
 // One changed file: a colored letter (never color alone), the path, and a +/− button.
@@ -30,11 +30,13 @@ export function ChangeRow({ change, staged, onOpen, onToggle }: Props) {
       <Text numberOfLines={1} style={[styles.path, { color: colors.text }]}>
         {change.path}
       </Text>
-      <IconButton
-        icon={staged ? 'dash' : 'plus'}
-        label={`${staged ? 'Unstage' : 'Stage'} ${change.path}`}
-        onPress={onToggle}
-      />
+      {onToggle && (
+        <IconButton
+          icon={staged ? 'dash' : 'plus'}
+          label={`${staged ? 'Unstage' : 'Stage'} ${change.path}`}
+          onPress={onToggle}
+        />
+      )}
     </Pressable>
   );
 }

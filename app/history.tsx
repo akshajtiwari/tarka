@@ -15,7 +15,7 @@ import { useTheme } from '../src/theme/useTheme';
 
 type Commit = Awaited<ReturnType<typeof history>>[number];
 
-// The last 50 commits, newest first.
+// The last 50 commits, newest first. Tap one to see what it changed.
 export default function HistoryScreen() {
   const colors = useTheme();
   const { projectId } = useLocalSearchParams<{ projectId: string }>();
@@ -46,6 +46,9 @@ export default function HistoryScreen() {
             icon="git-commit"
             title={item.message}
             subtitle={`${item.oid.slice(0, 7)}, ${item.author}, ${timeAgo(item.time)}`}
+            onPress={() =>
+              router.push({ pathname: '/commit', params: { projectId, oid: item.oid } })
+            }
           />
         )}
       />
