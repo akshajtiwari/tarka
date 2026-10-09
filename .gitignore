@@ -46,3 +46,6 @@ scripts/.e2e-run.sh
 
 AGENTS.md
 CLAUDE.md
+
+# Build output of local native modules
+modules/*/android/build/
