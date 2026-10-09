@@ -58,7 +58,8 @@ Flows outside the default run:
   three times. Read the timings with `adb logcat -s ReactNativeJS`.
 - `.maestro/termux/termux.yaml`: the `termux` command against the real Termux app. Run
   `scripts/termux-setup.sh` once first: it installs Termux v0.118.3 (x86_64, GitHub build), waits for its
-  first-time setup, sets `allow-external-apps` and grants the RUN_COMMAND permission.
+  first-time setup, sets `allow-external-apps` and grants the RUN_COMMAND permission. The flow taps Allow on
+  TARKA's permission request, because `clearState` resets that permission.
 - `.maestro/release/smoke.yaml`: for release builds (no Metro).
 - **Projects in Documents/TARKA:** grant "All files access" without the settings page:
   `adb shell appops set --uid com.akshajtiwari.tarka MANAGE_EXTERNAL_STORAGE allow`.

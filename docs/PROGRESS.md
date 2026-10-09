@@ -15,7 +15,8 @@ From the owner's phone test of v0.1.0. Everything below is device-verified on th
 - **Terminal** (the Run tab): run files, Python REPL, live `input()` (JSPI), `pip install`, `npm install`
   (packages from esm.sh), Stop, history, HTML preview. The editor has a **Run file** button.
 - **Termux bridge:** `termux <command>` copies the project into Termux and runs the command there.
-  Jest-tested with real bash; see "Next up" for the emulator run.
+  Device-tested against the real Termux app (0.118.3) on the emulator: permission request, `termux ls`,
+  `termux cat`, exit codes, and only changed files copied again.
 - **Projects in Documents/TARKA** (or inside TARKA), chosen in setup; every project shows its folder.
 - **Setup flow** (required; only Python is mandatory; git, AI and Termux can be "Set up later").
 - **Gemini** API key, models saved per provider. **Home buttons** in every tab, keyboard-aware forms,
@@ -51,6 +52,10 @@ From the owner's phone test of v0.1.0. Everything below is device-verified on th
   `LogBox.ignoreLogs` in `app/_layout.tsx`.
 - **Module build output** (`modules/*/android/build/`) is gitignored; it was committed once by mistake.
 - **A Python download that breaks halfway hangs** (Pyodide). Stop recovers; setup offers "Try again".
+- **`adb emu kill` is a hard kill:** writes not yet flushed are lost (a Termux setting came back as NUL bytes).
+  `e2e.sh` and `termux-setup.sh` run `adb shell sync` first.
+- **Maestro's `clearState` also resets TARKA's Termux permission**, so the Termux flow taps Allow each time.
+- **Termux creates its properties file with `# allow-external-apps = true` commented out**; match `^allow-…`.
 
 ## Session 2: 2026-10-09 (day)
 

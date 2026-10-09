@@ -81,7 +81,7 @@ Check items off as they land (each must pass the definition of done in [HANDOFF.
 - [x] Projects in `Documents/TARKA` (or inside TARKA), with the full path shown
 - [x] Gemini API key, model saved per provider
 - [x] Terminal: run, Python REPL, live `input()`, `pip install`, `npm install`, Stop, history; editor Run file button
-- [x] Termux bridge: `termux <command>` (jest-tested with real bash; see TESTING.md for the emulator flow)
+- [x] Termux bridge: `termux <command>` (jest-tested with real bash, and device-tested against Termux 0.118.3)
 - [x] Setup flow: theme, projects folder, Python install (required), git, AI, Termux (optional), tips
 - [x] Compiler research (COMPILERS.md)
 

@@ -32,7 +32,6 @@ Screenshots live in `.artifacts/screens/`. That folder is not committed; regener
 8. Delete a project's folder in your file manager, then tap it in TARKA: it should offer to remove it.
 
 ### Not verified on the emulator
-- **Termux:** see PROGRESS.md for whether the emulator run happened. The logic is tested with real bash in jest.
 - **A live Gemini or Claude reply:** no key on the laptop; the request shape is unit-tested and the agent
   flow uses a fake server.
 - **Git speed in a release build on a real phone.**
