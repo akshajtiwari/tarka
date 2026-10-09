@@ -17,8 +17,8 @@ type Settings = {
   aiBaseUrl: string; // only for OpenAI-compatible servers (Ollama, OpenRouter, ...)
   projectsLocation: ProjectsLocation;
   setProjectsLocation: (location: ProjectsLocation) => void;
-  tipsDone: boolean; // the first-launch tips card was dismissed
-  finishTips: () => void;
+  onboarded: boolean; // the first-launch setup was finished
+  setOnboarded: (done: boolean) => void;
   setAi: (provider: AiProvider, model: string, baseUrl: string) => void;
   setTheme: (theme: ThemeChoice) => void;
   setGitIdentity: (name: string, email: string) => void;
@@ -35,8 +35,8 @@ export const useSettings = create<Settings>()(
       aiBaseUrl: '',
       projectsLocation: 'app',
       setProjectsLocation: (projectsLocation) => set({ projectsLocation }),
-      tipsDone: false,
-      finishTips: () => set({ tipsDone: true }),
+      onboarded: false,
+      setOnboarded: (onboarded) => set({ onboarded }),
       setAi: (aiProvider, model, aiBaseUrl) =>
         set((s) => ({
           aiProvider,

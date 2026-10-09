@@ -1,4 +1,4 @@
-import { router } from 'expo-router';
+import { Redirect, router } from 'expo-router';
 import { FlatList, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -7,8 +7,8 @@ import { EmptyState } from '../src/components/EmptyState';
 import { IconButton } from '../src/components/IconButton';
 import { ProjectRow } from '../src/features/projects/ProjectRow';
 import { sortByRecent, useProjectStore } from '../src/features/projects/projectStore';
-import { TipsCard } from '../src/features/projects/TipsCard';
 import { useSettings } from '../src/features/settings/settingsStore';
+import { useSettingsReady } from '../src/features/settings/useSettingsReady';
 import { font, fontSize } from '../src/theme/fonts';
 import { space } from '../src/theme/spacing';
 import { useTheme } from '../src/theme/useTheme';
@@ -17,12 +17,16 @@ export default function HomeScreen() {
   const colors = useTheme();
   const projects = useProjectStore((s) => s.projects);
   const markOpened = useProjectStore((s) => s.markOpened);
-  const { tipsDone, finishTips } = useSettings();
+  const ready = useSettingsReady();
+  const onboarded = useSettings((s) => s.onboarded);
 
   function openProject(id: string) {
     markOpened(id);
     router.push({ pathname: '/project/[id]/code', params: { id } });
   }
+
+  if (!ready) return null;
+  if (!onboarded) return <Redirect href="/welcome" />;
 
   return (
     <SafeAreaView style={[styles.screen, { backgroundColor: colors.bg }]}>
@@ -43,7 +47,6 @@ export default function HomeScreen() {
             }
           />
         )}
-        ListHeaderComponent={tipsDone ? null : <TipsCard onDone={finishTips} />}
         ListEmptyComponent={
           <EmptyState
             title="No projects yet"
