@@ -43,3 +43,6 @@ yarn-error.*
 # Test screenshots and logs
 .artifacts/
 scripts/.e2e-run.sh
+
+AGENTS.md
+CLAUDE.md
