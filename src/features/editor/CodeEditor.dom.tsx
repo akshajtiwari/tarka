@@ -4,7 +4,7 @@
 // which is a web editor. Props come in from the native side; function props are async calls back out.
 
 import { EditorState } from '@codemirror/state';
-import { EditorView } from '@codemirror/view';
+import { EditorView, keymap } from '@codemirror/view';
 import type { DOMProps } from 'expo/dom';
 import { useEffect, useRef } from 'react';
 
@@ -25,6 +25,7 @@ type Props = {
   onSuggestions: (labels: string[]) => Promise<void>;
   onAccepted: (label: string) => Promise<void>;
   onFontSize: (size: number) => Promise<void>;
+  onSave: (path: string, text: string) => Promise<void>; // Ctrl+S on a hardware keyboard
   dom?: DOMProps;
 };
 
@@ -68,6 +69,18 @@ export default function CodeEditor(props: Props) {
             (size) => previewFontSize(editor, size),
             (size) => latest.current.onFontSize(size),
           ),
+          keymap.of([
+            {
+              key: 'Mod-s',
+              preventDefault: true,
+              run: (v) => {
+                clearTimeout(timer); // the save below carries the latest text
+                timer = undefined;
+                latest.current.onSave(path, v.state.doc.toString());
+                return true;
+              },
+            },
+          ]),
           EditorView.updateListener.of((update) => {
             if (!update.docChanged) return;
             clearTimeout(timer);
