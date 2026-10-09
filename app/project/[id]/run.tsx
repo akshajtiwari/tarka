@@ -53,7 +53,9 @@ export default function RunScreen() {
     const code = readForSearch(id, target) ?? '';
     if (kind === 'html') {
       const folder = target.includes('/') ? target.slice(0, target.lastIndexOf('/') + 1) : '';
-      setPreviewHtml(inlineAssets(code, (path) => readForSearch(id, folder + path)));
+      setPreviewHtml(
+        inlineAssets(code, (path) => readForSearch(id, folder + path.replace(/^\.\//, ''))),
+      );
       return;
     }
     setPreviewHtml(null);
