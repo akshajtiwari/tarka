@@ -1,9 +1,10 @@
 import { router, useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
-import { ActivityIndicator, Alert, StyleSheet, Text } from 'react-native';
+import { Alert, StyleSheet, Text } from 'react-native';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-controller';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { BusyLine } from '../../../src/components/BusyLine';
 import { Button } from '../../../src/components/Button';
 import { EmptyState } from '../../../src/components/EmptyState';
 import { Header } from '../../../src/components/Header';
@@ -29,13 +30,13 @@ export default function GitScreen() {
   const git = useGitStatus(id);
   const dir = repoDir(id);
 
-  const [busy, setBusy] = useState(false);
+  const [busy, setBusy] = useState<string | null>(null); // what is running, e.g. "Pulling…"
 
   // Run one git action at a time, then show the new state. Errors are shown, never swallowed.
   // A text result (from push/pull) is shown to the user. Returns true when it worked.
-  async function run(action: () => Promise<string | void>): Promise<boolean> {
+  async function run(label: string, action: () => Promise<string | void>): Promise<boolean> {
     if (busy) return false;
-    setBusy(true);
+    setBusy(label);
     let ok = true;
     try {
       const message = await action();
@@ -44,7 +45,7 @@ export default function GitScreen() {
       ok = false;
       Alert.alert('Git error', String(e));
     }
-    setBusy(false);
+    setBusy(null);
     await git.refresh();
     return ok;
   }
@@ -60,6 +61,7 @@ export default function GitScreen() {
     return (
       <SafeAreaView edges={['top']} style={{ flex: 1, backgroundColor: colors.bg }}>
         <Header title="Git" left={<HomeButton />} />
+        {busy && <BusyLine label={busy} />}
         <EmptyState
           title="Not a git repository yet"
           body="Start one to track changes, read diffs and commit."
@@ -67,7 +69,7 @@ export default function GitScreen() {
           <Button
             label="Start a git repository"
             variant="primary"
-            onPress={() => run(() => gitService.initRepo(gitFs, dir))}
+            onPress={() => run('Starting a repository…', () => gitService.initRepo(gitFs, dir))}
           />
         </EmptyState>
       </SafeAreaView>
@@ -81,19 +83,28 @@ export default function GitScreen() {
         left={<HomeButton />}
         right={
           <>
-            {(busy || git.loading) && <ActivityIndicator color={colors.accent} />}
             <IconButton
               icon="history"
               label="History"
               onPress={() => router.push({ pathname: '/history', params: { projectId: id } })}
             />
-            <IconButton icon="arrow-down" label="Pull" onPress={() => run(() => pullProject(id))} />
-            <IconButton icon="arrow-up" label="Push" onPress={() => run(() => pushProject(id))} />
+            <IconButton
+              icon="arrow-down"
+              label="Pull"
+              onPress={() => run('Pulling…', () => pullProject(id))}
+            />
+            <IconButton
+              icon="arrow-up"
+              label="Push"
+              onPress={() => run('Pushing…', () => pushProject(id))}
+            />
             <IconButton icon="sync" label="Refresh" onPress={git.refresh} />
           </>
         }
       />
       {/* Keyboard-aware, so the commit message box stays visible while typing. */}
+      {busy && <BusyLine label={busy} />}
+      {!busy && git.loading && <BusyLine label="Reading changes…" />}
       <KeyboardAwareScrollView keyboardShouldPersistTaps="handled" bottomOffset={96}>
         <ListRow
           icon="git-branch"
@@ -108,7 +119,9 @@ export default function GitScreen() {
             change={c}
             staged
             onOpen={() => openDiff(c)}
-            onToggle={() => run(() => gitService.unstage(gitFs, dir, c.path))}
+            onToggle={() =>
+              run(`Unstaging ${c.path}…`, () => gitService.unstage(gitFs, dir, c.path))
+            }
           />
         ))}
         {section(`Changes (${git.unstaged.length})`)}
@@ -118,7 +131,7 @@ export default function GitScreen() {
             change={c}
             staged={false}
             onOpen={() => openDiff(c)}
-            onToggle={() => run(() => gitService.stage(gitFs, dir, c))}
+            onToggle={() => run(`Staging ${c.path}…`, () => gitService.stage(gitFs, dir, c))}
           />
         ))}
         {!git.loading && git.staged.length + git.unstaged.length === 0 && (
@@ -128,13 +141,15 @@ export default function GitScreen() {
           <ListRow
             icon="plus"
             title="Stage all changes"
-            onPress={() => run(() => gitService.stageAll(gitFs, dir, git.unstaged))}
+            onPress={() =>
+              run('Staging all changes…', () => gitService.stageAll(gitFs, dir, git.unstaged))
+            }
           />
         )}
         <CommitBox
           stagedCount={git.staged.length}
           onCommit={(message, author) =>
-            run(async () => {
+            run('Committing…', async () => {
               await gitService.commit(gitFs, dir, message, author); // (returns the commit id; not shown)
             })
           }
