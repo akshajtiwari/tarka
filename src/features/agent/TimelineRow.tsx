@@ -37,7 +37,11 @@ export function TimelineRow({ item }: { item: TimelineItem }) {
     error: <Octicons name="x" size={14} color={colors.error} />,
   }[item.status];
   return (
-    <View style={styles.tool} accessibilityLabel={`${item.name} ${item.detail} ${item.status}`}>
+    <View
+      accessible
+      style={styles.tool}
+      accessibilityLabel={`${item.name} ${item.detail} ${item.status}`}
+    >
       {statusIcon}
       <Text numberOfLines={1} style={[styles.toolText, { color: colors.muted }]}>
         {item.name} <Text style={{ color: colors.text }}>{item.detail}</Text>
