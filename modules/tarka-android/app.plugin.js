@@ -10,6 +10,8 @@ module.exports = function withTarkaAndroid(config) {
   ]);
   return withAndroidManifest(config, (cfg) => {
     const manifest = cfg.modResults.manifest;
+    // Android 10 only: direct file access to Documents needs the legacy storage mode.
+    manifest.application[0].$['android:requestLegacyExternalStorage'] = 'true';
     manifest.queries = manifest.queries ?? [{}];
     const queries = manifest.queries[0];
     queries.package = queries.package ?? [];
