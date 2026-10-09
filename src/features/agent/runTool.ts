@@ -60,7 +60,8 @@ async function execute(projectId: string, call: ToolCall): Promise<string> {
       const path = projectPath(input);
       const content = requireString(input, 'content');
       const file = fileAt(projectId, path);
-      const before = file.exists ? file.textSync() : '';
+      const diskText = () => (file.exists ? file.textSync() : '');
+      const before = diskText();
       if (
         !(await useApprovalStore.getState().ask({ kind: 'write', path, before, after: content }))
       ) {
@@ -70,7 +71,7 @@ async function execute(projectId: string, call: ToolCall): Promise<string> {
       const tab = openTab(projectId, path);
       if (tab && tab.text !== tab.savedText)
         throw new Error('The user has unsaved edits in this file. Nothing was written.');
-      if ((file.exists ? file.textSync() : '') !== before)
+      if (diskText() !== before)
         throw new Error('The file changed while waiting for approval. Read it again first.');
       if (!file.exists) file.create({ intermediates: true });
       file.write(content);

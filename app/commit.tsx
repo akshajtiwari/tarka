@@ -17,7 +17,9 @@ import { useTheme } from '../src/theme/useTheme';
 
 type Detail = Awaited<ReturnType<typeof commitDetail>>;
 
-const count = (n: number) => (n === 1 ? '1 file' : `${n} files`);
+function fileCount(n: number) {
+  return n === 1 ? '1 file' : `${n} files`;
+}
 
 // One past commit: its message and the files it changed. Tap a file to see its diff.
 export default function CommitScreen() {
@@ -53,7 +55,7 @@ export default function CommitScreen() {
               <Text style={[styles.message, { color: colors.text }]}>{detail.message}</Text>
               <Text style={[styles.meta, { color: colors.muted }]}>
                 {`${detail.author}, ${timeAgo(detail.time)}`}
-                {detail.files && `, ${count(detail.files.length)}`}
+                {detail.files && `, ${fileCount(detail.files.length)}`}
               </Text>
             </View>
           }

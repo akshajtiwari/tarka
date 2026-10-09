@@ -1,13 +1,7 @@
 import * as git from 'isomorphic-git';
 import http from 'isomorphic-git/http/web';
 
-import {
-  stagedChanges,
-  unstagedChanges,
-  type Change,
-  type ChangeKind,
-  type StatusRow,
-} from './changes';
+import { stagedChanges, unstagedChanges, type Change, type StatusRow } from './changes';
 
 // All git work goes through these small functions. They take `fs` as a parameter so the app
 // passes its expo-file-system adapter and the tests pass Node's real `fs`.
@@ -107,10 +101,9 @@ export async function commitDetail(fs: Fs, dir: string, oid: string) {
       if (path === '.') return undefined;
       if ((await before?.oid()) === (await after?.oid())) return null; // same: skip it and its insides
       if ((await before?.type()) === 'tree' || (await after?.type()) === 'tree') return undefined;
-      let kind: ChangeKind = 'modified';
-      if (!before) kind = 'added';
-      if (!after) kind = 'deleted';
-      return { path, kind };
+      if (!before) return { path, kind: 'added' };
+      if (!after) return { path, kind: 'deleted' };
+      return { path, kind: 'modified' };
     },
   });
   return { ...info, files: files.sort((a, b) => a.path.localeCompare(b.path)) };

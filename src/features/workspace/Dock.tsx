@@ -18,7 +18,9 @@ const items: Record<
 };
 
 // Tablets and unfolded phones get a rail on the left instead of a dock at the bottom.
-export const useRail = () => useWindowDimensions().width >= 768;
+export function useRail() {
+  return useWindowDimensions().width >= 768;
+}
 
 // Only the parts of the tab navigator's props that the dock uses.
 type Props = {

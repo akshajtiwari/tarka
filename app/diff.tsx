@@ -28,10 +28,10 @@ export default function DiffScreen() {
   useEffect(() => {
     const dir = repoDir(projectId);
     if (to) {
-      const texts = BINARY.test(path) // an image or other non-text file: no text diff
-        ? ['', '']
-        : [from ? committedText(gitFs, dir, path, from) : '', committedText(gitFs, dir, path, to)];
-      Promise.all(texts).then(([a, b]) => setRows(diffRows(a, b)));
+      const isText = !BINARY.test(path); // an image or other non-text file: no text diff
+      const before = isText && from ? committedText(gitFs, dir, path, from) : '';
+      const after = isText ? committedText(gitFs, dir, path, to) : '';
+      Promise.all([before, after]).then(([a, b]) => setRows(diffRows(a, b)));
       return;
     }
     committedText(gitFs, dir, path).then((before) => {
