@@ -8,6 +8,7 @@ import { Button } from '../src/components/Button';
 import { Header } from '../src/components/Header';
 import { IconButton } from '../src/components/IconButton';
 import { TextField } from '../src/components/TextField';
+import { gitErrorText } from '../src/features/git/gitErrors';
 import { cloneProject, nameFromUrl } from '../src/features/projects/cloneProject';
 import { folderPath, newProjectsRoot } from '../src/features/projects/projectFolder';
 import { font, fontSize } from '../src/theme/fonts';
@@ -29,10 +30,7 @@ export default function CloneScreen() {
       );
       router.replace({ pathname: '/project/[id]/code', params: { id } });
     } catch (e) {
-      Alert.alert(
-        'Clone failed',
-        `${String(e)}\n\nCheck the URL. Private repos need a token in Settings.`,
-      );
+      Alert.alert('Clone failed', gitErrorText(e));
       setBusy(false);
     }
   }

@@ -5,8 +5,6 @@ import { KeyboardAwareScrollView } from 'react-native-keyboard-controller';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { BusyLine } from '../../../src/components/BusyLine';
-import { Button } from '../../../src/components/Button';
-import { EmptyState } from '../../../src/components/EmptyState';
 import { Header } from '../../../src/components/Header';
 import { Hint } from '../../../src/components/Hint';
 import { IconButton } from '../../../src/components/IconButton';
@@ -15,6 +13,8 @@ import { HomeButton } from '../../../src/components/HomeButton';
 import type { Change } from '../../../src/features/git/changes';
 import { ChangeRow } from '../../../src/features/git/ChangeRow';
 import { CommitBox } from '../../../src/features/git/CommitBox';
+import { gitErrorText } from '../../../src/features/git/gitErrors';
+import { GitMessage } from '../../../src/features/git/GitMessage';
 import * as gitService from '../../../src/features/git/gitService';
 import { pullProject, pushProject } from '../../../src/features/git/remoteActions';
 import { repoDir } from '../../../src/features/git/repo';
@@ -43,7 +43,7 @@ export default function GitScreen() {
       if (message) Alert.alert('Done', message);
     } catch (e) {
       ok = false;
-      Alert.alert('Git error', String(e));
+      Alert.alert('Git error', gitErrorText(e));
     }
     setBusy(null);
     await git.refresh();
@@ -57,22 +57,25 @@ export default function GitScreen() {
     <Text style={[styles.section, { color: colors.muted }]}>{title}</Text>
   );
 
+  if (git.loading && git.error) {
+    return (
+      <GitMessage
+        title="Could not read the repository"
+        body={git.error}
+        action="Try again"
+        onAction={git.refresh}
+      />
+    );
+  }
   if (!git.loading && !git.isRepo) {
     return (
-      <SafeAreaView edges={['top']} style={{ flex: 1, backgroundColor: colors.bg }}>
-        <Header title="Git" left={<HomeButton />} />
-        {busy && <BusyLine label={busy} />}
-        <EmptyState
-          title="Not a git repository yet"
-          body="Start one to track changes, read diffs and commit."
-        >
-          <Button
-            label="Start a git repository"
-            variant="primary"
-            onPress={() => run('Starting a repository…', () => gitService.initRepo(gitFs, dir))}
-          />
-        </EmptyState>
-      </SafeAreaView>
+      <GitMessage
+        title="Not a git repository yet"
+        body="Start one to track changes, read diffs and commit."
+        action="Start a git repository"
+        busy={busy}
+        onAction={() => run('Starting a repository…', () => gitService.initRepo(gitFs, dir))}
+      />
     );
   }
 
@@ -102,9 +105,9 @@ export default function GitScreen() {
           </>
         }
       />
-      {/* Keyboard-aware, so the commit message box stays visible while typing. */}
       {busy && <BusyLine label={busy} />}
       {!busy && git.loading && <BusyLine label="Reading changes…" />}
+      {/* Keyboard-aware, so the commit message box stays visible while typing. */}
       <KeyboardAwareScrollView keyboardShouldPersistTaps="handled" bottomOffset={96}>
         <ListRow
           icon="git-branch"

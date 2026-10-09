@@ -9,6 +9,7 @@ import { ListRow } from '../src/components/ListRow';
 import { TextField } from '../src/components/TextField';
 import { reloadOpenTabs, saveAllDirty } from '../src/features/editor/fileActions';
 import { nameProblem } from '../src/features/explorer/names';
+import { gitErrorText } from '../src/features/git/gitErrors';
 import * as gitService from '../src/features/git/gitService';
 import { repoDir } from '../src/features/git/repo';
 import { gitFs } from '../src/lib/gitFs';
@@ -47,7 +48,7 @@ export default function BranchesSheet() {
       useWorkspaceStore.getState().refreshTree();
       router.back();
     } catch (e) {
-      Alert.alert('Could not switch branch', String(e));
+      Alert.alert('Could not switch branch', gitErrorText(e));
     }
     setBusy(null);
   }
@@ -63,7 +64,7 @@ export default function BranchesSheet() {
       useGitStatusStore.getState().markStale(); // the Git tab shows the new branch name
       router.back();
     } catch (e) {
-      Alert.alert('Could not create the branch', String(e));
+      Alert.alert('Could not create the branch', gitErrorText(e));
     }
     setBusy(null);
   }
