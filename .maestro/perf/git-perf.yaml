@@ -1,0 +1,34 @@
+# Performance check on a real repo (needs internet): clone expressjs/express, then open the
+# explorer drawer and the Git tab three times each. Timings come from the dev logs:
+#   adb logcat -s ReactNativeJS | grep PERF
+# Not part of `npm run e2e`. Run: npm run e2e -- .maestro/perf/git-perf.yaml
+appId: com.akshajtiwari.tarka
+---
+- runFlow: ../common/open-app.yaml
+- tapOn: Clone repository
+- tapOn: Repository URL
+- inputText: https://github.com/expressjs/express
+- hideKeyboard
+- tapOn: Clone
+- extendedWaitUntil:
+    visible: Open a file
+    timeout: 300000
+- repeat:
+    times: 3
+    commands:
+      - tapOn:
+          text: Show files
+          index: 0
+      - extendedWaitUntil:
+          visible: Go to file
+          timeout: 30000
+      - back
+- repeat:
+    times: 3
+    commands:
+      - tapOn: Git
+      - extendedWaitUntil:
+          visible: Changes.*
+          timeout: 60000
+      - tapOn: Code
+- takeScreenshot: perf-done
