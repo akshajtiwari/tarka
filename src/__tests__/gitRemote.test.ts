@@ -55,3 +55,25 @@ test('clone, commit, push, and pull back into a second clone', async () => {
     files: null,
   });
 }, 30000);
+
+// Another app could add a proxy to .git/config in shared storage, to collect the token.
+test('a proxy in .git/config is never used', async () => {
+  const dir = path.join(root, 'proxied');
+  await gitRemote.clone(fs, dir, `${server.url}/demo.git`);
+  execSync(`git -C ${dir} config http.corsProxy http://127.0.0.1:9`); // nothing listens there
+
+  await gitRemote.pull(fs, dir, me); // would fail with "connection refused" through the proxy
+  fs.writeFileSync(path.join(dir, 'c.txt'), 'c\n');
+  await gitService.stage(fs, dir, { path: 'c.txt', kind: 'untracked' });
+  await gitService.commit(fs, dir, 'add c', me);
+  await gitRemote.push(fs, dir);
+}, 30000);
+
+test('a token inside the clone URL is refused', async () => {
+  const dir = path.join(root, 'login');
+  await expect(gitRemote.clone(fs, dir, 'https://ghp_secret@github.com/u/r.git')).rejects.toThrow(
+    'Put the token in Settings → Git, not in the URL.',
+  );
+  await expect(gitRemote.clone(fs, dir, 'https://u:p@github.com/u/r.git')).rejects.toThrow();
+  expect(fs.existsSync(dir)).toBe(false);
+});

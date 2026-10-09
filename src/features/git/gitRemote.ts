@@ -18,6 +18,11 @@ export function canSendToken(url: string): boolean {
   }
 }
 
+// Never use a proxy from .git/config: the project may sit in shared storage, where another app
+// could add one, and isomorphic-git would then send the token to it (it checks the real URL).
+// '' (not undefined) stops isomorphic-git from reading the setting.
+const NO_PROXY = '';
+
 function auth(token?: string | null) {
   if (!token) return undefined;
   return (url: string) =>
@@ -32,13 +37,18 @@ export async function assertHasRemote(fs: Fs, dir: string) {
 }
 
 // Shallow, single-branch clone: much faster on a phone, and enough to edit and push.
-export function clone(
+export async function clone(
   fs: Fs,
   dir: string,
   url: string,
   token?: string | null,
   onProgress?: git.ProgressCallback,
 ) {
+  // "https://TOKEN@github.com/…" would skip the host check above, and the URL is saved in
+  // .git/config, which other apps can read when the project is in shared storage.
+  if (/^\w+:\/\/[^/]*@/.test(url)) {
+    throw new Error('Put the token in Settings → Git, not in the URL.');
+  }
   dropGitCache(dir); // a new repo in this folder: nothing old may be reused
   return dropCacheIfFails(dir, () =>
     git.clone({
@@ -50,6 +60,7 @@ export function clone(
       depth: 1,
       onAuth: auth(token),
       onProgress,
+      corsProxy: NO_PROXY,
       cache: cacheFor(dir),
     }),
   );
@@ -64,6 +75,7 @@ export function pull(fs: Fs, dir: string, author: Author, token?: string | null)
       author,
       singleBranch: true,
       onAuth: auth(token),
+      corsProxy: NO_PROXY,
       cache: cacheFor(dir),
     }),
   );
@@ -71,6 +83,6 @@ export function pull(fs: Fs, dir: string, author: Author, token?: string | null)
 
 export function push(fs: Fs, dir: string, token?: string | null) {
   return dropCacheIfFails(dir, () =>
-    git.push({ fs, http, dir, onAuth: auth(token), cache: cacheFor(dir) }),
+    git.push({ fs, http, dir, onAuth: auth(token), corsProxy: NO_PROXY, cache: cacheFor(dir) }),
   );
 }
