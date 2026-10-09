@@ -90,7 +90,9 @@ test('Stop in the middle of several tool calls still answers every call', async 
   const controller = new AbortController();
   const history: Turn[] = [{ role: 'user', text: 'go' }];
   await runAgent({
-    provider: scripted([{ text: '', toolCalls: [call('a', { path: 'a' }), call('b', { path: 'b' })], stop: 'tools' }]),
+    provider: scripted([
+      { text: '', toolCalls: [call('a', { path: 'a' }), call('b', { path: 'b' })], stop: 'tools' },
+    ]),
     history,
     tools: [],
     signal: controller.signal,
