@@ -21,8 +21,20 @@ export function AiSettings() {
   const [key, setKey] = useState('');
   const keyName = provider === 'anthropic' ? 'anthropic-key' : 'openai-key';
 
+  // Switching provider shows that provider's key. The field is cleared on the tap and a late
+  // answer is ignored, so one provider's key can never end up saved under the other.
+  function choose(next: AiProvider) {
+    if (next === provider) return;
+    setKey('');
+    setProvider(next);
+  }
+
   useEffect(() => {
-    getSecret(keyName).then((saved) => setKey(saved ?? ''));
+    let live = true;
+    getSecret(keyName).then((saved) => live && setKey(saved ?? ''));
+    return () => {
+      live = false;
+    };
   }, [keyName]);
 
   async function save() {
@@ -38,13 +50,13 @@ export function AiSettings() {
     <View>
       <ListRow
         title="Anthropic (Claude)"
-        onPress={() => setProvider('anthropic')}
+        onPress={() => choose('anthropic')}
         right={check(provider === 'anthropic')}
       />
       <ListRow
         title="OpenAI-compatible"
         subtitle="OpenAI, OpenRouter, or Ollama on your laptop"
-        onPress={() => setProvider('openai')}
+        onPress={() => choose('openai')}
         right={check(provider === 'openai')}
       />
       <View style={styles.form}>
