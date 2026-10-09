@@ -1,5 +1,6 @@
 import Octicons from '@expo/vector-icons/Octicons';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Directions, Gesture, GestureDetector } from 'react-native-gesture-handler';
 
 import { Button } from '../../components/Button';
 import { IconButton } from '../../components/IconButton';
@@ -15,9 +16,11 @@ type Props = {
   onShowTabs: () => void;
   onShowMenu: () => void;
   onSave: () => void;
+  onSwipe: (by: 1 | -1) => void; // swipe left: next open file, swipe right: previous
 };
 
-// ☰ | file name ● ▾ | Save ⋯. Tapping the name opens the list of open files.
+// ☰ | file name ● ▾ | Save ⋯. Tapping the name opens the list of open files,
+// swiping the header moves between them.
 export function EditorHeader({
   fileName,
   dirty,
@@ -26,28 +29,43 @@ export function EditorHeader({
   onShowTabs,
   onShowMenu,
   onSave,
+  onSwipe,
 }: Props) {
   const colors = useTheme();
+  const swipe = Gesture.Race(
+    Gesture.Fling()
+      .direction(Directions.LEFT)
+      .runOnJS(true)
+      .onEnd(() => onSwipe(1)),
+    Gesture.Fling()
+      .direction(Directions.RIGHT)
+      .runOnJS(true)
+      .onEnd(() => onSwipe(-1)),
+  );
 
   return (
-    <View style={[styles.header, { backgroundColor: colors.surface, borderColor: colors.line }]}>
-      <IconButton icon="three-bars" label="Show files" onPress={onShowFiles} />
-      <Pressable
-        accessibilityRole="button"
-        accessibilityLabel="Open files"
-        disabled={tabCount === 0}
-        onPress={onShowTabs}
-        style={styles.pill}
-      >
-        <Text numberOfLines={1} style={[styles.name, { color: colors.text }]}>
-          {fileName ?? 'No file open'}
-        </Text>
-        {dirty && <View style={[styles.dot, { backgroundColor: colors.accent }]} />}
-        {tabCount > 0 && <Octicons name="chevron-down" size={14} color={colors.muted} />}
-      </Pressable>
-      {dirty && <Button label="Save" onPress={onSave} />}
-      {fileName && <IconButton icon="kebab-horizontal" label="Editor menu" onPress={onShowMenu} />}
-    </View>
+    <GestureDetector gesture={swipe}>
+      <View style={[styles.header, { backgroundColor: colors.surface, borderColor: colors.line }]}>
+        <IconButton icon="three-bars" label="Show files" onPress={onShowFiles} />
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel="Open files"
+          disabled={tabCount === 0}
+          onPress={onShowTabs}
+          style={styles.pill}
+        >
+          <Text numberOfLines={1} style={[styles.name, { color: colors.text }]}>
+            {fileName ?? 'No file open'}
+          </Text>
+          {dirty && <View style={[styles.dot, { backgroundColor: colors.accent }]} />}
+          {tabCount > 0 && <Octicons name="chevron-down" size={14} color={colors.muted} />}
+        </Pressable>
+        {dirty && <Button label="Save" onPress={onSave} />}
+        {fileName && (
+          <IconButton icon="kebab-horizontal" label="Editor menu" onPress={onShowMenu} />
+        )}
+      </View>
+    </GestureDetector>
   );
 }
 
