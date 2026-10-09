@@ -1,7 +1,9 @@
 import { Directory, File, Paths } from 'expo-file-system';
 
 // Every project lives in its own folder: <app documents>/projects/<id>/
+// Ids are made by makeProjectId (only a-z, 0-9 and "-"); anything else is refused.
 export function projectDir(id: string): Directory {
+  if (!/^[a-z0-9-]+$/.test(id)) throw new Error(`Not a project id: ${id}`);
   return new Directory(Paths.document, 'projects', id);
 }
 

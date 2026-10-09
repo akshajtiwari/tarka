@@ -6,15 +6,26 @@ import { projectDir } from '../features/projects/projectFolder';
 
 export type Entry = { name: string; isDir: boolean };
 
-function dirAt(projectId: string, relPath: string): Directory {
+// Splits a project path into parts and refuses "." and ".." so no path can leave the project
+// (a deep link like ?path=../.. must never reach other projects or app files).
+export function safeParts(relPath: string): string[] {
   const parts = relPath.split('/').filter(Boolean);
-  return new Directory(projectDir(projectId), ...parts);
+  if (parts.some((part) => part === '.' || part === '..')) {
+    throw new Error(`Not a path inside the project: ${relPath}`);
+  }
+  return parts;
 }
 
-// Folders first, then files, each sorted by name.
+export function dirAt(projectId: string, relPath: string): Directory {
+  return new Directory(projectDir(projectId), ...safeParts(relPath));
+}
+
+// Folders first, then files, each sorted by name. The .git folder is hidden: it is git's
+// own data, and deleting or editing it by hand would break the repository.
 export function listEntries(projectId: string, relPath: string): Entry[] {
   const entries = dirAt(projectId, relPath)
     .list()
+    .filter((item) => item.name !== '.git')
     .map((item) => ({ name: item.name, isDir: item instanceof Directory }));
   return entries.sort((a, b) => {
     if (a.isDir !== b.isDir) return a.isDir ? -1 : 1;
@@ -23,7 +34,7 @@ export function listEntries(projectId: string, relPath: string): Entry[] {
 }
 
 export function fileAt(projectId: string, relPath: string): File {
-  return new File(projectDir(projectId), ...relPath.split('/').filter(Boolean));
+  return new File(projectDir(projectId), ...safeParts(relPath));
 }
 
 // Files we never try to read as text.

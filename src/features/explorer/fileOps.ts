@@ -1,23 +1,11 @@
-import { Directory, File } from 'expo-file-system';
-
-import { listEntries } from '../../lib/projectFs';
+import { dirAt, fileAt, listEntries } from '../../lib/projectFs';
 import { useEditorStore } from '../editor/editorStore';
-import { projectDir } from '../projects/projectFolder';
 import { useWorkspaceStore } from '../workspace/workspaceStore';
 import { copyName, joinPath, parentOf } from './names';
 
 // File and folder actions from the explorer. Each one refreshes the tree afterwards
 // and keeps open tabs in sync. They throw an Error with a readable message on failure.
 
-function parts(path: string) {
-  return path.split('/').filter(Boolean);
-}
-function fileAt(projectId: string, path: string) {
-  return new File(projectDir(projectId), ...parts(path));
-}
-function dirAt(projectId: string, path: string) {
-  return new Directory(projectDir(projectId), ...parts(path));
-}
 function ensureFree(projectId: string, path: string) {
   if (fileAt(projectId, path).exists || dirAt(projectId, path).exists) {
     throw new Error(`"${path}" already exists.`);
