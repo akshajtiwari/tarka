@@ -31,7 +31,7 @@ export function suggestionExtensions(
       { autocomplete: memorySource },
     ]),
     EditorView.updateListener.of((update) => {
-      const labels = currentCompletions(update.state)
+      const labels = chips(update.state)
         .slice(0, 8)
         .map((c) => c.label);
       const key = labels.join('\n');
@@ -42,11 +42,24 @@ export function suggestionExtensions(
   ];
 }
 
+// Several sources can offer the same word (a keyword, a project word, memory): one chip each.
+// `index` is the completion's place in CodeMirror's own list, used to accept it.
+function chips(state: EditorState) {
+  const seen = new Set<string>();
+  const list: { label: string; index: number }[] = [];
+  currentCompletions(state).forEach((c, index) => {
+    if (seen.has(c.label)) return;
+    seen.add(c.label);
+    list.push({ label: c.label, index });
+  });
+  return list;
+}
+
 // Inserts the chip the user tapped. Returns its label, or null if the list changed meanwhile.
-export function acceptSuggestion(view: EditorView, index: number): string | null {
-  const option = currentCompletions(view.state)[index];
-  if (!option) return null;
-  view.dispatch({ effects: setSelectedCompletion(index) });
+export function acceptSuggestion(view: EditorView, chipIndex: number): string | null {
+  const chip = chips(view.state)[chipIndex];
+  if (!chip) return null;
+  view.dispatch({ effects: setSelectedCompletion(chip.index) });
   acceptCompletion(view);
-  return option.label;
+  return chip.label;
 }
