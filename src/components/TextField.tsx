@@ -1,3 +1,4 @@
+import { useRef } from 'react';
 import { StyleSheet, Text, TextInput, View } from 'react-native';
 
 import { font, fontSize } from '../theme/fonts';
@@ -17,11 +18,16 @@ type Props = {
 export function TextField(props: Props) {
   const { label, value, onChangeText, placeholder, autoFocus, mono, secret } = props;
   const colors = useTheme();
+  const input = useRef<TextInput>(null);
 
   return (
     <View style={styles.field}>
-      <Text style={[styles.label, { color: colors.muted }]}>{label}</Text>
+      {/* Tapping the label works like tapping the box: it starts typing. */}
+      <Text style={[styles.label, { color: colors.muted }]} onPress={() => input.current?.focus()}>
+        {label}
+      </Text>
       <TextInput
+        ref={input}
         accessibilityLabel={label}
         value={value}
         onChangeText={onChangeText}
