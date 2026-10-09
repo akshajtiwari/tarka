@@ -22,8 +22,11 @@ for _ in $(seq 1 60); do
 done
 
 # Let other apps (TARKA) send commands, then restart Termux so it reads the setting.
-adb shell run-as com.termux sh -c \
-  'mkdir -p files/home/.termux && grep -q allow-external-apps files/home/.termux/termux.properties 2>/dev/null || echo allow-external-apps=true >> files/home/.termux/termux.properties'
+# adb shell joins its arguments into one line for the device's shell, so the script is quoted twice.
+adb shell "run-as com.termux sh -c 'mkdir -p files/home/.termux && \
+  (grep -q ^allow-external-apps files/home/.termux/termux.properties 2>/dev/null || \
+  echo allow-external-apps=true >> files/home/.termux/termux.properties)'"
+adb shell sync # the e2e script may hard-restart the emulator, which loses unflushed writes
 adb shell am force-stop com.termux
 adb shell pm grant com.akshajtiwari.tarka com.termux.permission.RUN_COMMAND
 echo "Termux is ready"

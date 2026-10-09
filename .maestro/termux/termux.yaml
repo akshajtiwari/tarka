@@ -8,6 +8,15 @@ appId: com.akshajtiwari.tarka
 - tapOn: Terminal input
 - inputText: termux ls
 - pressKey: Enter
+# clearState also resets the permission, so TARKA asks for it the way it asks a new user.
+- extendedWaitUntil:
+    visible: .*execute arbitrary commands.*|\[exit 0\]
+    timeout: 20000
+- runFlow:
+    when:
+      visible: .*execute arbitrary commands.*
+    commands:
+      - tapOn: Allow
 - extendedWaitUntil:
     visible: \[exit 0\]
     timeout: 60000

@@ -12,6 +12,7 @@ fresh_emulator() {
   rss_kb=$(ps -o rss= -C qemu-system-x86_64-headless | head -1 || true) # empty when no emulator
   if [ "${rss_kb:-0}" -gt 4500000 ]; then
     echo "== emulator uses $((rss_kb / 1024)) MB, restarting it"
+    adb shell sync > /dev/null 2>&1 || true # a hard kill loses writes not on disk yet
     adb emu kill > /dev/null 2>&1 || true
     sleep 8
   fi
