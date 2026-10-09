@@ -8,59 +8,60 @@ import { TextField } from '../../components/TextField';
 import { getSecret, setSecret } from '../../lib/secure';
 import { space } from '../../theme/spacing';
 import { useTheme } from '../../theme/useTheme';
-import { DEFAULT_ANTHROPIC_MODEL } from '../agent/providers/anthropic';
+import { AI_PROVIDERS } from '../agent/aiProviders';
 import { useSettings, type AiProvider } from './settingsStore';
 
+const providerIds = Object.keys(AI_PROVIDERS) as AiProvider[];
+
+type Props = { onSaved?: () => void }; // e.g. onboarding moves on; Settings shows a message
+
 // Which AI the agent uses. You bring your own key; it is stored in secure storage.
-export function AiSettings() {
+export function AiSettings({ onSaved }: Props) {
   const colors = useTheme();
-  const { aiProvider, aiModel, aiBaseUrl, setAi } = useSettings();
+  const { aiProvider, aiModels, aiBaseUrl, setAi } = useSettings();
   const [provider, setProvider] = useState<AiProvider>(aiProvider);
-  const [model, setModel] = useState(aiModel);
+  const [model, setModel] = useState(aiModels[aiProvider] ?? '');
   const [baseUrl, setBaseUrl] = useState(aiBaseUrl);
   const [key, setKey] = useState('');
-  const keyName = provider === 'anthropic' ? 'anthropic-key' : 'openai-key';
+  const info = AI_PROVIDERS[provider];
 
-  // Switching provider shows that provider's key. The field is cleared on the tap and a late
-  // answer is ignored, so one provider's key can never end up saved under the other.
+  // Switching provider shows that provider's model and key. The key field is cleared on the tap
+  // and a late answer is ignored, so one provider's key can never end up saved under another.
   function choose(next: AiProvider) {
     if (next === provider) return;
     setKey('');
+    setModel(useSettings.getState().aiModels[next] ?? '');
     setProvider(next);
   }
 
   useEffect(() => {
     let live = true;
-    getSecret(keyName).then((saved) => live && setKey(saved ?? ''));
+    getSecret(info.secret).then((saved) => live && setKey(saved ?? ''));
     return () => {
       live = false;
     };
-  }, [keyName]);
+  }, [info.secret]);
 
   async function save() {
     setAi(provider, model, baseUrl);
-    await setSecret(keyName, key.trim());
-    Alert.alert('Saved', 'The agent will use these settings.');
+    await setSecret(info.secret, key.trim());
+    if (onSaved) onSaved();
+    else Alert.alert('Saved', 'The agent will use these settings.');
   }
-
-  const check = (on: boolean) =>
-    on ? <Octicons name="check" size={18} color={colors.accent} /> : null;
 
   return (
     <View>
-      <ListRow
-        title="Anthropic (Claude)"
-        onPress={() => choose('anthropic')}
-        right={check(provider === 'anthropic')}
-      />
-      <ListRow
-        title="OpenAI-compatible"
-        subtitle="OpenAI, OpenRouter, or Ollama on your laptop"
-        onPress={() => choose('openai')}
-        right={check(provider === 'openai')}
-      />
+      {providerIds.map((id) => (
+        <ListRow
+          key={id}
+          title={AI_PROVIDERS[id].name}
+          subtitle={AI_PROVIDERS[id].subtitle}
+          onPress={() => choose(id)}
+          right={provider === id && <Octicons name="check" size={18} color={colors.accent} />}
+        />
+      ))}
       <View style={styles.form}>
-        {provider === 'openai' && (
+        {info.needsServer && (
           <TextField
             label="Server address"
             value={baseUrl}
@@ -73,14 +74,14 @@ export function AiSettings() {
           label="Model"
           value={model}
           onChangeText={setModel}
-          placeholder={provider === 'anthropic' ? DEFAULT_ANTHROPIC_MODEL : 'qwen2.5-coder:3b'}
+          placeholder={info.defaultModel || 'qwen2.5-coder:3b'}
           mono
         />
         <TextField
           label="API key"
           value={key}
           onChangeText={setKey}
-          placeholder={provider === 'anthropic' ? 'sk-ant-…' : 'not needed for Ollama'}
+          placeholder={info.keyHint}
           mono
           secret
         />

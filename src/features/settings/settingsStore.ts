@@ -3,7 +3,7 @@ import { create } from 'zustand';
 import { createJSONStorage, persist } from 'zustand/middleware';
 
 export type ThemeChoice = 'system' | 'dark' | 'light';
-export type AiProvider = 'anthropic' | 'openai';
+export type AiProvider = 'anthropic' | 'gemini' | 'openai';
 // Where new projects go: Documents/TARKA (visible to file managers and Termux) or inside the app.
 export type ProjectsLocation = 'documents' | 'app';
 
@@ -13,7 +13,7 @@ type Settings = {
   gitName: string;
   gitEmail: string;
   aiProvider: AiProvider;
-  aiModel: string; // empty = the provider's default
+  aiModels: Partial<Record<AiProvider, string>>; // per provider; empty = its default
   aiBaseUrl: string; // only for OpenAI-compatible servers (Ollama, OpenRouter, ...)
   projectsLocation: ProjectsLocation;
   setProjectsLocation: (location: ProjectsLocation) => void;
@@ -31,18 +31,35 @@ export const useSettings = create<Settings>()(
       gitName: '',
       gitEmail: '',
       aiProvider: 'anthropic',
-      aiModel: '',
+      aiModels: {},
       aiBaseUrl: '',
       projectsLocation: 'app',
       setProjectsLocation: (projectsLocation) => set({ projectsLocation }),
       tipsDone: false,
       finishTips: () => set({ tipsDone: true }),
-      setAi: (aiProvider, aiModel, aiBaseUrl) =>
-        set({ aiProvider, aiModel: aiModel.trim(), aiBaseUrl: aiBaseUrl.trim() }),
+      setAi: (aiProvider, model, aiBaseUrl) =>
+        set((s) => ({
+          aiProvider,
+          aiModels: { ...s.aiModels, [aiProvider]: model.trim() },
+          aiBaseUrl: aiBaseUrl.trim(),
+        })),
       setTheme: (theme) => set({ theme }),
       setGitIdentity: (gitName, gitEmail) =>
         set({ gitName: gitName.trim(), gitEmail: gitEmail.trim() }),
     }),
-    { name: 'settings', storage: createJSONStorage(() => AsyncStorage) },
+    {
+      name: 'settings',
+      storage: createJSONStorage(() => AsyncStorage),
+      version: 1,
+      migrate: (saved, version) => migrateSettings(saved as Record<string, unknown>, version),
+    },
   ),
 );
+
+// Version 0 kept one model for every provider; version 1 keeps one per provider.
+export function migrateSettings(saved: Record<string, unknown>, version: number) {
+  if (version >= 1) return saved as unknown as Settings;
+  const { aiModel, ...rest } = saved;
+  const provider = (saved.aiProvider as AiProvider) ?? 'anthropic';
+  return { ...rest, aiModels: aiModel ? { [provider]: aiModel } : {} } as unknown as Settings;
+}

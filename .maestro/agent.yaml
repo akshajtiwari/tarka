@@ -11,6 +11,9 @@ appId: com.akshajtiwari.tarka
 - tapOn: Model
 - inputText: fake
 - hideKeyboard
+- scrollUntilVisible: # the projects-folder section sits above it
+    element:
+      text: Save AI settings
 - tapOn: Save AI settings
 - tapOn: OK
 - back

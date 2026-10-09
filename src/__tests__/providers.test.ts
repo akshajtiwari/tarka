@@ -1,5 +1,9 @@
 import { fromAnthropic, toAnthropicMessages } from '../features/agent/providers/anthropicMessages';
-import { fromOpenAI, toOpenAIMessages } from '../features/agent/providers/openaiMessages';
+import {
+  fromOpenAI,
+  toOpenAIMessages,
+  toOpenAITools,
+} from '../features/agent/providers/openaiMessages';
 import type { Turn } from '../features/agent/types';
 
 const history: Turn[] = [
@@ -69,4 +73,42 @@ test('openai: unreadable arguments do not crash', () => {
   });
   expect(reply.toolCalls[0].input).toEqual({ _unreadable_arguments: '{bad' });
   expect(reply.stop).toBe('tools');
+});
+
+test('openai format: a thought signature on a tool call goes back unchanged', () => {
+  const signature = { google: { thought_signature: 'abc' } };
+  const reply = fromOpenAI({
+    finish_reason: 'tool_calls',
+    message: {
+      content: null,
+      tool_calls: [
+        {
+          id: 'c1',
+          type: 'function',
+          function: { name: 'read_file', arguments: '{"path":"a.py"}' },
+          extra_content: signature,
+        },
+      ],
+    },
+  });
+  const turn: Turn = { role: 'assistant', text: '', toolCalls: reply.toolCalls, raw: reply.raw };
+  const sent = toOpenAIMessages('sys', [turn])[1];
+  expect(sent).toMatchObject({ tool_calls: [{ id: 'c1', extra_content: signature }] });
+});
+
+test('openai format: tools without inputs have no schema (Gemini refuses empty ones)', () => {
+  const tools = toOpenAITools([
+    {
+      name: 'git_status',
+      description: 'd',
+      parameters: { type: 'object', properties: {}, required: [] },
+    },
+    {
+      name: 'read_file',
+      description: 'd',
+      parameters: { type: 'object', properties: { path: { type: 'string' } }, required: ['path'] },
+    },
+  ]);
+  expect(tools[0].function).not.toHaveProperty('parameters');
+  expect(tools[1].function).toHaveProperty('parameters');
 });
