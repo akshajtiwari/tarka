@@ -1,0 +1,16 @@
+# Settings with the keyboard open: the screen scrolls so the field you type in, and the
+# button under it, stay above the keyboard (no need to close the keyboard first).
+appId: com.akshajtiwari.tarka
+---
+- runFlow: common/open-app.yaml
+- tapOn: Settings
+- scrollUntilVisible:
+    element:
+      text: Access token.*
+- tapOn: Access token.*
+- inputText: ghp_example
+- assertVisible: Save git settings
+- takeScreenshot: settings-keyboard
+- tapOn: Save git settings
+- assertVisible: Saved
+- tapOn: OK

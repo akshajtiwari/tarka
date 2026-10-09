@@ -1,6 +1,7 @@
 import { router, useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
-import { ActivityIndicator, Alert, ScrollView, StyleSheet, Text } from 'react-native';
+import { ActivityIndicator, Alert, StyleSheet, Text } from 'react-native';
+import { KeyboardAwareScrollView } from 'react-native-keyboard-controller';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { Button } from '../../../src/components/Button';
@@ -90,7 +91,8 @@ export default function GitScreen() {
           </>
         }
       />
-      <ScrollView keyboardShouldPersistTaps="handled">
+      {/* Keyboard-aware, so the commit message box stays visible while typing. */}
+      <KeyboardAwareScrollView keyboardShouldPersistTaps="handled" bottomOffset={96}>
         <ListRow
           icon="git-branch"
           title={git.branch ?? 'no branch yet'}
@@ -135,7 +137,7 @@ export default function GitScreen() {
             })
           }
         />
-      </ScrollView>
+      </KeyboardAwareScrollView>
     </SafeAreaView>
   );
 }

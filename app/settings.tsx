@@ -1,7 +1,8 @@
 import Octicons from '@expo/vector-icons/Octicons';
 import { router } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { Alert, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Alert, StyleSheet, Text, View } from 'react-native';
+import { KeyboardAwareScrollView } from 'react-native-keyboard-controller';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { Button } from '../src/components/Button';
@@ -21,6 +22,9 @@ const themes: { value: ThemeChoice; title: string }[] = [
   { value: 'dark', title: 'Dark (slate)' },
   { value: 'light', title: 'Light (chalk)' },
 ];
+
+// Room kept between the focused field and the keyboard: enough to also show the button below it.
+const KEYBOARD_GAP = 96;
 
 export default function SettingsScreen() {
   const colors = useTheme();
@@ -49,7 +53,8 @@ export default function SettingsScreen() {
         title="Settings"
         left={<IconButton icon="arrow-left" label="Back" onPress={() => router.back()} />}
       />
-      <ScrollView keyboardShouldPersistTaps="handled">
+      {/* Keyboard-aware: the field you type in, and the button under it, stay above the keyboard. */}
+      <KeyboardAwareScrollView keyboardShouldPersistTaps="handled" bottomOffset={KEYBOARD_GAP}>
         {section('Theme')}
         {themes.map((t) => (
           <ListRow
@@ -85,7 +90,7 @@ export default function SettingsScreen() {
           />
           <Button label="Save git settings" variant="primary" onPress={saveGit} />
         </View>
-      </ScrollView>
+      </KeyboardAwareScrollView>
     </SafeAreaView>
   );
 }

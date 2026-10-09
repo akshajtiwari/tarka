@@ -1,6 +1,7 @@
 import { router } from 'expo-router';
 import { useState } from 'react';
 import { ActivityIndicator, Alert, StyleSheet, Text, View } from 'react-native';
+import { KeyboardAwareScrollView } from 'react-native-keyboard-controller';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { Button } from '../src/components/Button';
@@ -41,7 +42,11 @@ export default function CloneScreen() {
         title="Clone repository"
         left={<IconButton icon="arrow-left" label="Back" onPress={() => router.back()} />}
       />
-      <View style={styles.form}>
+      <KeyboardAwareScrollView
+        contentContainerStyle={styles.form}
+        keyboardShouldPersistTaps="handled"
+        bottomOffset={96}
+      >
         <TextField
           label="Repository URL"
           value={url}
@@ -66,7 +71,7 @@ export default function CloneScreen() {
         ) : (
           <Button label="Clone" variant="primary" onPress={clone} disabled={!url.trim()} />
         )}
-      </View>
+      </KeyboardAwareScrollView>
     </SafeAreaView>
   );
 }
