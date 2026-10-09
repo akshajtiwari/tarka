@@ -1,4 +1,5 @@
 import Octicons from '@expo/vector-icons/Octicons';
+import { memo } from 'react';
 import { Pressable, StyleSheet, Text } from 'react-native';
 
 import { font, fontSize } from '../../theme/fonts';
@@ -13,11 +14,19 @@ type Props = {
   expanded: boolean;
   active: boolean;
   gitKind?: ChangeKind; // shown as a colored letter: M modified, U new, A added
-  onPress: () => void;
-  onLongPress: () => void;
+  onPress: (row: TreeRow) => void;
+  onLongPress: (row: TreeRow) => void;
 };
 
-export function FileRow({ row, expanded, active, gitKind, onPress, onLongPress }: Props) {
+// Memoized: with stable handlers, a row only redraws when its own data changes.
+export const FileRow = memo(function FileRow({
+  row,
+  expanded,
+  active,
+  gitKind,
+  onPress,
+  onLongPress,
+}: Props) {
   const colors = useTheme();
   const gitColor = gitKind && changeColor(gitKind, colors);
   const folderIcon = expanded ? 'file-directory-open-fill' : 'file-directory-fill';
@@ -27,8 +36,8 @@ export function FileRow({ row, expanded, active, gitKind, onPress, onLongPress }
     <Pressable
       accessibilityRole="button"
       accessibilityLabel={`${row.isDir ? 'Folder' : 'File'} ${row.path}`}
-      onPress={onPress}
-      onLongPress={onLongPress}
+      onPress={() => onPress(row)}
+      onLongPress={() => onLongPress(row)}
       style={({ pressed }) => [
         styles.row,
         { paddingLeft: space.md + row.depth * space.lg },
@@ -45,7 +54,7 @@ export function FileRow({ row, expanded, active, gitKind, onPress, onLongPress }
       )}
     </Pressable>
   );
-}
+});
 
 const styles = StyleSheet.create({
   row: {

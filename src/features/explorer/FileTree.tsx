@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { memo, useCallback, useMemo, useState } from 'react';
 import { FlatList, StyleSheet, Text, View } from 'react-native';
 
 import { Hint } from '../../components/Hint';
@@ -6,7 +6,7 @@ import { IconButton } from '../../components/IconButton';
 import { listEntries } from '../../lib/projectFs';
 import { useWorkspaceStore } from '../workspace/workspaceStore';
 import { font, fontSize } from '../../theme/fonts';
-import { space } from '../../theme/spacing';
+import { size, space } from '../../theme/spacing';
 import { useTheme } from '../../theme/useTheme';
 import { FileRow } from './FileRow';
 import { useGitColors } from './useGitColors';
@@ -22,7 +22,8 @@ type Props = {
   onFileActions: (path: string, isDir: boolean) => void; // long-press, or + for the project root
 };
 
-export function FileTree({
+// Memoized: the workspace re-renders often, and a big tree is costly to redraw.
+export const FileTree = memo(function FileTree({
   projectId,
   projectName,
   activeFile,
@@ -34,7 +35,8 @@ export function FileTree({
   const colors = useTheme();
   const [expanded, setExpanded] = useState<Set<string>>(new Set());
   const treeVersion = useWorkspaceStore((s) => s.treeVersion);
-  const gitKinds = useGitColors(projectId);
+  const shown = useWorkspaceStore((s) => s.explorerShown);
+  const gitKinds = useGitColors(projectId, shown);
 
   // treeVersion changes after a file action, so the folder is read again.
   const rows = useMemo(
@@ -42,17 +44,23 @@ export function FileTree({
     [projectId, expanded, treeVersion], // eslint-disable-line react-hooks/exhaustive-deps
   );
 
-  function toggleFolder(path: string) {
-    const next = new Set(expanded);
-    if (next.has(path)) next.delete(path);
-    else next.add(path);
-    setExpanded(next);
-  }
-
-  function pressRow(row: TreeRow) {
-    if (row.isDir) toggleFolder(row.path);
-    else onOpenFile(row.path);
-  }
+  // Stable, so rows (memoized) only redraw when their own data changes.
+  const pressRow = useCallback(
+    (row: TreeRow) => {
+      if (!row.isDir) return onOpenFile(row.path);
+      setExpanded((old) => {
+        const next = new Set(old);
+        if (next.has(row.path)) next.delete(row.path);
+        else next.add(row.path);
+        return next;
+      });
+    },
+    [onOpenFile],
+  );
+  const longPressRow = useCallback(
+    (row: TreeRow) => onFileActions(row.path, row.isDir),
+    [onFileActions],
+  );
 
   return (
     <View style={[styles.tree, { backgroundColor: colors.surface }]}>
@@ -71,6 +79,12 @@ export function FileTree({
       <FlatList
         data={rows}
         keyExtractor={(row) => row.path}
+        getItemLayout={(_, index) => ({
+          length: size.treeRow,
+          offset: size.treeRow * index,
+          index,
+        })}
+        initialNumToRender={30}
         ListEmptyComponent={<Hint text="No files yet. Tap + to make one." />}
         renderItem={({ item }) => (
           <FileRow
@@ -78,14 +92,14 @@ export function FileTree({
             expanded={expanded.has(item.path)}
             active={item.path === activeFile}
             gitKind={gitKinds[item.path]}
-            onPress={() => pressRow(item)}
-            onLongPress={() => onFileActions(item.path, item.isDir)}
+            onPress={pressRow}
+            onLongPress={longPressRow}
           />
         )}
       />
     </View>
   );
-}
+});
 
 const styles = StyleSheet.create({
   tree: { flex: 1 },

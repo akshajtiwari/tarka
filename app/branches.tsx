@@ -12,6 +12,7 @@ import * as gitService from '../src/features/git/gitService';
 import { repoDir } from '../src/features/git/repo';
 import { gitFs } from '../src/lib/gitFs';
 import { useWorkspaceStore } from '../src/features/workspace/workspaceStore';
+import { useGitStatusStore } from '../src/features/git/gitStatusStore';
 import { font, fontSize } from '../src/theme/fonts';
 import { space } from '../src/theme/spacing';
 import { useTheme } from '../src/theme/useTheme';
@@ -52,6 +53,7 @@ export default function BranchesSheet() {
     if (problem) return Alert.alert('Check the name', problem);
     try {
       await gitService.createBranch(gitFs, dir, newName.trim());
+      useGitStatusStore.getState().markStale(); // the Git tab shows the new branch name
       router.back();
     } catch (e) {
       Alert.alert('Could not create the branch', String(e));

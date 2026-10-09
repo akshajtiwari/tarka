@@ -78,7 +78,7 @@ export default function GitScreen() {
         title="Git"
         right={
           <>
-            {busy && <ActivityIndicator color={colors.accent} />}
+            {(busy || git.loading) && <ActivityIndicator color={colors.accent} />}
             <IconButton
               icon="history"
               label="History"
@@ -117,7 +117,7 @@ export default function GitScreen() {
             onToggle={() => run(() => gitService.stage(gitFs, dir, c))}
           />
         ))}
-        {git.staged.length + git.unstaged.length === 0 && (
+        {!git.loading && git.staged.length + git.unstaged.length === 0 && (
           <Hint text="Nothing changed since the last commit. Edits you make show up here." />
         )}
         {git.unstaged.length > 1 && (

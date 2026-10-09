@@ -1,5 +1,5 @@
 import { Redirect, router, Tabs, useLocalSearchParams } from 'expo-router';
-import { useEffect } from 'react';
+import { useCallback, useEffect } from 'react';
 import { Alert, BackHandler, StyleSheet, View } from 'react-native';
 import { Drawer } from 'react-native-drawer-layout';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -8,6 +8,7 @@ import { useEditorStore } from '../../../src/features/editor/editorStore';
 import { openFileFromDisk, saveAllDirty } from '../../../src/features/editor/fileActions';
 import { FileTree } from '../../../src/features/explorer/FileTree';
 import { dropGitCache } from '../../../src/features/git/gitCache';
+import { useGitStatusStore } from '../../../src/features/git/gitStatusStore';
 import { repoDir } from '../../../src/features/git/repo';
 import { useProjectStore } from '../../../src/features/projects/projectStore';
 import { Dock, useRail } from '../../../src/features/workspace/Dock';
@@ -21,7 +22,9 @@ export default function WorkspaceLayout() {
   const insets = useSafeAreaInsets();
   const { id } = useLocalSearchParams<{ id: string }>();
   const project = useProjectStore((s) => s.projects.find((p) => p.id === id));
-  const { explorerOpen, setExplorerOpen } = useWorkspaceStore();
+  const explorerOpen = useWorkspaceStore((s) => s.explorerOpen);
+  const setExplorerOpen = useWorkspaceStore((s) => s.setExplorerOpen);
+  const setExplorerShown = useWorkspaceStore((s) => s.setExplorerShown);
   const activePath = useEditorStore((s) => s.activePath);
   const rail = useRail();
 
@@ -30,6 +33,7 @@ export default function WorkspaceLayout() {
   useEffect(() => {
     setExplorerOpen(false);
     useEditorStore.getState().enterProject(id);
+    useGitStatusStore.getState().enterProject(id);
     return () => {
       dropGitCache(repoDir(id)); // it holds the repo's pack files in memory
       const saveErrors = saveAllDirty(id);
@@ -50,19 +54,40 @@ export default function WorkspaceLayout() {
     return () => sub.remove();
   }, [explorerOpen, setExplorerOpen]);
 
-  if (!project) return <Redirect href="/" />;
+  // Stable handlers, so the (memoized) file tree doesn't redraw when this screen does.
+  const openFile = useCallback(
+    (path: string) => {
+      const error = openFileFromDisk(id, path);
+      if (error) Alert.alert('Cannot open file', error);
+      else setExplorerOpen(false);
+    },
+    [id, setExplorerOpen],
+  );
+  const quickOpen = useCallback(
+    () => router.push({ pathname: '/quick-open', params: { projectId: id } }),
+    [id],
+  );
+  const search = useCallback(
+    () => router.push({ pathname: '/search', params: { projectId: id } }),
+    [id],
+  );
+  const fileActions = useCallback(
+    (path: string, isDir: boolean) =>
+      router.push({
+        pathname: '/file-actions',
+        params: { projectId: id, path, isDir: String(isDir) },
+      }),
+    [id],
+  );
 
-  function openFile(path: string) {
-    const error = openFileFromDisk(id, path);
-    if (error) Alert.alert('Cannot open file', error);
-    else setExplorerOpen(false);
-  }
+  if (!project) return <Redirect href="/" />;
 
   return (
     <Drawer
       open={explorerOpen}
       onOpen={() => setExplorerOpen(true)}
       onClose={() => setExplorerOpen(false)}
+      onTransitionEnd={(closing) => setExplorerShown(!closing)}
       drawerStyle={[styles.drawer, { backgroundColor: colors.surface }]}
       renderDrawerContent={() => (
         <View style={[styles.drawerContent, { paddingTop: insets.top }]}>
@@ -70,16 +95,9 @@ export default function WorkspaceLayout() {
             projectId={project.id}
             projectName={project.name}
             activeFile={activePath}
-            onQuickOpen={() =>
-              router.push({ pathname: '/quick-open', params: { projectId: project.id } })
-            }
-            onSearch={() => router.push({ pathname: '/search', params: { projectId: project.id } })}
-            onFileActions={(path, isDir) =>
-              router.push({
-                pathname: '/file-actions',
-                params: { projectId: project.id, path, isDir: String(isDir) },
-              })
-            }
+            onQuickOpen={quickOpen}
+            onSearch={search}
+            onFileActions={fileActions}
             onOpenFile={openFile}
           />
         </View>

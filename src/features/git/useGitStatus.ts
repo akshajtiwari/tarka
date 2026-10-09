@@ -1,55 +1,31 @@
-import { useFocusEffect } from 'expo-router';
-import { useCallback, useState } from 'react';
+import { useIsFocused } from 'expo-router';
+import { useCallback } from 'react';
 
 import type { Change } from './changes';
-import * as gitService from './gitService';
-import { gitFs } from '../../lib/gitFs';
-import { repoDir } from './repo';
+import { useGitSnapshot, useGitStatusStore } from './gitStatusStore';
 
-type GitStatus = {
-  loading: boolean;
-  isRepo: boolean;
-  branch: string | null;
-  staged: Change[];
-  unstaged: Change[];
-  error: string | null;
-};
+const NONE: Change[] = [];
 
-const empty: GitStatus = {
-  loading: true,
-  isRepo: false,
-  branch: null,
-  staged: [],
-  unstaged: [],
-  error: null,
-};
-
-// Reads the repo state whenever the Git tab comes into view, and on refresh().
+// The Git tab's view of the shared git status: shown at once from the last read, and read
+// again in the background while the tab is on screen and something changed.
 export function useGitStatus(projectId: string) {
-  const [status, setStatus] = useState<GitStatus>(empty);
+  const snap = useGitSnapshot(projectId, useIsFocused());
+  const error = useGitStatusStore((s) => s.error);
 
-  const refresh = useCallback(async () => {
-    const dir = repoDir(projectId);
-    try {
-      if (!(await gitService.isRepo(gitFs, dir))) {
-        setStatus({ ...empty, loading: false });
-        return;
-      }
-      const [changes, branch] = await Promise.all([
-        gitService.getChanges(gitFs, dir),
-        gitService.currentBranch(gitFs, dir),
-      ]);
-      setStatus({ loading: false, isRepo: true, branch: branch ?? null, ...changes, error: null });
-    } catch (e) {
-      setStatus({ ...empty, loading: false, error: String(e) });
-    }
+  // After a git action: read now, without waiting.
+  const refresh = useCallback(() => {
+    const store = useGitStatusStore.getState();
+    store.markStale();
+    return store.refresh(projectId);
   }, [projectId]);
 
-  useFocusEffect(
-    useCallback(() => {
-      refresh();
-    }, [refresh]),
-  );
-
-  return { ...status, refresh };
+  return {
+    loading: !snap,
+    isRepo: snap?.isRepo ?? false,
+    branch: snap?.branch ?? null,
+    staged: snap?.staged ?? NONE,
+    unstaged: snap?.unstaged ?? NONE,
+    error,
+    refresh,
+  };
 }

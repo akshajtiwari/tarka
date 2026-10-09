@@ -1,6 +1,7 @@
 import { fileAt } from '../../lib/projectFs';
 import { isDirty, useEditorStore } from './editorStore';
 import { openModeFor } from './fileSizeGuard';
+import { useGitStatusStore } from '../git/gitStatusStore';
 
 // Reads a file from disk and opens it in a tab. Returns an error message if it could not be opened.
 export function openFileFromDisk(projectId: string, path: string): string | null {
@@ -22,6 +23,7 @@ export function saveFile(projectId: string, path: string): string | null {
   try {
     fileAt(projectId, path).write(file.text);
     useEditorStore.getState().markSaved(path, file.text);
+    useGitStatusStore.getState().markStale(); // its git status may have changed
     return null;
   } catch (e) {
     return `Could not save ${path}: ${String(e)}`;
