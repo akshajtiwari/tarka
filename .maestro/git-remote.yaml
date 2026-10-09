@@ -10,6 +10,9 @@ appId: com.akshajtiwari.tarka
 - tapOn: Your email
 - inputText: phone@example.com
 - hideKeyboard
+- scrollUntilVisible: # the AI section sits above it
+    element:
+      text: Save git settings
 - tapOn: Save git settings
 - tapOn: OK
 - back
