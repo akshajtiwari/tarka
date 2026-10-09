@@ -14,6 +14,17 @@ export type Colors = {
   warning: string;
   error: string;
   running: string;
+  // Diffs use the familiar GitHub greens and reds: a tinted line, a stronger line-number
+  // column, and a colored +/- mark (so color is never the only signal).
+  diff: {
+    addLine: string;
+    addGutter: string;
+    addMark: string;
+    delLine: string;
+    delGutter: string;
+    delMark: string;
+  };
+  term: typeof terminal;
   syntax: {
     keyword: string;
     string: string;
@@ -24,6 +35,16 @@ export type Colors = {
     comment: string;
     invalid: string;
   };
+};
+
+// The terminal (Run tab) is GitHub-dark navy in both themes, like most terminals.
+const terminal = {
+  bg: '#0D1117',
+  text: '#E6EDF3',
+  muted: '#8B949E',
+  error: '#FF7B72',
+  prompt: '#79C0FF',
+  success: '#3FB950',
 };
 
 export const dark: Colors = {
@@ -39,6 +60,15 @@ export const dark: Colors = {
   warning: '#E2B04A',
   error: '#E5736A',
   running: '#79A7D3',
+  diff: {
+    addLine: '#2EA04326',
+    addGutter: '#3FB9504D',
+    addMark: '#3FB950',
+    delLine: '#F8514926',
+    delGutter: '#F851494D',
+    delMark: '#F85149',
+  },
+  term: terminal,
   syntax: {
     keyword: '#C8A2D8',
     string: '#A7C796',
@@ -64,6 +94,15 @@ export const light: Colors = {
   warning: '#8F6200',
   error: '#B3261E',
   running: '#2B5F91',
+  diff: {
+    addLine: '#DAFBE1',
+    addGutter: '#ACEEBB',
+    addMark: '#1A7F37',
+    delLine: '#FFEBE9',
+    delGutter: '#FFCECB',
+    delMark: '#CF222E',
+  },
+  term: terminal,
   syntax: {
     keyword: '#7E4596',
     string: '#3F6E2C',

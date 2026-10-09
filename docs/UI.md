@@ -32,8 +32,9 @@ The one memorable detail is the **brass caret and active-line bar** in the edito
 | warning | `#E2B04A` | `#8F6200` |
 | error | `#E5736A` | `#B3261E` |
 | running | `#79A7D3` | `#2B5F91` |
-| added (diff) | success at 14% alpha on bg | same |
-| removed (diff) | error at 14% alpha on bg | same |
+| diff added: line / line-number column / `+` | `#2EA04326` / `#3FB9504D` / `#3FB950` | `#DAFBE1` / `#ACEEBB` / `#1A7F37` |
+| diff removed: line / line-number column / `-` | `#F8514926` / `#F851494D` / `#F85149` | `#FFEBE9` / `#FFCECB` / `#CF222E` |
+| terminal (`term`): bg / text / muted / error / prompt / success | `#0D1117` / `#E6EDF3` / `#8B949E` / `#FF7B72` / `#79C0FF` / `#3FB950` | same (the terminal is GitHub-dark navy in both themes) |
 
 **Syntax colors (dark)**
 
