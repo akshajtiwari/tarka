@@ -4,13 +4,22 @@ import type { ModelReply, ToolSpec, Turn } from '../types';
 export type AnthropicBlock = { type: string; [field: string]: unknown };
 export type AnthropicMessage = { role: 'user' | 'assistant'; content: string | AnthropicBlock[] };
 
-// Our history -> Anthropic messages. Assistant turns are sent back exactly as the API gave
-// them (including thinking blocks), which the API requires when continuing a conversation.
+// Assistant turns are sent back exactly as the API gave them (including thinking blocks),
+// which the API requires when continuing a conversation. A turn from the other provider
+// (you switched in Settings) has no such content, so it is rebuilt from its text and tool calls.
+function assistantContent(turn: Extract<Turn, { role: 'assistant' }>): AnthropicBlock[] {
+  if (Array.isArray(turn.raw) && turn.raw.length > 0) return turn.raw;
+  const blocks: AnthropicBlock[] = turn.text ? [{ type: 'text', text: turn.text }] : [];
+  for (const c of turn.toolCalls)
+    blocks.push({ type: 'tool_use', id: c.id, name: c.name, input: c.input });
+  return blocks.length > 0 ? blocks : [{ type: 'text', text: '(no reply)' }]; // the API refuses empty content
+}
+
+// Our history -> Anthropic messages.
 export function toAnthropicMessages(history: Turn[]): AnthropicMessage[] {
   return history.map((turn): AnthropicMessage => {
     if (turn.role === 'user') return { role: 'user', content: turn.text };
-    if (turn.role === 'assistant')
-      return { role: 'assistant', content: turn.raw as AnthropicBlock[] };
+    if (turn.role === 'assistant') return { role: 'assistant', content: assistantContent(turn) };
     return {
       role: 'user',
       content: turn.results.map((r) => ({

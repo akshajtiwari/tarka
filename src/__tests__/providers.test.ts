@@ -28,6 +28,15 @@ test('anthropic: assistant turns are sent back unchanged, tool results as user t
   });
 });
 
+test('anthropic: a turn from the other provider is rebuilt, never sent empty', () => {
+  const fromOpenAITurn: Turn[] = [{ ...history[1], raw: undefined } as Turn];
+  expect(toAnthropicMessages(fromOpenAITurn)[0].content).toEqual(
+    history[1].role === 'assistant' ? history[1].raw : null,
+  );
+  const empty: Turn[] = [{ role: 'assistant', text: '', toolCalls: [] }];
+  expect(toAnthropicMessages(empty)[0].content).toEqual([{ type: 'text', text: '(no reply)' }]);
+});
+
 test('anthropic: tool calls, refusals and cut-off replies', () => {
   const content = [{ type: 'tool_use', id: 'x', name: 'list_files', input: {} }] as never;
   expect(fromAnthropic(content, 'tool_use')).toMatchObject({
