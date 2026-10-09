@@ -1,14 +1,17 @@
 import * as SecureStore from 'expo-secure-store';
 
-// The git token (a GitHub/GitLab personal access token) is kept in the phone's
-// encrypted storage (Android Keystore), never in plain app storage.
-const GIT_TOKEN = 'git-token';
+// Secrets (git token, AI API keys) are kept in the phone's encrypted storage (Android Keystore),
+// never in plain app storage.
+export type SecretName = 'git-token' | 'anthropic-key' | 'openai-key';
 
-export function getGitToken(): Promise<string | null> {
-  return SecureStore.getItemAsync(GIT_TOKEN);
+export function getSecret(name: SecretName): Promise<string | null> {
+  return SecureStore.getItemAsync(name);
 }
 
-export function setGitToken(token: string): Promise<void> {
-  if (!token) return SecureStore.deleteItemAsync(GIT_TOKEN);
-  return SecureStore.setItemAsync(GIT_TOKEN, token);
+export function setSecret(name: SecretName, value: string): Promise<void> {
+  if (!value) return SecureStore.deleteItemAsync(name);
+  return SecureStore.setItemAsync(name, value);
 }
+
+export const getGitToken = () => getSecret('git-token');
+export const setGitToken = (token: string) => setSecret('git-token', token);

@@ -9,6 +9,7 @@ import { Header } from '../src/components/Header';
 import { IconButton } from '../src/components/IconButton';
 import { ListRow } from '../src/components/ListRow';
 import { TextField } from '../src/components/TextField';
+import { AiSettings } from '../src/features/settings/AiSettings';
 import { useSettings, type ThemeChoice } from '../src/features/settings/settingsStore';
 import { getGitToken, setGitToken } from '../src/lib/secure';
 import { font, fontSize } from '../src/theme/fonts';
@@ -58,6 +59,8 @@ export default function SettingsScreen() {
             right={theme === t.value && <Octicons name="check" size={18} color={colors.accent} />}
           />
         ))}
+        {section('AI agent')}
+        <AiSettings />
         {section('Git')}
         <View style={styles.form}>
           <TextField
