@@ -1,5 +1,5 @@
 import { gitFs } from '../../lib/gitFs';
-import { fileAt, listEntries, readForSearch } from '../../lib/projectFs';
+import { fileAt, listEntries, readForSearch, safeParts } from '../../lib/projectFs';
 import { searchText } from '../../lib/textSearch';
 import { allFilePaths } from '../../lib/walk';
 import { useEditorStore } from '../editor/editorStore';
@@ -19,6 +19,22 @@ function requireString(input: Record<string, unknown>, key: string): string {
   return value;
 }
 
+// A path from the model: never outside the project (safeParts refuses ".."), never inside .git,
+// and spelled one way ("./a.js" becomes "a.js") so it matches open tabs.
+function projectPath(input: Record<string, unknown>): string {
+  const parts = safeParts(requireString(input, 'path').replace(/^(\.\/)+/, ''));
+  if (parts.length === 0) throw new Error('A file path is needed.');
+  if (parts[0] === '.git') throw new Error("The .git folder is git's own data and is off limits.");
+  return parts.join('/');
+}
+
+// The open tab, if this file is open in this project's editor.
+function openTab(projectId: string, path: string) {
+  const editor = useEditorStore.getState();
+  if (editor.projectId !== projectId) return undefined;
+  return editor.files.find((f) => f.path === path);
+}
+
 async function execute(projectId: string, call: ToolCall): Promise<string> {
   const { input } = call;
   const files = () => allFilePaths((p) => listEntries(projectId, p));
@@ -26,7 +42,7 @@ async function execute(projectId: string, call: ToolCall): Promise<string> {
     case 'list_files':
       return files().join('\n') || '(no files)';
     case 'read_file': {
-      const text = readForSearch(projectId, requireString(input, 'path'));
+      const text = readForSearch(projectId, projectPath(input));
       if (text === null)
         throw new Error('Not a readable text file (missing, binary or over 1 MB).');
       return text;
@@ -41,23 +57,30 @@ async function execute(projectId: string, call: ToolCall): Promise<string> {
       return matches.map((m) => `${m.path}:${m.line}: ${m.text}`).join('\n') || '(no matches)';
     }
     case 'write_file': {
-      const path = requireString(input, 'path');
+      const path = projectPath(input);
       const content = requireString(input, 'content');
-      const file = fileAt(projectId, path); // refuses paths outside the project
+      const file = fileAt(projectId, path);
       const before = file.exists ? file.textSync() : '';
       if (
         !(await useApprovalStore.getState().ask({ kind: 'write', path, before, after: content }))
       ) {
         return 'The user rejected this change.';
       }
+      // The user may have typed in this file while the card was open: never overwrite that.
+      const tab = openTab(projectId, path);
+      if (tab && tab.text !== tab.savedText)
+        throw new Error('The user has unsaved edits in this file. Nothing was written.');
+      if ((file.exists ? file.textSync() : '') !== before)
+        throw new Error('The file changed while waiting for approval. Read it again first.');
       if (!file.exists) file.create({ intermediates: true });
       file.write(content);
-      useEditorStore.getState().reloadFile(path, content);
+      if (tab) useEditorStore.getState().reloadFile(path, content);
       useWorkspaceStore.getState().refreshTree();
       return `Wrote ${path}.`;
     }
     case 'delete_file': {
-      const path = requireString(input, 'path');
+      const path = projectPath(input);
+      if (!fileAt(projectId, path).exists) throw new Error(`Not a file: ${path}`);
       const before = readForSearch(projectId, path) ?? '';
       if (!(await useApprovalStore.getState().ask({ kind: 'delete', path, before, after: '' }))) {
         return 'The user rejected deleting this file.';
@@ -84,7 +107,9 @@ async function execute(projectId: string, call: ToolCall): Promise<string> {
 export async function runTool(projectId: string, call: ToolCall): Promise<ToolResult> {
   try {
     const output = await execute(projectId, call);
-    return { id: call.id, output: output.slice(0, MAX_OUTPUT), isError: false };
+    if (output.length <= MAX_OUTPUT) return { id: call.id, output, isError: false };
+    const cut = `${output.slice(0, MAX_OUTPUT)}\n[cut after ${MAX_OUTPUT} characters]`;
+    return { id: call.id, output: cut, isError: false };
   } catch (e) {
     return { id: call.id, output: e instanceof Error ? e.message : String(e), isError: true };
   }
