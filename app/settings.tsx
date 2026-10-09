@@ -11,6 +11,7 @@ import { GitSettings } from '../src/features/settings/GitSettings';
 import { ProjectsFolderSettings } from '../src/features/settings/ProjectsFolderSettings';
 import { useSettings } from '../src/features/settings/settingsStore';
 import { ThemeSettings } from '../src/features/settings/ThemeSettings';
+import { TermuxSettings } from '../src/features/termux/TermuxSettings';
 import { font, fontSize } from '../src/theme/fonts';
 import { space } from '../src/theme/spacing';
 import { useTheme } from '../src/theme/useTheme';
@@ -50,6 +51,8 @@ export default function SettingsScreen() {
           </Text>
         )}
         <GitSettings />
+        {section('Termux (optional)')}
+        <TermuxSettings />
         {section('Setup')}
         <View style={styles.setup}>
           <Button

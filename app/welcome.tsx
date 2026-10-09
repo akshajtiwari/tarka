@@ -15,6 +15,7 @@ import { ProjectsFolderSettings } from '../src/features/settings/ProjectsFolderS
 import { useSettings } from '../src/features/settings/settingsStore';
 import { ThemeSettings } from '../src/features/settings/ThemeSettings';
 import { TerminalBridge } from '../src/features/terminal/TerminalBridge';
+import { TermuxSettings } from '../src/features/termux/TermuxSettings';
 import { font, fontSize } from '../src/theme/fonts';
 import { radius, space } from '../src/theme/spacing';
 import { useTheme } from '../src/theme/useTheme';
@@ -85,6 +86,7 @@ export default function WelcomeScreen() {
         {step.key === 'python' && <PythonStep status={python.status} onRetry={python.retry} />}
         {step.key === 'git' && <GitSettings onSaved={next} />}
         {step.key === 'ai' && <AiSettings onSaved={next} />}
+        {step.key === 'termux' && <TermuxSettings />}
         {step.key === 'tips' && <TipsList />}
       </KeyboardAwareScrollView>
       <View style={[styles.footer, { borderColor: colors.line }]}>

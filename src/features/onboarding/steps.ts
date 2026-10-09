@@ -1,5 +1,6 @@
 // The first-launch setup, in order. Optional steps can be left for later (Settings has them all).
-export type StepKey = 'welcome' | 'theme' | 'folder' | 'python' | 'git' | 'ai' | 'tips' | 'done';
+export type StepKey =
+  'welcome' | 'theme' | 'folder' | 'python' | 'git' | 'ai' | 'termux' | 'tips' | 'done';
 
 export const STEPS: { key: StepKey; title: string; body?: string; optional?: boolean }[] = [
   {
@@ -28,6 +29,12 @@ export const STEPS: { key: StepKey; title: string; body?: string; optional?: boo
     key: 'ai',
     title: 'AI agent',
     body: "Bring your own key: Claude, Gemini or any OpenAI-compatible server. Keys stay in the phone's secure storage.",
+    optional: true,
+  },
+  {
+    key: 'termux',
+    title: 'Real Linux tools (optional)',
+    body: 'For C, C++, Java and other compiled languages, TARKA can use the Termux app.',
     optional: true,
   },
   { key: 'tips', title: 'A few phone tricks' },
