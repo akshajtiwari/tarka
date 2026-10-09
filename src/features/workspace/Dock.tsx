@@ -6,6 +6,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { font, fontSize } from '../../theme/fonts';
 import { size, space } from '../../theme/spacing';
 import { useTheme } from '../../theme/useTheme';
+import { useTerminalStore } from '../terminal/terminalStore';
 
 const items: Record<
   string,
@@ -33,6 +34,8 @@ export function Dock({ state, navigation }: Props) {
   const insets = useSafeAreaInsets();
   const keyboardOpen = useKeyboardState((s) => s.isVisible);
   const rail = useRail();
+  // A dot on Run while a program runs there, so it's visible from the other tabs too.
+  const running = useTerminalStore((s) => s.mode === 'busy' || s.mode === 'ask');
 
   // While typing, the key row takes the dock's space. The rail takes no height, so it stays.
   if (keyboardOpen && !rail) return null;
@@ -57,7 +60,12 @@ export function Dock({ state, navigation }: Props) {
             onPress={() => navigation.navigate(route.name, state.routes[state.index].params)}
             style={rail ? styles.railItem : styles.item}
           >
-            <Octicons name={item.icon} size={20} color={iconColor} />
+            <View>
+              <Octicons name={item.icon} size={20} color={iconColor} />
+              {route.name === 'run' && running && (
+                <View style={[styles.dot, { backgroundColor: colors.accent }]} />
+              )}
+            </View>
             <Text style={[styles.label, { color: active ? colors.text : colors.muted }]}>
               {item.label}
             </Text>
@@ -79,4 +87,5 @@ const styles = StyleSheet.create({
     gap: 2,
   },
   label: { fontFamily: font.ui, fontSize: fontSize.caption },
+  dot: { position: 'absolute', top: -2, right: -4, width: 8, height: 8, borderRadius: 4 },
 });

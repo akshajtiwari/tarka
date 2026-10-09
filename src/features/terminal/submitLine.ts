@@ -102,6 +102,7 @@ function runPath(projectId: string, file: string, kind: ReturnType<typeof runKin
   saveAllDirty(projectId); // run what you see in the editor
   const code = readForSearch(projectId, file);
   if (code === null) return t.print('stderr', `No such text file: ${file}`);
+  if (kind === 'py' || kind === 'js' || kind === 'ts') t.setActivity(`Running ${file}…`);
   if (kind === 'py') {
     const files = projectFiles(projectId, () => true);
     return t.send({ type: 'run-python', file, files, requirements: requirementsOf(projectId) });

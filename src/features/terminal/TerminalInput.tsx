@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 
+import { BusyLine } from '../../components/BusyLine';
 import { IconButton } from '../../components/IconButton';
 import { topItems } from '../../lib/usageMemory';
 import { font, fontSize } from '../../theme/fonts';
@@ -23,6 +24,7 @@ export function TerminalInput({ projectId }: { projectId: string }) {
   const { term } = useTheme();
   const mode = useTerminalStore((s) => s.mode);
   const prompt = useTerminalStore((s) => s.prompt);
+  const activity = useTerminalStore((s) => s.activity);
   const history = useHistoryStore((s) => s.commands);
   const [text, setText] = useState('');
 
@@ -46,6 +48,7 @@ export function TerminalInput({ projectId }: { projectId: string }) {
 
   return (
     <View style={[styles.bar, { backgroundColor: term.bg, borderColor: `${term.muted}55` }]}>
+      {mode === 'busy' && <BusyLine label={activity ?? 'Running…'} color={term.muted} />}
       <ScrollView
         horizontal
         keyboardShouldPersistTaps="always"

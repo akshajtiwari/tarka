@@ -18,6 +18,7 @@ type TerminalState = {
   projectId: string | null;
   lines: OutputLine[];
   mode: Mode; // shell: commands; busy: a program runs; repl: Python prompt; ask: input() waits
+  activity: string | null; // what runs right now, shown while busy ("Running main.py…")
   prompt: string; // shown before the input box
   inRepl: boolean;
   jspi: boolean | null; // can input() pause for typing? (null until Python started)
@@ -32,6 +33,7 @@ type TerminalState = {
   clear: () => void;
   send: (command: NewCommand, afterSuccess?: () => void) => void;
   setMode: (mode: Mode) => void;
+  setActivity: (activity: string | null) => void;
   enterRepl: () => void;
   leaveRepl: () => void;
   setPreview: (html: string | null) => void;
@@ -41,7 +43,7 @@ type TerminalState = {
 export const appendLines = (old: OutputLine[], added: OutputLine[]) =>
   [...old, ...added].slice(-MAX_LINES);
 
-const shell = { mode: 'shell' as Mode, prompt: '$', inRepl: false };
+const shell = { mode: 'shell' as Mode, prompt: '$', inRepl: false, activity: null };
 
 export const useTerminalStore = create<TerminalState>()((set, get) => ({
   projectId: null,
@@ -80,7 +82,8 @@ export const useTerminalStore = create<TerminalState>()((set, get) => ({
         ...(busy ? { mode: 'busy' as Mode, afterSuccess: afterSuccess ?? null } : {}),
       };
     }),
-  setMode: (mode) => set({ mode }),
+  setMode: (mode) => set(mode === 'shell' ? { mode, activity: null } : { mode }),
+  setActivity: (activity) => set({ activity }),
   enterRepl: () => set({ mode: 'repl', prompt: '>>>', inRepl: true }),
   leaveRepl: () => set(shell),
   setPreview: (preview) => set({ preview }),
@@ -102,7 +105,7 @@ export const useTerminalStore = create<TerminalState>()((set, get) => ({
       }
     } else if (event.type === 'done') {
       const after = s.afterSuccess;
-      set(s.inRepl ? { mode: 'repl', prompt: event.more ? '...' : '>>>' } : shell);
+      set(s.inRepl ? { mode: 'repl', prompt: event.more ? '...' : '>>>', activity: null } : shell);
       set({ afterSuccess: null });
       if (event.ok && after) after();
     }

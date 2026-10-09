@@ -22,6 +22,9 @@ function writeProjectFile(projectId: string, path: string, text: string) {
 // so the next session installs them again.
 export function pip(projectId: string, action: 'install' | 'list', packages: string[]) {
   const terminal = useTerminalStore.getState();
+  terminal.setActivity(
+    action === 'install' ? `Installing ${packages.join(', ')}…` : 'Listing packages…',
+  );
   terminal.send({ type: 'pip', action, packages, requirements: requirementsOf(projectId) }, () => {
     if (action !== 'install') return;
     const text = readText(projectId, 'requirements.txt') ?? '';
@@ -40,6 +43,7 @@ export async function npm(projectId: string, action: 'install' | 'list', package
     return;
   }
   terminal.setMode('busy');
+  terminal.setActivity(`Adding ${packages.join(', ')}…`);
   try {
     const added: Record<string, string> = {};
     for (const name of packages) {

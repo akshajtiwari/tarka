@@ -28,6 +28,7 @@ export async function runInTermux(projectId: string, line: string) {
   const syncOnly = line.trim() === 'sync';
   if (syncOnly) forgetSent(projectId);
   t.setMode('busy');
+  t.setActivity('Running in Termux…');
   try {
     const { files, stamps, skipped } = collect(projectId);
     if (skipped > 0) t.print('info', `${skipped} file(s) over 140 KB were not copied to Termux.`);
