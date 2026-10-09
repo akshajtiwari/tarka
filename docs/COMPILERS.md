@@ -37,6 +37,11 @@ that runs code in a Web Worker, so a stuck loop can be killed.
 | Go | `yaegi` (a Go interpreter) compiled to WASM | ~10 MB | possible |
 | Rust | none practical today (rustc is too big for a WebView) | — | remote only |
 
+**What v1 learned on a real Android WebView (2026-10):**
+- `importScripts()` from another site fails inside a worker, but `fetch` and `import()` work.
+- Pyodide 314 needs a *module* worker: `new Worker(url, { type: 'module' })` plus `await import('…/pyodide.mjs')`.
+- DOM-component props arrive as fresh JSON copies on every re-render. Key effects on ids, not objects, or a run restarts on every output line.
+
 **Recommendation after v1:** add Lua and SQL (tiny, offline, easy), then run a C/C++ spike with `@yowasp/clang`.
 Measure memory use on a mid-range phone before promising C++.
 

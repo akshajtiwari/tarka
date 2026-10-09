@@ -48,12 +48,12 @@ Check items off as they land (each must pass the definition of done in AGENTS.md
 - [~] Conflicts: a pull that conflicts stops and names the files (isomorphic-git aborts the merge); no in-app merge editor yet
 
 ## Phase 5: run on the device
-- [ ] Sandbox DOM component with timeouts
-- [ ] JavaScript, TypeScript (sucrase)
-- [ ] HTML preview
-- [ ] Python (Pyodide)
-- [ ] Console, stdin, run-history suggestions
-- [ ] COMPILERS.md research doc
+- [x] Sandbox DOM component with timeouts (module Web Worker, killed on stop/timeout)
+- [x] JavaScript, TypeScript (sucrase)
+- [x] HTML preview (local CSS/JS inlined; preview area does not fill the full height yet)
+- [x] Python (Pyodide 314.0.7 from jsDelivr, cached after the first run)
+- [x] Console, stdin (run-history suggestions dropped: there is no command box on the phone yet)
+- [x] COMPILERS.md research doc
 
 ## Phase 6: agent
 - [ ] Provider settings (Anthropic, OpenAI-compatible, Ollama), keys in secure storage
