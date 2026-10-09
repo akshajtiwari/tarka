@@ -4,18 +4,30 @@ import { Pressable, StyleSheet, Text } from 'react-native';
 import { font, fontSize } from '../../theme/fonts';
 import { size, space } from '../../theme/spacing';
 import { useTheme } from '../../theme/useTheme';
+import type { ChangeKind } from '../git/changes';
 import type { TreeRow } from './treeRows';
 
 type Props = {
   row: TreeRow;
   expanded: boolean;
   active: boolean;
+  gitKind?: ChangeKind; // shown as a colored letter: M modified, U new, A added
   onPress: () => void;
   onLongPress: () => void;
 };
 
-export function FileRow({ row, expanded, active, onPress, onLongPress }: Props) {
+const gitLetters = { added: 'A', untracked: 'U', modified: 'M', deleted: 'D' };
+
+export function FileRow({ row, expanded, active, gitKind, onPress, onLongPress }: Props) {
   const colors = useTheme();
+  const gitColor =
+    gitKind &&
+    {
+      added: colors.success,
+      untracked: colors.success,
+      modified: colors.warning,
+      deleted: colors.error,
+    }[gitKind];
   const folderIcon = expanded ? 'file-directory-open-fill' : 'file-directory-fill';
   const icon = row.isDir ? folderIcon : 'file';
 
@@ -33,9 +45,12 @@ export function FileRow({ row, expanded, active, onPress, onLongPress }: Props) 
       ]}
     >
       <Octicons name={icon} size={16} color={row.isDir ? colors.accent : colors.muted} />
-      <Text numberOfLines={1} style={[styles.name, { color: colors.text }]}>
+      <Text numberOfLines={1} style={[styles.name, { color: gitColor ?? colors.text }]}>
         {row.name}
       </Text>
+      {gitKind && (
+        <Text style={[styles.gitLetter, { color: gitColor }]}>{gitLetters[gitKind]}</Text>
+      )}
     </Pressable>
   );
 }
@@ -51,4 +66,5 @@ const styles = StyleSheet.create({
     borderLeftColor: 'transparent',
   },
   name: { flex: 1, fontFamily: font.code, fontSize: fontSize.small },
+  gitLetter: { fontFamily: font.codeBold, fontSize: fontSize.caption },
 });

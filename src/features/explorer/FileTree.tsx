@@ -8,6 +8,7 @@ import { font, fontSize } from '../../theme/fonts';
 import { space } from '../../theme/spacing';
 import { useTheme } from '../../theme/useTheme';
 import { FileRow } from './FileRow';
+import { useGitColors } from './useGitColors';
 import { buildRows, type TreeRow } from './treeRows';
 
 type Props = {
@@ -32,6 +33,7 @@ export function FileTree({
   const colors = useTheme();
   const [expanded, setExpanded] = useState<Set<string>>(new Set());
   const treeVersion = useWorkspaceStore((s) => s.treeVersion);
+  const gitKinds = useGitColors(projectId);
 
   // treeVersion changes after a file action, so the folder is read again.
   const rows = useMemo(
@@ -73,6 +75,7 @@ export function FileTree({
             row={item}
             expanded={expanded.has(item.path)}
             active={item.path === activeFile}
+            gitKind={gitKinds[item.path]}
             onPress={() => pressRow(item)}
             onLongPress={() => onFileActions(item.path, item.isDir)}
           />

@@ -46,6 +46,15 @@ appId: com.akshajtiwari.tarka
     timeout: 10000
 - takeScreenshot: git-diff
 - back
+# The explorer marks the changed file (amber name + "M").
+- tapOn: Code
+- tapOn:
+    text: Show files
+    index: 0
+- assertVisible: M
+- takeScreenshot: explorer-git-colors
+- back
+- tapOn: Git
 # Make a branch.
 - tapOn: Tap to switch or create a branch
 - tapOn: New branch
