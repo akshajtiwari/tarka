@@ -19,7 +19,8 @@ The full product description is in [PROJECT.md](PROJECT.md).
 6. [DEV_SETUP.md](DEV_SETUP.md) and [TESTING.md](TESTING.md): how to run, build and test.
 7. [DECISIONS.md](DECISIONS.md): why each library or approach was chosen.
 8. [DEBT.md](DEBT.md): known shortcuts and when to fix them.
-9. [reference/nimotecode-notes.md](reference/nimotecode-notes.md): what we learned from NimoteCode, and which of its docs to re-read for each phase.
+9. [RELEASE.md](RELEASE.md): building, signing and publishing an APK (the key lives outside the repo).
+10. [reference/nimotecode-notes.md](reference/nimotecode-notes.md): what we learned from NimoteCode, and which of its docs to re-read for each phase.
 
 ## How to continue
 

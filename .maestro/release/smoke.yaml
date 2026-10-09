@@ -1,0 +1,58 @@
+# Release build check, no Metro: the app starts, runs code, and code you run can't read app files.
+# Not part of `npm run e2e`. Install the release APK, then: maestro test .maestro/release/smoke.yaml
+appId: com.akshajtiwari.tarka
+---
+- launchApp:
+    clearState: true
+- extendedWaitUntil:
+    visible: Projects
+    timeout: 30000
+- tapOn: Got it
+- tapOn: New project
+- tapOn: Name
+- inputText: js
+- tapOn: JavaScript
+- hideKeyboard
+- tapOn: Create project
+- tapOn: Run
+- tapOn: Run main.js
+- extendedWaitUntil:
+    visible: hello, world
+    timeout: 15000
+- takeScreenshot: release-run-js
+# Release pages load from file://, and the WebView allows file reads: the worker must refuse them.
+- tapOn: Code
+- tapOn:
+    text: Show files
+    index: 0
+- tapOn: New file or folder
+- tapOn: New file
+- inputText: probe.js
+- hideKeyboard
+- tapOn: Done
+- tapOn: File probe.js
+- tapOn:
+    point: 50%,30%
+- inputText: "fetch('file:///proc/self/status').then(() => console.log('READ'), (e) => console.log('BLOCKED ' + e.message))"
+- hideKeyboard
+- tapOn: Run
+- tapOn: Run probe.js
+- extendedWaitUntil:
+    visible: BLOCKED Only web addresses.*
+    timeout: 15000
+- takeScreenshot: release-file-blocked
+# Python downloads Pyodide from the CDN on first use.
+- back
+- back
+- tapOn: New project
+- tapOn: Name
+- inputText: py
+- tapOn: Python
+- hideKeyboard
+- tapOn: Create project
+- tapOn: Run
+- tapOn: Run main.py
+- extendedWaitUntil:
+    visible: hello, world
+    timeout: 120000
+- takeScreenshot: release-run-python
