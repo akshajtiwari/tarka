@@ -1,6 +1,6 @@
 # Testing
 
-Nothing is "done" until it passes the gates below (see AGENTS.md section 4). Everything runs without a human.
+Nothing is "done" until it passes the gates below (see the definition of done in [HANDOFF.md](HANDOFF.md#definition-of-done)). Everything runs without a human.
 
 ## 1. `npm run check`: fast, run it all the time
 

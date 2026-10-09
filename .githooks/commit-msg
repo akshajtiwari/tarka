@@ -2,6 +2,6 @@
 # Every commit is written in the owner's name only.
 # Block co-author and tool attribution lines (but not normal words like a provider's name).
 if grep -qiE 'co-authored-by|generated with|noreply@anthropic\.com|claude code' "$1"; then
-  echo "commit-msg: attribution lines are not allowed in this repo (see AGENTS.md)" >&2
+  echo "commit-msg: attribution lines are not allowed in this repo" >&2
   exit 1
 fi

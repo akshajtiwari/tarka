@@ -11,7 +11,7 @@ A mobile IDE that feels clean while you write code on a phone. The editor comes 
    - Autosave, so work is never lost.
 2. **The whole loop happens in one app:** explore → edit → run → review the diff → commit → push.
 3. **AI that works with you, not around you:** the agent proposes changes as diffs, and you approve every write.
-4. **Code anyone can read:** short files, plain functions and few dependencies (see AGENTS.md).
+4. **Code anyone can read:** short files, plain functions and few dependencies.
 
 ## Feature list (v1)
 

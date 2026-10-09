@@ -1,6 +1,6 @@
 # Roadmap
 
-Check items off as they land (each must pass the definition of done in AGENTS.md).
+Check items off as they land (each must pass the definition of done in [HANDOFF.md](HANDOFF.md#definition-of-done)).
 `[x]` done and tested. `[~]` built and unit-tested, but the device (Maestro) test is still pending.
 
 ## Phase 0: repo and dev setup
