@@ -1,4 +1,6 @@
 import { getGitToken } from '../../lib/secure';
+import type { ProgressCallback } from 'isomorphic-git';
+
 import * as gitService from '../git/gitService';
 import { gitFs } from '../../lib/gitFs';
 import { repoDir } from '../git/repo';
@@ -13,11 +15,15 @@ export function nameFromUrl(url: string): string {
 }
 
 // Clones a repository into a new project and adds it to the list. Returns the project id.
-export async function cloneProject(url: string, name: string): Promise<string> {
+export async function cloneProject(
+  url: string,
+  name: string,
+  onProgress?: ProgressCallback,
+): Promise<string> {
   const { projects, addProject } = useProjectStore.getState();
   const id = makeProjectId(name, [...projects.map((p) => p.id), ...existingProjectFolders()]);
   try {
-    await gitService.clone(gitFs, repoDir(id), url.trim(), await getGitToken());
+    await gitService.clone(gitFs, repoDir(id), url.trim(), await getGitToken(), onProgress);
   } catch (e) {
     deleteProjectFolder(id); // don't leave half a clone behind
     throw e;

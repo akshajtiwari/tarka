@@ -17,11 +17,14 @@ export default function CloneScreen() {
   const [url, setUrl] = useState('');
   const [name, setName] = useState('');
   const [busy, setBusy] = useState(false);
+  const [progress, setProgress] = useState('Connecting…');
 
   async function clone() {
     setBusy(true);
     try {
-      const id = await cloneProject(url, name || nameFromUrl(url));
+      const id = await cloneProject(url, name || nameFromUrl(url), ({ phase, loaded, total }) =>
+        setProgress(total ? `${phase} ${Math.round((loaded / total) * 100)}%` : `${phase}…`),
+      );
       router.replace({ pathname: '/project/[id]/code', params: { id } });
     } catch (e) {
       Alert.alert(
@@ -56,7 +59,10 @@ export default function CloneScreen() {
           Only the latest commit of the main branch is downloaded, to keep it fast on a phone.
         </Text>
         {busy ? (
-          <ActivityIndicator color={colors.accent} />
+          <View style={styles.progress}>
+            <ActivityIndicator color={colors.accent} />
+            <Text style={[styles.note, { color: colors.text }]}>{progress}</Text>
+          </View>
         ) : (
           <Button label="Clone" variant="primary" onPress={clone} disabled={!url.trim()} />
         )}
@@ -68,4 +74,5 @@ export default function CloneScreen() {
 const styles = StyleSheet.create({
   form: { padding: space.lg, gap: space.md },
   note: { fontFamily: font.ui, fontSize: fontSize.small },
+  progress: { flexDirection: 'row', alignItems: 'center', gap: space.md },
 });

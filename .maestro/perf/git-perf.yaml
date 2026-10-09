@@ -10,6 +10,10 @@ appId: com.akshajtiwari.tarka
 - inputText: https://github.com/expressjs/express
 - hideKeyboard
 - tapOn: Clone
+- extendedWaitUntil: # the clone screen shows what git is doing
+    visible: .*(Counting|Compressing|Receiving|Resolving|Analyzing|Updating|Connecting).*
+    timeout: 60000
+- takeScreenshot: clone-progress
 - extendedWaitUntil:
     visible: Open a file
     timeout: 300000

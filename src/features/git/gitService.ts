@@ -168,7 +168,13 @@ export async function assertHasRemote(fs: Fs, dir: string) {
 }
 
 // Shallow, single-branch clone: much faster on a phone, and enough to edit and push.
-export function clone(fs: Fs, dir: string, url: string, token?: string | null) {
+export function clone(
+  fs: Fs,
+  dir: string,
+  url: string,
+  token?: string | null,
+  onProgress?: git.ProgressCallback,
+) {
   dropGitCache(dir); // a new repo in this folder: nothing old may be reused
   return changing(dir, () =>
     git.clone({
@@ -179,6 +185,7 @@ export function clone(fs: Fs, dir: string, url: string, token?: string | null) {
       singleBranch: true,
       depth: 1,
       onAuth: auth(token),
+      onProgress,
       cache: cacheFor(dir),
     }),
   );
