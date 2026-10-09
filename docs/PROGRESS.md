@@ -27,6 +27,10 @@ From the owner's phone test of v0.1.0. Everything below is device-verified on th
   7 should-fix and 3 nice-to-have, all fixed with tests).
 - **Tests:** 131 unit tests, 16 Maestro flows (green), plus `perf/git-perf.yaml`, `termux/termux.yaml` and
   `release/smoke.yaml` outside the default run.
+- **Release 0.2.0:** signed with the same key (updates 0.1.0 in place), 66 MB, arm64-v8a + x86_64.
+  On the emulator, without Metro: the release smoke passed (setup, Documents/TARKA, terminal JS with
+  `input()`, Python, `file://` blocked for fetch and `import()`), and installing it over 0.1.0 kept a 0.1
+  project, which still opened and ran.
 
 ### Next up
 1. Owner: try 0.2.0 on the phone (REVIEW.md).

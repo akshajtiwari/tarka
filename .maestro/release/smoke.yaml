@@ -85,6 +85,29 @@ appId: com.akshajtiwari.tarka
     visible: BLOCKED Ada Only web addresses.*
     timeout: 15000
 - takeScreenshot: release-file-blocked
+# import() can't be guarded from JavaScript: the runner page's security policy must refuse it.
+- tapOn: Code
+- tapOn:
+    text: Show files
+    index: 0
+- tapOn: New file or folder
+- tapOn: New file
+- inputText: imp.js
+- hideKeyboard
+- tapOn: Done
+- tapOn: File imp.js
+- tapOn:
+    point: 50%,30%
+- inputText: "self.addEventListener('securitypolicyviolation', (e) => console.log('VIOLATION ' + e.blockedURI))"
+- pressKey: Enter
+- inputText: "await import('file:///storage/emulated/0/Documents/TARKA/js/main.js').then(() => console.log('IMPORTED'), () => console.log('IMPORT FAILED')); await new Promise((r) => setTimeout(r, 500))"
+- hideKeyboard
+- tapOn: Run file
+- extendedWaitUntil:
+    visible: VIOLATION file
+    timeout: 15000
+- assertNotVisible: IMPORTED
+- takeScreenshot: release-import-blocked
 # Python in the terminal (Pyodide was cached during setup).
 - tapOn: Go to projects
 - tapOn: New project
