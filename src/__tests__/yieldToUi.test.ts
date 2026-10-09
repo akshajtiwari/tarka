@@ -1,6 +1,8 @@
 jest.useFakeTimers();
 
 test('git work pauses for the UI only after running a while without a break', async () => {
+  // Loaded after fake timers are on, so the module starts its clock on the fake time.
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
   const { maybeYield } = require('../lib/yieldToUi');
   await maybeYield(); // just started: no pause
 
