@@ -19,4 +19,9 @@ nohup emulator -avd tarka $window_flag -no-audio -no-boot-anim -gpu guest -no-sn
 
 adb wait-for-device
 until [ "$(adb shell getprop sys.boot_completed 2>/dev/null | tr -d '\r')" = "1" ]; do sleep 2; done
+# The network comes up a little after boot, and the flows download Python right away.
+for _ in $(seq 1 30); do
+  adb shell ping -c 1 -W 2 cdn.jsdelivr.net > /dev/null 2>&1 && break
+  sleep 2
+done
 echo "emulator ready"
