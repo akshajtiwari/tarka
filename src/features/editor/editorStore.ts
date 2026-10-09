@@ -5,8 +5,10 @@ import { create } from 'zustand';
 export type OpenFile = { path: string; text: string; savedText: string; locked?: boolean };
 
 type EditorState = {
+  projectId: string | null; // which project these tabs belong to
   files: OpenFile[];
   activePath: string | null;
+  enterProject: (projectId: string) => void;
   openFile: (path: string, text: string, locked?: boolean) => void;
   setActive: (path: string) => void;
   updateText: (path: string, text: string) => void;
@@ -18,8 +20,15 @@ type EditorState = {
 };
 
 export const useEditorStore = create<EditorState>()((set) => ({
+  projectId: null,
   files: [],
   activePath: null,
+
+  // Tabs from another project must never stay open (saving would write into the wrong folder).
+  enterProject: (projectId) =>
+    set((state) =>
+      state.projectId === projectId ? state : { projectId, files: [], activePath: null },
+    ),
 
   // Opening a file that is already open just switches to it (keeps unsaved edits).
   openFile: (path, text, locked = false) =>

@@ -25,9 +25,13 @@ export default function WorkspaceLayout() {
   // (the autosave timer would be cancelled), then close the tabs.
   useEffect(() => {
     setExplorerOpen(false);
+    useEditorStore.getState().enterProject(id);
     return () => {
-      saveAllDirty(id);
-      useEditorStore.getState().reset();
+      const saveErrors = saveAllDirty(id);
+      // If a save failed, keep the edits in memory: reopening this project shows them again.
+      if (saveErrors.length > 0)
+        Alert.alert('Some files could not be saved', saveErrors.join('\n'));
+      else useEditorStore.getState().reset();
     };
   }, [id, setExplorerOpen]);
 

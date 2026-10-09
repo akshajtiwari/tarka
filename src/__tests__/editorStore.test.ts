@@ -51,3 +51,13 @@ test('deleting a folder closes the tabs inside it', () => {
   expect(state.files.map((f) => f.path)).toEqual(['keep.js']);
   expect(state.activePath).toBe('keep.js');
 });
+
+test('entering another project closes the old tabs, re-entering the same keeps them', () => {
+  const { enterProject, openFile } = useEditorStore.getState();
+  enterProject('a');
+  openFile('main.js', 'x');
+  enterProject('a');
+  expect(useEditorStore.getState().files).toHaveLength(1);
+  enterProject('b');
+  expect(useEditorStore.getState().files).toEqual([]);
+});
