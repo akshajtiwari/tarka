@@ -31,6 +31,10 @@ if ! curl -s localhost:8081/status | grep -q running; then
   until curl -s localhost:8081/status | grep -q running; do sleep 2; done
 fi
 
+# The emulator's WebView (Chrome 133) has JSPI behind a flag; phones (Chrome 137+) have it on.
+# The terminal needs it for live Python input().
+adb shell "echo '_ --js-flags=--experimental-wasm-jspi --enable-features=WebAssemblyJSPromiseIntegration' > /data/local/tmp/webview-command-line" || true
+
 # clearState doesn't reach shared storage: start every run without old Documents/TARKA projects.
 adb shell rm -rf /storage/emulated/0/Documents/TARKA > /dev/null 2>&1 || true
 

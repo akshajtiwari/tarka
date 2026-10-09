@@ -63,6 +63,19 @@ appId: com.akshajtiwari.tarka
 - extendedWaitUntil:
     visible: '1024'
     timeout: 20000
+# input() pauses Python until the answer is typed (JSPI; scripts/e2e.sh turns it on in the emulator).
+- inputText: name = input("Name? ")
+- pressKey: Enter
+- extendedWaitUntil:
+    visible: your answer
+    timeout: 20000
+- inputText: Ada
+- pressKey: Enter
+- inputText: print("hi", name)
+- pressKey: Enter
+- extendedWaitUntil:
+    visible: hi Ada
+    timeout: 20000
 - tapOn: Exit Python
 - tapOn: Terminal input
 - inputText: pip install six
