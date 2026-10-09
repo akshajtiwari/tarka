@@ -2,6 +2,7 @@ import { router, useLocalSearchParams } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { BusyLine } from '../src/components/BusyLine';
 import { EmptyState } from '../src/components/EmptyState';
 import { Header } from '../src/components/Header';
 import { IconButton } from '../src/components/IconButton';
@@ -48,6 +49,7 @@ export default function DiffScreen() {
         title={path.split('/').pop()!}
         left={<IconButton icon="arrow-left" label="Back" onPress={() => router.back()} />}
       />
+      {!rows && <BusyLine label="Comparing…" />}
       {rows && rows.length === 0 && (
         <EmptyState
           title="No text changes"

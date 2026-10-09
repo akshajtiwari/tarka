@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react';
 import { FlatList } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { BusyLine } from '../src/components/BusyLine';
 import { EmptyState } from '../src/components/EmptyState';
 import { Header } from '../src/components/Header';
 import { IconButton } from '../src/components/IconButton';
@@ -32,6 +33,7 @@ export default function HistoryScreen() {
         title="History"
         left={<IconButton icon="arrow-left" label="Back" onPress={() => router.back()} />}
       />
+      {!commits && <BusyLine label="Reading history…" />}
       {commits && commits.length === 0 && (
         <EmptyState
           title="No commits yet"

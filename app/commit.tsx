@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react';
 import { FlatList, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { BusyLine } from '../src/components/BusyLine';
 import { EmptyState } from '../src/components/EmptyState';
 import { Header } from '../src/components/Header';
 import { IconButton } from '../src/components/IconButton';
@@ -45,6 +46,7 @@ export default function CommitScreen() {
         title={`Commit ${oid.slice(0, 7)}`}
         left={<IconButton icon="arrow-left" label="Back" onPress={() => router.back()} />}
       />
+      {!detail && !error && <BusyLine label="Reading the commit…" />}
       {error !== '' && <EmptyState title="Could not read this commit" body={error} />}
       {detail && (
         <FlatList

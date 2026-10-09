@@ -3,6 +3,7 @@ import { router, useLocalSearchParams } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { Alert, StyleSheet, Text, View } from 'react-native';
 
+import { BusyLine } from '../src/components/BusyLine';
 import { Button } from '../src/components/Button';
 import { ListRow } from '../src/components/ListRow';
 import { TextField } from '../src/components/TextField';
@@ -25,6 +26,7 @@ export default function BranchesSheet() {
   const [branches, setBranches] = useState<string[]>([]);
   const [current, setCurrent] = useState<string | null>(null);
   const [newName, setNewName] = useState('');
+  const [busy, setBusy] = useState<string | null>(null); // e.g. "Switching to main…"
 
   useEffect(() => {
     gitService.listBranches(gitFs, dir).then(setBranches, () => setBranches([]));
@@ -34,6 +36,8 @@ export default function BranchesSheet() {
   // Switching changes files on disk: save first, refuse if there is uncommitted work
   // (it would be overwritten), then reload the open tabs.
   async function switchTo(branch: string) {
+    if (busy) return;
+    setBusy(`Switching to ${branch}…`);
     try {
       const saveErrors = saveAllDirty(projectId);
       if (saveErrors.length > 0) throw new Error(saveErrors.join('\n'));
@@ -45,12 +49,15 @@ export default function BranchesSheet() {
     } catch (e) {
       Alert.alert('Could not switch branch', String(e));
     }
+    setBusy(null);
   }
 
   // A new branch starts from the current commit, so no file changes and the tabs stay as they are.
   async function create() {
     const problem = nameProblem(newName);
     if (problem) return Alert.alert('Check the name', problem);
+    if (busy) return;
+    setBusy(`Creating ${newName.trim()}…`);
     try {
       await gitService.createBranch(gitFs, dir, newName.trim());
       useGitStatusStore.getState().markStale(); // the Git tab shows the new branch name
@@ -58,11 +65,13 @@ export default function BranchesSheet() {
     } catch (e) {
       Alert.alert('Could not create the branch', String(e));
     }
+    setBusy(null);
   }
 
   return (
     <View style={{ backgroundColor: colors.surface }}>
       <Text style={[styles.title, { color: colors.text }]}>Branches</Text>
+      {busy && <BusyLine label={busy} />}
       {branches.map((b) => (
         <ListRow
           key={b}
@@ -80,7 +89,7 @@ export default function BranchesSheet() {
           placeholder="feature-x"
           mono
         />
-        <Button label="Create and switch" onPress={create} disabled={!newName.trim()} />
+        <Button label="Create and switch" onPress={create} disabled={!newName.trim() || !!busy} />
       </View>
     </View>
   );
