@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 import { useApprovalStore } from './approvalStore';
 import { runAgent, type AgentEvent } from './loop';
@@ -20,6 +20,9 @@ export function useAgent(projectId: string) {
   const [running, setRunning] = useState(false);
   const history = useRef<Turn[]>([]);
   const controller = useRef<AbortController | null>(null);
+
+  // Leaving the project stops the agent, so it never writes into a project you closed.
+  useEffect(() => () => stop(), []);
 
   const add = (item: TimelineItem) => setItems((old) => [...old, item]);
 
